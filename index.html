@@ -8241,7 +8241,7 @@ input.search:focus {
     </div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1.5px dashed #E7DFD5;font-size:12px;color:var(--ink-muted);">
-      <span style="display:flex;align-items:center;gap:5px;">☁️ Đồng bộ Realtime từ Firebase Cloud</span>
+      <span style="display:flex;align-items:center;gap:5px;">⚡ Đồng bộ Realtime từ Supabase Cloud</span>
       <button type="button" class="btn" onclick="refreshLeaderboardData()" style="padding:4px 12px;font-size:11.5px;background:#FFF;border:1.5px solid var(--ink-border);border-radius:10px;cursor:pointer;">🔄 Cập nhật</button>
     </div>
   </div>
@@ -8296,11 +8296,11 @@ input.search:focus {
 
       <div class="auth-extra-links">
         <span class="auth-link" onclick="handleForgotPassword()">Quên mật khẩu?</span>
-        <span class="auth-link" onclick="openFirebaseConfigModal(false)">⚙ Cài đặt Firebase</span>
+        <span class="auth-link" onclick="openSupabaseConfigModal(false)">⚙ Cài đặt Supabase Cloud</span>
       </div>
 
       <div style="background:#FFF9E6;border:1.5px dashed #D4A325;border-radius:12px;padding:10px 12px;font-size:12px;color:#7A5506;margin-top:16px;">
-        💡 <strong>Bạn có biết:</strong> Bạn bè của bạn cũng có thể tự tạo tài khoản riêng để vào học. Tiến độ của mỗi người được lưu hoàn toàn tách biệt trên máy chủ đám mây!
+        💡 <strong>Bạn có biết:</strong> Bạn bè của bạn cũng có thể tự tạo tài khoản riêng để vào học. Tiến độ của mỗi người được lưu hoàn toàn tách biệt trên máy chủ Supabase!
       </div>
 
       <div style="text-align:center;margin-top:12px;">
@@ -8326,62 +8326,103 @@ input.search:focus {
         <button type="button" class="btn" onclick="manualSyncCloud()" style="width:100%;font-weight:700;">🔄 Đồng bộ tiến độ lên Cloud ngay</button>
         <button type="button" class="btn" onclick="openCatPickerModal(); closeAuthModal();" style="width:100%;font-weight:700;">🐱 Đổi bé mèo & Tên hiển thị</button>
         <button type="button" class="btn" onclick="resetAllStudyData()" style="width:100%;font-size:12.5px;color:#991B1B;background:#FFF1F2;border-color:#FCA5A5;font-weight:700;">🗑️ Xóa sạch tiến độ học (Bắt đầu từ 0)</button>
-        <button type="button" class="btn" onclick="openFirebaseConfigModal(false)" style="width:100%;font-size:12.5px;color:var(--ink-muted);">⚙ Cấu hình kết nối Firebase</button>
+        <button type="button" class="btn" onclick="openSupabaseConfigModal(false)" style="width:100%;font-size:12.5px;color:var(--ink-muted);">⚙ Cấu hình kết nối Supabase</button>
         <button type="button" class="btn" onclick="handleAuthLogout()" style="width:100%;background:#FEE2E2;border-color:#DC2626;color:#B91C1C;font-weight:800;margin-top:4px;">🚪 Đăng xuất (Đổi người học khác)</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- FIREBASE CONFIG MODAL -->
+<!-- SUPABASE CONFIG MODAL -->
+<div class="modal hidden" id="supabaseConfigModal">
+  <div class="modal-card" style="max-width: 560px;">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:26px">⚡</span>
+        <div>
+          <h2 style="margin:0;font-size:18px">Kết Nối Máy Chủ Supabase</h2>
+          <div class="small">Lưu trữ đám mây & Bảng xếp hạng cho bạn bè học tập</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeSupabaseConfigModal()">✕ Đóng</button>
+    </div>
+
+    <div id="supabaseConfigNotice" style="display:none;background:#FEF3C7;border:2px solid #F59E0B;border-radius:14px;padding:12px;font-size:13px;color:#92400E;margin:14px 0 10px;">
+      ⚠️ <strong>Chưa phát hiện cấu hình Supabase:</strong> Hãy dán <b>Project URL</b> và <b>anon public key</b> từ Supabase Dashboard vào ô dưới để kích hoạt tài khoản đám mây!
+    </div>
+
+    <div style="margin:14px 0 10px;">
+      <label style="font-size:12.5px;font-weight:700;color:var(--ink-text);display:block;margin-bottom:4px;">
+        1. Supabase Project URL:
+      </label>
+      <input type="text" id="supabaseUrlInput" placeholder="https://xxxxxxxxxxxx.supabase.co" style="width:100%;font-family:monospace;font-size:12px;padding:10px;border:2px solid var(--ink-border);border-radius:12px;box-sizing:border-box;background:#FAF8F2;">
+    </div>
+
+    <div style="margin:0 0 8px;">
+      <label style="font-size:12.5px;font-weight:700;color:var(--ink-text);display:block;margin-bottom:4px;">
+        2. Supabase Anon Public Key:
+      </label>
+      <textarea id="supabaseKeyInput" rows="3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="width:100%;font-family:monospace;font-size:11.5px;padding:10px;border:2px solid var(--ink-border);border-radius:12px;box-sizing:border-box;background:#FAF8F2;"></textarea>
+      <div id="supabaseConfigError" style="color:#D32F2F;font-size:12px;font-weight:700;margin-top:4px;"></div>
+    </div>
+
+    <div class="small" style="line-height:1.5;color:var(--ink-muted);background:#F3F4F6;padding:10px 12px;border-radius:10px;margin-bottom:14px;">
+      📌 <strong>Cách lấy thông tin trong 30 giây:</strong><br>
+      1. Vào <b>supabase.com</b> → Chọn Project của bạn.<br>
+      2. Bấm icon bánh răng ⚙ <b>Project Settings</b> ở thanh menu góc trái dưới → Chọn <b>API</b>.<br>
+      3. Copy <b>Project URL</b> và <b>anon public key</b> dán vào 2 ô trên!<br>
+      4. <i>(Mẹo)</i>: Trong Supabase, chọn <b>SQL Editor</b> → chạy nội dung tệp <code>supabase_schema.sql</code> để tạo bảng tự động.
+    </div>
+
+    <div class="row" style="justify-content:flex-end;gap:10px;">
+      <button type="button" class="btn" onclick="closeSupabaseConfigModal()">Đóng</button>
+      <button type="button" class="btn primary" onclick="saveSupabaseConfigFromInput()" style="background:#22C55E;border-color:var(--ink-border);color:#FFF;font-weight:800;">Lưu Cấu Hình & Kích Hoạt 🚀</button>
+    </div>
+  </div>
+</div>
+
+<!-- FIREBASE CONFIG MODAL (TÙY CHỌN DỰ PHÒNG) -->
 <div class="modal hidden" id="firebaseConfigModal">
   <div class="modal-card" style="max-width: 560px;">
     <div class="row" style="justify-content:space-between;align-items:center">
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:26px">⚙️</span>
         <div>
-          <h2 style="margin:0;font-size:18px">Kết Nối Máy Chủ Firebase</h2>
-          <div class="small">Dành cho người tạo trang web kết nối Cloud miễn phí</div>
+          <h2 style="margin:0;font-size:18px">Kết Nối Máy Chủ Firebase (Dự phòng)</h2>
+          <div class="small">Dành cho người tạo trang web kết nối Firebase</div>
         </div>
       </div>
       <button class="modal-close" onclick="closeFirebaseConfigModal()">✕ Đóng</button>
     </div>
 
     <div id="firebaseConfigNotice" style="display:none;background:#FEF3C7;border:2px solid #F59E0B;border-radius:14px;padding:12px;font-size:13px;color:#92400E;margin:14px 0 10px;">
-      ⚠️ <strong>Chưa phát hiện cấu hình Firebase:</strong> Hãy dán mã cấu hình Firebase của bạn vào ô dưới để kích hoạt tính năng Đăng nhập & Lưu tiến độ đám mây cho bạn bè!
+      ⚠️ <strong>Chưa phát hiện cấu hình Firebase:</strong> Hãy dán mã cấu hình Firebase của bạn vào ô dưới!
     </div>
 
     <div style="margin:14px 0 8px;">
       <label style="font-size:12.5px;font-weight:700;color:var(--ink-text);display:block;margin-bottom:6px;">
         Dán mã <code>firebaseConfig</code> từ Firebase Console vào đây:
       </label>
-      <textarea id="firebaseConfigJsonInput" rows="9" placeholder='const firebaseConfig = {
+      <textarea id="firebaseConfigJsonInput" rows="7" placeholder='const firebaseConfig = {
   apiKey: "AIzaSy...",
   authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "...",
-  appId: "..."
+  projectId: "your-project"
 };' style="width:100%;font-family:monospace;font-size:12px;padding:10px;border:2px solid var(--ink-border);border-radius:12px;box-sizing:border-box;background:#FAF8F2;"></textarea>
       <div id="firebaseConfigError" style="color:#D32F2F;font-size:12px;font-weight:700;margin-top:4px;"></div>
     </div>
 
-    <div class="small" style="line-height:1.5;color:var(--ink-muted);background:#F3F4F6;padding:10px 12px;border-radius:10px;margin-bottom:14px;">
-      📌 <strong>Cách lấy cấu hình trong 2 phút (Hoàn toàn miễn phí):</strong><br>
-      1. Vào <b>console.firebase.google.com</b> → Tạo Project mới.<br>
-      2. Bật <b>Authentication</b> (chọn phương thức Email/Password và Google).<br>
-      3. Bật <b>Firestore Database</b> (chọn chế độ Test mode).<br>
-      4. Bấm icon bánh răng ⚙ Project Settings → Add App (Web <code>&lt;/&gt;</code>) → Copy đoạn <code>firebaseConfig</code> dán vào đây!
-    </div>
-
     <div class="row" style="justify-content:flex-end;gap:10px;">
       <button type="button" class="btn" onclick="closeFirebaseConfigModal()">Đóng</button>
-      <button type="button" class="btn primary" onclick="saveFirebaseConfigFromInput()" style="background:var(--c-sunflower);border-color:var(--ink-border);color:var(--ink-text);font-weight:800;">Lưu Cấu Hình & Kích Hoạt 🚀</button>
+      <button type="button" class="btn primary" onclick="saveFirebaseConfigFromInput()" style="background:var(--c-sunflower);border-color:var(--ink-border);color:var(--ink-text);font-weight:800;">Lưu Firebase & Kích Hoạt 🚀</button>
     </div>
   </div>
 </div>
 
-<!-- Firebase SDK & Multi-User Cloud Engine -->
+<!-- Cloud Engines: Supabase (Chính) & Firebase (Dự phòng) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="supabase-auth.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -13523,7 +13564,7 @@ document.getElementById('manageModal').onclick=e=>{if(e.target.id==='manageModal
 document.addEventListener('keydown',e=>{
   if(document.activeElement && ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;
   if(e.key==='Escape'){
-    ['manageModal', 'catAvatarModal', 'checkinModal', 'editGuestbookModal', 'boomboxPlaylistModal', 'podcastAddModal', 'authModal', 'firebaseConfigModal', 'leaderboardModal', 'feedNudgePopover'].forEach(id => {
+    ['manageModal', 'catAvatarModal', 'checkinModal', 'editGuestbookModal', 'boomboxPlaylistModal', 'podcastAddModal', 'authModal', 'supabaseConfigModal', 'firebaseConfigModal', 'leaderboardModal', 'feedNudgePopover'].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.classList.add('hidden');
     });

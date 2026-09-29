@@ -132,24 +132,48 @@
     renderLeaderboard(cachedLeaderboardUsers);
   };
 
-  // Tải danh sách người dùng từ Firebase Cloud
+  // Tải danh sách người dùng từ Supabase / Firebase Cloud
   window.refreshLeaderboardData = async function() {
     let users = [];
 
-    // 1. Đọc từ Firebase Realtime Database
-    try {
-      if (window.firebase && firebase.database) {
-        const snap = await firebase.database().ref('users').once('value');
-        const val = snap.val();
-        if (val) {
-          Object.keys(val).forEach(uid => {
-            const u = val[uid];
-            users.push(formatUserForLeaderboard(uid, u));
-          });
+    // 0. Đọc từ Supabase Database (nếu đã kết nối)
+    if (typeof window.loadLeaderboardFromSupabase === 'function') {
+      try {
+        const sbUsers = await window.loadLeaderboardFromSupabase();
+        if (sbUsers && Array.isArray(sbUsers) && sbUsers.length > 0) {
+          users = sbUsers.map(u => ({
+            uid: u.uid,
+            name: u.name,
+            catId: 12,
+            avatarType: 'v2',
+            avatar: u.avatar,
+            streak: u.streak,
+            words: u.words,
+            matchBest: u.blitz || 9999,
+            isMe: u.isMe
+          }));
         }
+      } catch (e) {
+        console.warn('[Leaderboard] Supabase fetch error:', e);
       }
-    } catch (e) {
-      console.warn('[Leaderboard] Realtime DB read error:', e);
+    }
+
+    // 1. Đọc từ Firebase Realtime Database
+    if (!users.length) {
+      try {
+        if (window.firebase && firebase.database) {
+          const snap = await firebase.database().ref('users').once('value');
+          const val = snap.val();
+          if (val) {
+            Object.keys(val).forEach(uid => {
+              const u = val[uid];
+              users.push(formatUserForLeaderboard(uid, u));
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('[Leaderboard] Realtime DB read error:', e);
+      }
     }
 
     // 2. Nếu Realtime DB rỗng, thử Firestore
