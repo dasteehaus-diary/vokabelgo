@@ -1,0 +1,410 @@
+[
+  {
+    "id": 1,
+    "start": 26.0,
+    "end": 33.0,
+    "text": "Fertig, okay! Klingel, klingel, klingel, klingel!",
+    "meaning": "Xong rồi, được rồi! Kính coong, kính coong!",
+    "note": "fertig (xong rồi); klingeln (chuông reo)."
+  },
+  {
+    "id": 2,
+    "start": 32.5,
+    "end": 36.5,
+    "text": "Hallo, der Pizzaladen!",
+    "meaning": "Xin chào, tiệm pizza xin nghe!",
+    "note": "der Pizzaladen (tiệm bán bánh pizza)."
+  },
+  {
+    "id": 3,
+    "start": 35.5,
+    "end": 39.0,
+    "text": "Möchten Sie gerne eine Pizza bestellen? Ja, bitte!",
+    "meaning": "Quý khách muốn đặt bánh pizza không ạ? Vâng, làm ơn!",
+    "note": "eine Pizza bestellen (đặt pizza)."
+  },
+  {
+    "id": 4,
+    "start": 38.5,
+    "end": 42.0,
+    "text": "Ich möchte eine Pizza Supreme, aber ohne Pilze!",
+    "meaning": "Cho tôi một chiếc pizza thập cẩm, nhưng không lấy nấm nhé!",
+    "note": "ohne Pilze (không lấy nấm)."
+  },
+  {
+    "id": 5,
+    "start": 41.5,
+    "end": 45.0,
+    "text": "Möchten Sie auch Knoblauchbrot? Ja, ich nehme auch Knoblauchbrot!",
+    "meaning": "Quý khách có muốn bánh mì bơ tỏi không? Có, cho tôi cả bánh mì bơ tỏi nữa!",
+    "note": "das Knoblauchbrot (bánh mì bơ tỏi)."
+  },
+  {
+    "id": 6,
+    "start": 44.5,
+    "end": 48.0,
+    "text": "Gut, alles klar! Wird nicht lange dauern!",
+    "meaning": "Tốt, rõ rồi ạ! Sẽ không lâu đâu!",
+    "note": "alles klar (rõ rồi); nicht lange dauern (không mất nhiều thời gian)."
+  },
+  {
+    "id": 7,
+    "start": 47.5,
+    "end": 52.0,
+    "text": "Brauchen Sie meine Adresse? Nein, ich kann Sie ja sehen! Auf Wiederhören!",
+    "meaning": "Bác có cần địa chỉ của tôi không? Không, tôi nhìn thấy bạn mà! Tạm biệt nhé!",
+    "note": "auf Wiederhören (chào tạm biệt qua điện thoại)."
+  },
+  {
+    "id": 8,
+    "start": 51.5,
+    "end": 55.0,
+    "text": "Wir brauchen eine Pizza Supreme bitte, Pizza-Tante!",
+    "meaning": "Tụi cháu cần một chiếc pizza Supreme, dì pizza ơi!",
+    "note": "die Pizza-Tante (dì bán bánh pizza)."
+  },
+  {
+    "id": 9,
+    "start": 54.5,
+    "end": 58.0,
+    "text": "Aber ohne Pilze! Okay, ich mache das Knoblauchbrot.",
+    "meaning": "Nhưng không lấy nấm nhé! Được rồi, tớ nướng bánh mì bơ tỏi.",
+    "note": "ohne Pilze (không nấm)."
+  },
+  {
+    "id": 10,
+    "start": 57.5,
+    "end": 62.5,
+    "text": "Können wir so tun, als ob wir Schwestern sind und der Pizzaladen uns gehört?",
+    "meaning": "Tụi mình giả vờ làm hai chị em và tiệm pizza là của tụi mình được không?",
+    "note": "so tun, als ob (giả vờ như thể là)."
+  },
+  {
+    "id": 11,
+    "start": 62.0,
+    "end": 66.5,
+    "text": "Oh ja! Und wir schmeißen den Pizzaladen für Mum!",
+    "meaning": "Ôi đúng rồi! Và tụi mình quán xuyến tiệm pizza giúp mẹ!",
+    "note": "den Laden schmeißen (quán xuyến cả cửa tiệm)."
+  },
+  {
+    "id": 12,
+    "start": 66.0,
+    "end": 70.0,
+    "text": "Damit sie in den Urlaub fliegen kann! Nach Italien!",
+    "meaning": "Để mẹ được bay đi nghỉ dưỡng! Đi nước Ý!",
+    "note": "in den Urlaub fliegen (bay đi nghỉ mát)."
+  },
+  {
+    "id": 13,
+    "start": 72.5,
+    "end": 76.5,
+    "text": "Das Knoblauchbrot ist fertig! Klasse!",
+    "meaning": "Bánh mì bơ tỏi xong rồi! Tuyệt cú mèo!",
+    "note": "fertig sein (đã xong); klasse (tuyệt vời)."
+  },
+  {
+    "id": 14,
+    "start": 76.5,
+    "end": 79.5,
+    "text": "Danke, Pizza-Schwester!",
+    "meaning": "Cảm ơn em gái pizza nhé!",
+    "note": "die Pizza-Schwester (chị/em gái tiệm pizza)."
+  },
+  {
+    "id": 15,
+    "start": 79.5,
+    "end": 83.5,
+    "text": "Ich bin schon da! Sehr schön!",
+    "meaning": "Cháu giao tới nơi rồi đây! Đẹp lắm!",
+    "note": "schon da sein (đã đến nơi)."
+  },
+  {
+    "id": 16,
+    "start": 83.5,
+    "end": 88.0,
+    "text": "Es sind keine Pilze drauf! Nein, keine Pilze! Sehr gut!",
+    "meaning": "Không hề có nấm trên bánh! Rất tốt!",
+    "note": "keine Pilze drauf (không có nấm ở trên)."
+  },
+  {
+    "id": 17,
+    "start": 93.5,
+    "end": 99.0,
+    "text": "Nimm sie einfach nur, die Pizza! Okay, danke!",
+    "meaning": "Bác cứ nhận lấy bánh pizza đi! Được rồi, cảm ơn cháu!",
+    "note": "einfach nur nehmen (cứ việc nhận lấy)."
+  },
+  {
+    "id": 18,
+    "start": 104.5,
+    "end": 108.5,
+    "text": "Oh Mann, ich bin wieder da, Pizza-Schwester!",
+    "meaning": "Ôi trời, em về rồi đây chị gái pizza!",
+    "note": "wieder da sein (đã quay về)."
+  },
+  {
+    "id": 19,
+    "start": 108.5,
+    "end": 113.0,
+    "text": "Oh nein, nicht schon wieder! Ich repariere es!",
+    "meaning": "Ôi không, lại thế nữa rồi! Tớ sửa nó ngay đây!",
+    "note": "reparieren (sửa chữa)."
+  },
+  {
+    "id": 20,
+    "start": 113.0,
+    "end": 117.0,
+    "text": "Mum, kriegen wir ein neues Auto?",
+    "meaning": "Mẹ ơi, mua cho con xe mới được không?",
+    "note": "ein neues Auto kriegen (được mua xe mới)."
+  },
+  {
+    "id": 21,
+    "start": 117.0,
+    "end": 121.5,
+    "text": "Das hast du bekommen, als du zwei Jahre alt warst!",
+    "meaning": "Chiếc xe này con nhận được lúc con mới 2 tuổi đấy!",
+    "note": "bekommen (nhận được)."
+  },
+  {
+    "id": 22,
+    "start": 121.5,
+    "end": 126.0,
+    "text": "Aber das Rad fällt immer wieder ab!",
+    "meaning": "Nhưng bánh xe cứ bị rơi ra hoài à!",
+    "note": "das Rad fällt ab (bánh xe bị rụng ra)."
+  },
+  {
+    "id": 23,
+    "start": 126.0,
+    "end": 131.0,
+    "text": "An dem Auto hängen doch so viele Erinnerungen!",
+    "meaning": "Chiếc xe này gắn liền với biết bao kỷ niệm mà!",
+    "note": "Erinnerungen (kỷ niệm đẹp)."
+  },
+  {
+    "id": 24,
+    "start": 131.0,
+    "end": 136.0,
+    "text": "Diese Folge von Bluey heißt: Pizza-Schwestern!",
+    "meaning": "Tập phim Bluey này có tên là: Chị em tiệm Pizza!",
+    "note": "die Folge heißen (tập phim có tên là)."
+  },
+  {
+    "id": 25,
+    "start": 136.0,
+    "end": 140.5,
+    "text": "Was ist das denn Cooles, Muffin?",
+    "meaning": "Đồ gì trông ngầu thế hả Muffin?",
+    "note": "was ist das denn Cooles (cái gì mà ngầu thế)."
+  },
+  {
+    "id": 26,
+    "start": 140.5,
+    "end": 145.5,
+    "text": "Das ist ein Elektroauto von meinem Dad!",
+    "meaning": "Đây là xe ô tô điện của bố tớ đấy!",
+    "note": "das Elektroauto (xe ô tô điện)."
+  },
+  {
+    "id": 27,
+    "start": 145.5,
+    "end": 150.0,
+    "text": "Das kann ja sogar ohne Pedale fahren!",
+    "meaning": "Nó thậm chí tự chạy không cần bàn đạp chân luôn!",
+    "note": "ohne Pedale (không cần bàn đạp)."
+  },
+  {
+    "id": 28,
+    "start": 150.0,
+    "end": 155.0,
+    "text": "Es ist sehr teuer, also seid vorsichtig!",
+    "meaning": "Nó đắt tiền lắm, nên các cậu phải cẩn thận đấy!",
+    "note": "vorsichtig sein (cẩn thận)."
+  },
+  {
+    "id": 29,
+    "start": 155.0,
+    "end": 161.0,
+    "text": "Wir sind drei Schwestern, die einen Pizzaladen haben.",
+    "meaning": "Tụi mình là 3 chị em mở tiệm bánh pizza.",
+    "note": "drei Schwestern (ba chị em gái)."
+  },
+  {
+    "id": 30,
+    "start": 165.0,
+    "end": 170.0,
+    "text": "Hallo, sind da die Kunden?",
+    "meaning": "Alo, khách hàng ở đó phải không?",
+    "note": "die Kunden (khách hàng)."
+  },
+  {
+    "id": 31,
+    "start": 170.0,
+    "end": 175.5,
+    "text": "Du machst mit dem Fuß so und der Kofferraum öffnet!",
+    "meaning": "Cậu gõ chân thế này là cốp xe tự mở ra!",
+    "note": "der Kofferraum öffnet sich (cốp xe tự mở)."
+  },
+  {
+    "id": 32,
+    "start": 175.5,
+    "end": 181.0,
+    "text": "Nein, wir müssen das telefonisch klären!",
+    "meaning": "Không, tụi mình phải xác nhận qua điện thoại!",
+    "note": "telefonisch klären (giải quyết qua điện thoại)."
+  },
+  {
+    "id": 33,
+    "start": 187.0,
+    "end": 193.5,
+    "text": "Jetzt können wir die Pizza richtig schnell ausliefern!",
+    "meaning": "Giờ tụi mình có thể giao pizza siêu tốc rồi!",
+    "note": "ausliefern (giao hàng)."
+  },
+  {
+    "id": 34,
+    "start": 194.0,
+    "end": 200.5,
+    "text": "Es darf kein Dreck in mein neues Auto kommen!",
+    "meaning": "Tuyệt đối không được để vết bẩn nào dính vào xe mới!",
+    "note": "kein Dreck (không dính bẩn)."
+  },
+  {
+    "id": 35,
+    "start": 203.5,
+    "end": 208.5,
+    "text": "Weil es unglaublich viel Geld kostet!",
+    "meaning": "Vì chiếc xe này tốn cực kỳ nhiều tiền!",
+    "note": "unglaublich viel Geld (nhiều tiền không tưởng)."
+  },
+  {
+    "id": 36,
+    "start": 208.5,
+    "end": 214.0,
+    "text": "Und was machen wir da jetzt?",
+    "meaning": "Được rồi, thế giờ tụi mình làm sao đây?",
+    "note": "was machen wir jetzt (giờ làm gì đây)."
+  },
+  {
+    "id": 37,
+    "start": 214.5,
+    "end": 221.0,
+    "text": "Füße abtreten! Ich will keinen Dreck im Auto!",
+    "meaning": "Chùi sạch chân đi! Tớ không muốn có vết bẩn trong xe!",
+    "note": "Füße abtreten (chùi sạch chân)."
+  },
+  {
+    "id": 38,
+    "start": 257.0,
+    "end": 261.5,
+    "text": "Alles klar und los geht's!",
+    "meaning": "Sẵn sàng và xuất phát nào!",
+    "note": "los geht's (bắt đầu thôi)."
+  },
+  {
+    "id": 39,
+    "start": 261.5,
+    "end": 266.0,
+    "text": "Hä, was ist los? Der Akku ist alle!",
+    "meaning": "Ơ kìa, chuyện gì xảy ra thế này? Hết pin rồi!",
+    "note": "der Akku ist alle (ắc quy/pin đã hết sạch)."
+  },
+  {
+    "id": 40,
+    "start": 266.0,
+    "end": 271.0,
+    "text": "Wir müssen ihn aufladen!",
+    "meaning": "Tụi mình phải cắm sạc cho xe thôi!",
+    "note": "aufladen (sạc điện)."
+  },
+  {
+    "id": 41,
+    "start": 271.0,
+    "end": 277.0,
+    "text": "Was wollen wir spielen, bis wir wieder fahren können?",
+    "meaning": "Tụi mình chơi trò gì trong lúc đợi xe sạc lại đây?",
+    "note": "fahren können (có thể lái xe)."
+  },
+  {
+    "id": 42,
+    "start": 280.5,
+    "end": 288.0,
+    "text": "Sie wollen eine Pizza Supreme mit extra Ananasstückchen!",
+    "meaning": "Khách muốn đặt một chiếc pizza thập cẩm thêm dứa!",
+    "note": "extra Ananasstückchen (thêm dứa)."
+  },
+  {
+    "id": 43,
+    "start": 297.0,
+    "end": 304.0,
+    "text": "Du kannst ja der Mechaniker sein! Okay!",
+    "meaning": "Cậu làm thợ sửa xe đi! Được thôi!",
+    "note": "der Mechaniker (thợ cơ khí/thợ sửa xe)."
+  },
+  {
+    "id": 44,
+    "start": 329.5,
+    "end": 335.5,
+    "text": "Die Kunden haben zehn Pizzen bestellt!",
+    "meaning": "Khách hàng đã đặt mười chiếc bánh pizza lận!",
+    "note": "zehn Pizzen (10 cái bánh pizza)."
+  },
+  {
+    "id": 45,
+    "start": 335.5,
+    "end": 340.5,
+    "text": "Sie machen eine Pizza-Party!",
+    "meaning": "Họ tổ chức một bữa tiệc pizza!",
+    "note": "eine Pizza-Party machen (tổ chức tiệc pizza)."
+  },
+  {
+    "id": 46,
+    "start": 340.5,
+    "end": 348.0,
+    "text": "Ich habe das Auto ganz besonders schnell gemacht!",
+    "meaning": "Tớ đã độ cho chiếc xe chạy siêu nhanh luôn rồi!",
+    "note": "besonders schnell (đặc biệt nhanh chóng)."
+  },
+  {
+    "id": 47,
+    "start": 367.5,
+    "end": 372.0,
+    "text": "Ihre Pizzen sind da!",
+    "meaning": "Bánh pizza của quý khách tới rồi đây!",
+    "note": "sind da (đã tới nơi)."
+  },
+  {
+    "id": 48,
+    "start": 372.0,
+    "end": 376.5,
+    "text": "Wie ist es in Italien? Gut, danke!",
+    "meaning": "Chuyến đi Ý thế nào rồi mẹ? Tốt lắm, cảm ơn con!",
+    "note": "in Italien (ở nước Ý)."
+  },
+  {
+    "id": 49,
+    "start": 379.5,
+    "end": 386.5,
+    "text": "Vielleicht ist es Zeit für ein neues Auto...",
+    "meaning": "Có lẽ đã đến lúc mua một chiếc xe mới rồi...",
+    "note": "Zeit für ein neues Auto (thời điểm cho chiếc xe mới)."
+  },
+  {
+    "id": 50,
+    "start": 390.5,
+    "end": 395.0,
+    "text": "Hallo, Mechaniker! Ich habe eine Panne!",
+    "meaning": "Xin chào thợ sửa xe! Xe tôi bị hỏng rồi!",
+    "note": "eine Panne haben (bị hỏng xe giữa đường)."
+  },
+  {
+    "id": 51,
+    "start": 399.5,
+    "end": 406.0,
+    "text": "Das ging ja schnell! So gut wie neu!",
+    "meaning": "Xong nhanh quá! Tốt như mới luôn!",
+    "note": "so gut wie neu (như mới)."
+  }
+]

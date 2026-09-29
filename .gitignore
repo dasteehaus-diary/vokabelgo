@@ -1,0 +1,20 @@
+# Hệ thống & Trình duyệt
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# Thư mục lưu trữ & Tạm thời dung lượng lớn
+video_archive/
+_backup_video_full_phase1/
+tmp_model/
+
+# Các file đa phương tiện vượt quá 100MB (GitHub giới hạn 100MB/file)
+music/kpop.mp3
+video/supergerman.mp4
+
+# Các video nháp chưa kích hoạt trong bài học chính
+video/easygerman*
+video/achterbahn*
+video/hans.mp4
+video/spielzeugladen.mp4

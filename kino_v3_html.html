@@ -1,0 +1,273 @@
+      <!-- KINO STUDIO V3: MASTER BLUEPRINT IMPLEMENTATION -->
+      <section id="diktatMode" class="hidden">
+        <div class="kino-v3-root">
+
+          <!-- 1. TOP PILL CAROUSEL & HEADER -->
+          <div class="kino-v3-top-header">
+            <div class="kino-v3-carousel">
+              <button class="kino-pill-btn active" title="Tập phim đang chiếu">
+                <span>🍕 Bluey – Pizza-Schwestern</span>
+                <span class="kino-pill-badge">A1-A2 · Hoạt hình</span>
+              </button>
+            </div>
+            <div class="kino-v3-top-actions">
+              <button class="kino-top-action-btn" onclick="reviewCurrentVideoVocab()" title="Ôn tập 16 cụm từ đắt giá của bài này qua Flashcards">
+                📇 Ôn 16 cụm từ bài này
+              </button>
+              <button class="kino-top-action-btn" onclick="openKinoFullMovieModal()" title="Xem toàn bộ tập phim liền mạch 06:59 mộc không phụ đề">
+                🍿 Xem toàn phim (06:59)
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. MASTER PROGRESS BAR (The Favorite Glowing Progress Bar) -->
+          <div class="kino-v3-progress-card">
+            <div class="kino-v3-prog-row">
+              <div class="kino-v3-prog-left">
+                <div class="kino-v3-streak-badge" id="kinoStreakBadge" title="Ngọn lửa hoàn thành câu tích lũy">
+                  <span class="kino-v3-streak-flame">🔥</span>
+                  <span id="kinoStreakText">0 câu</span>
+                </div>
+                <div class="kino-v3-prog-stats" id="kinoProgressCount">0 / 72 câu (0%)</div>
+              </div>
+
+              <div class="kino-v3-prog-center">
+                <div class="kino-v3-meter-track" title="Thanh năng lượng tiến độ">
+                  <div class="kino-v3-meter-fill" id="kinoMeterFill" style="width: 1.4%;"></div>
+                </div>
+                <div class="kino-v3-milestones">
+                  <span id="mile25">⭐ 25% (18 câu)</span>
+                  <span id="mile50">🎖️ 50% (36 câu)</span>
+                  <span id="mile75">🏆 75% (54 câu)</span>
+                  <span id="mile100">👑 100% (72 câu)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. MAIN 2-COLUMN GRID -->
+          <div class="kino-v3-grid">
+
+            <!-- LEFT: Video Card (Bo Góc Hiện Đại) -->
+            <div class="kino-v3-col-left">
+              <div class="kino-v3-video-card">
+                <div class="kino-v3-video-frame">
+                  <video id="kinoMainVideo" playsinline preload="auto" src="video/pizzaschwester.mp4"></video>
+
+                  <!-- Subtitle Overlay Banner (Locked/Unlocked) -->
+                  <div class="kino-v3-sub-overlay hidden-sub" id="kinoSubOverlay">
+                    <div class="kino-v3-sub-de" id="kinoOverlayDe">Fertig! Okay. Klingel-klingel! Klingel-klingel!</div>
+                    <div class="kino-v3-sub-vi" id="kinoOverlayVi">Xong rồi! Được rồi. Kính coong! Kính coong!</div>
+                  </div>
+
+                  <!-- Dubbing Recording HUD -->
+                  <div class="kino-v3-recording-hud hidden" id="kinoRecordingHud">
+                    <div class="kino-v3-hud-pulse">🔴 ĐANG LỒNG TIẾNG...</div>
+                    <div class="kino-v3-hud-sub" id="kinoHudSub">Hãy nhìn khẩu hình nhân vật và nói theo!</div>
+                  </div>
+
+                  <!-- 3-2-1 Countdown HUD -->
+                  <div class="kino-v3-countdown-hud hidden" id="kinoCountdownHud">
+                    <div class="kino-v3-countdown-number" id="kinoCountNumber">3</div>
+                    <div class="kino-v3-countdown-text">Chuẩn bị nói theo nhân vật nhé!</div>
+                  </div>
+                </div>
+
+                <!-- Video Controls Bar -->
+                <div class="kino-v3-controls-bar">
+                  <div class="kino-v3-ctrl-left">
+                    <button class="kino-btn-ctrl" id="kinoPrevBtn" onclick="prevKinoSentence()" title="Câu trước">
+                      <span>◀</span> Câu trước
+                    </button>
+                    <button class="kino-btn-ctrl primary" id="kinoPlayLoopBtn" onclick="playKinoCurrentSegment()" title="Nghe lại câu này">
+                      <span>🔁</span> Nghe câu này
+                    </button>
+                    <button class="kino-btn-ctrl" id="kinoNextBtn" onclick="nextKinoSentence()" title="Câu tiếp">
+                      Câu tiếp <span>▶</span>
+                    </button>
+                  </div>
+                  <div class="kino-v3-ctrl-right">
+                    <button class="kino-btn-ctrl" id="kinoSpeedBtn" onclick="toggleKinoSpeed()" title="Đổi tốc độ phát">
+                      🐢 <span>1.0x</span>
+                    </button>
+                    <button class="kino-btn-ctrl" id="kinoToggleSubBtn" onclick="toggleKinoSubtitles()" title="Bật/Tắt phụ đề (Cần nghe 2 lần hoặc gõ thử 1 lần)">
+                      🔒 <span>Phụ đề</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sentence Info Bar -->
+              <div class="kino-v3-sentence-info-bar">
+                <span class="kino-v3-time-text" id="kinoTimeTag">⏱️ 00:27.7 ➔ 00:32.8 (5.1s) · Câu #01 / 72</span>
+                <span id="kinoSubLockStatus" style="font-size:11px;color:#f59e0b;">🔒 Nghe 2 lần hoặc gõ thử 1 lần để mở phụ đề</span>
+              </div>
+            </div>
+
+            <!-- RIGHT: Unified Learning Hub (Viết & Nói Độc Lập Trên 1 Màn Hình) -->
+            <div class="kino-v3-col-right">
+              <div class="kino-v3-learn-hub">
+
+                <!-- ✍️ 1. DIKTAT CARD -->
+                <div class="kino-v3-card">
+                  <div class="kino-v3-card-header">
+                    <div class="kino-v3-card-title">
+                      <span>✍️ 1. Chép chính tả (Diktat)</span>
+                    </div>
+                    <!-- Quick German Characters -->
+                    <div class="kino-special-chars-bar">
+                      <button class="kino-char-btn" onclick="insertKinoChar('ä')">ä</button>
+                      <button class="kino-char-btn" onclick="insertKinoChar('ö')">ö</button>
+                      <button class="kino-char-btn" onclick="insertKinoChar('ü')">ü</button>
+                      <button class="kino-char-btn" onclick="insertKinoChar('ß')">ß</button>
+                      <button class="kino-char-btn" onclick="insertKinoChar('Ä')">Ä</button>
+                      <button class="kino-char-btn" onclick="insertKinoChar('Ö')">Ö</button>
+                      <button class="kino-char-btn" onclick="insertKinoChar('Ü')">Ü</button>
+                    </div>
+                  </div>
+
+                  <div class="kino-diktat-input-box">
+                    <textarea id="kinoDiktatInput" class="kino-diktat-textarea" rows="2" placeholder="Nghe câu thoại và gõ tiếng Đức vào đây..." spellcheck="false" autocomplete="off"></textarea>
+                  </div>
+
+                  <div class="kino-diktat-actions-row">
+                    <button class="kino-action-btn-main primary" id="kinoCheckBtn" onclick="checkKinoDiktat()">
+                      ⌨️ Kiểm tra (Enter)
+                    </button>
+                    <button class="kino-action-btn-main outline" id="kinoHintBtn" onclick="giveKinoFirstLetterHint()">
+                      💡 Gợi ý chữ đầu
+                    </button>
+                    <button class="kino-action-btn-main outline" id="kinoAnswerBtn" onclick="revealKinoAnswer()">
+                      👁️ Xem đáp án
+                    </button>
+                  </div>
+
+                  <!-- Feedback & Word Diff Box -->
+                  <div class="kino-v3-feedback-card hidden" id="kinoFeedbackBox">
+                    <div class="kino-v3-fb-status" id="kinoFeedbackStatus"></div>
+                    <div class="kino-word-diff-box" id="kinoWordDiffBox"></div>
+                    <div class="kino-copy-to-pass-box hidden" id="kinoCopyToPassBox"></div>
+                    <div style="font-size:12px;color:#94a3b8;margin-top:4px;" id="kinoFeedbackVi"></div>
+                  </div>
+                </div>
+
+                <!-- 🎙️ 2. DUBBING CARD -->
+                <div class="kino-v3-card kino-v3-dub-card">
+                  <div class="kino-v3-card-header">
+                    <div class="kino-v3-card-title">
+                      <span>🎙️ 2. Lồng tiếng nhân vật (Synchronsprechen)</span>
+                    </div>
+                    <div class="kino-dub-mute-toggle-row">
+                      <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+                        <input type="checkbox" id="kinoDubKeepAudioCheck">
+                        <span>🔉 Giữ tiếng nền 15%</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="kino-dub-target-quote">
+                    <div class="kino-dub-quote-de" id="kinoDubTargetDe">Fertig! Okay. Klingel-klingel! Klingel-klingel!</div>
+                    <div class="kino-dub-quote-vi" id="kinoDubTargetVi">Xong rồi! Được rồi. Kính coong! Kính coong!</div>
+                  </div>
+
+                  <div class="kino-dub-btn-wrap">
+                    <button class="kino-btn-record-main" id="kinoDubRecordBtn" onclick="startKinoDubbingProcess()">
+                      <span class="mic-icon">🎙️</span>
+                      <span id="kinoDubBtnText">Bắt đầu lồng tiếng câu này</span>
+                    </button>
+
+                    <!-- Replay actions -->
+                    <div class="kino-dub-replay-row hidden" id="kinoDubReplayRow">
+                      <button class="kino-action-btn-main outline" onclick="playKinoCurrentSegment()">
+                        👂 Giọng gốc
+                      </button>
+                      <button class="kino-action-btn-main primary" onclick="replayKinoDubbing()">
+                        🎙️ Giọng của bạn
+                      </button>
+                      <button class="kino-action-btn-main outline" onclick="startKinoDubbingProcess()">
+                        🔄 Thu âm lại
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="kino-dub-status-tip" id="kinoDubStatusTip">
+                    Nhấn nút Micro để đếm ngược 3-2-1 và nói theo nhân vật!
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 4. BOTTOM: 72-SENTENCE LINEAR UNLOCK TIMELINE -->
+          <div class="kino-v3-timeline-card">
+            <div class="kino-v3-timeline-header" onclick="toggleKinoTimeline()">
+              <div class="kino-v3-timeline-title">
+                <span>📜 Kịch bản 72 câu thoại (Mở khóa tuần tự)</span>
+                <span style="color:#10b981;font-size:12px;" id="kinoTimelineStats">(Đã mở khóa: 1 / 72 câu)</span>
+              </div>
+              <button class="kino-top-action-btn" id="kinoTimelineCollapseBtn">Thu gọn ▲</button>
+            </div>
+            <div class="kino-v3-timeline-body" id="kinoTimelineBody">
+              <div class="kino-v3-timeline-list" id="kinoTimelineList">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- FULL MOVIE MODAL (06:59 Mộc Không Phụ Đề) -->
+        <div class="kino-full-modal hidden" id="kinoFullMovieModal">
+          <div class="kino-full-modal-header">
+            <div style="font-weight:700;font-size:16px;">🍿 Bluey – Pizza-Schwestern (Phát toàn bộ 06:59 mộc không phụ đề)</div>
+            <button class="kino-top-action-btn" onclick="closeKinoFullMovieModal()">✖️ Quay lại bài học</button>
+          </div>
+          <div class="kino-full-modal-body">
+            <video id="kinoFullPlayer" controls playsinline src="video/pizzaschwester.mp4"></video>
+          </div>
+        </div>
+
+        <!-- WELCOME BACK MODAL -->
+        <div class="kino-dialog-overlay hidden" id="kinoWelcomeModal">
+          <div class="kino-dialog-box">
+            <div style="font-size:40px;margin-bottom:8px;">🐾</div>
+            <h3 style="margin:0 0 6px;color:#f59e0b;">Chào mừng quay trở lại Rạp Kino!</h3>
+            <p style="font-size:14px;color:#cbd5e1;margin-bottom:16px;" id="kinoWelcomeMsg">
+              Bạn đang học dở bài <b>Bluey – Pizza-Schwestern</b>.
+            </p>
+            <div style="display:flex;gap:10px;">
+              <button class="kino-action-btn-main outline" style="flex:1;" onclick="kinoResumeStartOver()">
+                🔁 Ôn từ Câu 1
+              </button>
+              <button class="kino-action-btn-main primary" style="flex:1;" onclick="kinoResumeContinue()">
+                ▶️ Học tiếp câu mới
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 100% VICTORY SCREEN MODAL -->
+        <div class="kino-dialog-overlay hidden" id="kinoVictoryModal">
+          <div class="kino-dialog-box" style="max-width:500px;">
+            <div style="font-size:48px;margin-bottom:8px;">👑 🎉</div>
+            <h2 style="margin:0 0 6px;color:#f59e0b;">XUẤT SẮC! HOÀN THÀNH 100%!</h2>
+            <p style="font-size:14px;color:#cbd5e1;line-height:1.5;margin-bottom:18px;">
+              Bạn đã hoàn thành trọn vẹn cả <b>72 câu thoại</b> của tập phim <b>Bluey – Pizza-Schwestern</b>! Bạn đã bắt tai cực tốt và lồng tiếng như một diễn viên thực thụ!
+            </p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <button class="kino-action-btn-main primary" style="justify-content:center;padding:12px;" onclick="playKinoMixtape()">
+                🎬 Xem toàn bộ phim lồng tiếng bằng giọng của bạn (Mixtape)
+              </button>
+              <button class="kino-action-btn-main outline" style="justify-content:center;" onclick="reviewCurrentVideoVocab()">
+                📇 Ôn 16 cụm từ đắt giá của bài này qua Flashcards
+              </button>
+              <button class="kino-top-action-btn" style="justify-content:center;margin-top:6px;" onclick="closeKinoVictoryModal()">
+                Đóng thông báo
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>

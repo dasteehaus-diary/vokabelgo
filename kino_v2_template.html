@@ -1,0 +1,180 @@
+      <!-- KINO STUDIO V2: CLEAN & ROBUST (Bluey - Pizza-Schwestern) -->
+      <section id="diktatMode" class="hidden">
+        <div class="kino-v2-container">
+          
+          <!-- Top Header Row -->
+          <div class="kino-v2-header">
+            <div class="kino-v2-header-left">
+              <span class="kino-v2-badge">🎬 RẠP PHIM KINO · BÀI 1</span>
+              <h2 class="kino-v2-title">🍕 Bluey – Pizza-Schwestern (Hai chị em bán Pizza)</h2>
+            </div>
+            <div class="kino-v2-header-right">
+              <span class="kino-v2-progress-pill" id="kinoProgressText">Câu 1 / 72</span>
+              <span class="kino-v2-done-badge" id="kinoDoneCount">✅ Đã thuộc: 0 / 72 câu</span>
+            </div>
+          </div>
+
+          <!-- Overall Progress Bar -->
+          <div class="kino-v2-progress-track">
+            <div class="kino-v2-progress-fill" id="kinoProgressFill" style="width: 1.4%;"></div>
+          </div>
+
+          <!-- Main Layout Grid: Left = Video & Subtitles, Right = Diktat & Dubbing -->
+          <div class="kino-v2-grid">
+            
+            <!-- LEFT: Video Card -->
+            <div class="kino-v2-col-video">
+              <div class="kino-v2-video-card">
+                <div class="kino-v2-video-box">
+                  <video id="kinoMainVideo" playsinline preload="auto" src="video/pizzaschwester.mp4"></video>
+                  
+                  <!-- Floating Subtitle Banner on Video -->
+                  <div class="kino-v2-sub-overlay" id="kinoSubOverlay">
+                    <div class="kino-v2-sub-de" id="kinoOverlayDe">Fertig! Okay. Klingel-klingel! Klingel-klingel!</div>
+                    <div class="kino-v2-sub-vi" id="kinoOverlayVi">Xong rồi! Được rồi. Kính coong! Kính coong!</div>
+                  </div>
+
+                  <!-- Dubbing Active Recording Overlay -->
+                  <div class="kino-v2-recording-hud hidden" id="kinoRecordingHud">
+                    <div class="kino-hud-pulse">🔴 ĐANG LỒNG TIẾNG...</div>
+                    <div class="kino-hud-sub" id="kinoHudSub">Nói theo nhân vật nhé!</div>
+                  </div>
+                </div>
+
+                <!-- Video Controls Bar -->
+                <div class="kino-v2-controls">
+                  <div class="kino-v2-ctrl-left">
+                    <button class="kino-ctrl-btn" id="kinoPrevBtn" title="Câu trước (Phím Mũi tên trái)">
+                      <span>◀</span> Câu trước
+                    </button>
+                    <button class="kino-ctrl-btn primary" id="kinoPlayLoopBtn" title="Nghe lại câu này (Phím Space)">
+                      <span id="kinoPlayLoopIcon">🔁</span> <span id="kinoPlayLoopText">Nghe câu này</span>
+                    </button>
+                    <button class="kino-ctrl-btn" id="kinoNextBtn" title="Câu tiếp theo (Phím Mũi tên phải)">
+                      Câu tiếp <span>▶</span>
+                    </button>
+                  </div>
+                  <div class="kino-v2-ctrl-right">
+                    <button class="kino-ctrl-btn toggle-btn" id="kinoSpeedBtn" title="Đổi tốc độ phát">
+                      🐢 <span>1.0x</span>
+                    </button>
+                    <button class="kino-ctrl-btn toggle-btn" id="kinoToggleSubBtn" title="Bật/Tắt phụ đề trên video">
+                      👁️ <span>Phụ đề</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sentence Info Bar -->
+              <div class="kino-v2-sentence-bar">
+                <span class="kino-time-tag" id="kinoTimeTag">⏱️ 00:27.7 ➔ 00:32.8 (5.1s)</span>
+                <span class="kino-shortcut-tip">💡 Mẹo: Dùng phím <b>Space</b> để nghe lại, <b>Enter</b> để kiểm tra câu</span>
+              </div>
+            </div>
+
+            <!-- RIGHT: Learning Hub (Diktat & Dubbing) -->
+            <div class="kino-v2-col-learn">
+              
+              <!-- Mode Tabs: Diktat vs Dubbing -->
+              <div class="kino-learn-tabs">
+                <button class="kino-tab-btn active" id="tabBtnDiktat" onclick="switchKinoLearnTab('diktat')">
+                  ✍️ <span>1. Chép chính tả (Diktat)</span>
+                </button>
+                <button class="kino-tab-btn" id="tabBtnDub" onclick="switchKinoLearnTab('dub')">
+                  🎙️ <span>2. Lồng tiếng (Dubbing)</span>
+                </button>
+              </div>
+
+              <!-- TAB 1: DIKTAT PANEL -->
+              <div class="kino-tab-content" id="panelDiktat">
+                <div class="kino-diktat-card">
+                  <div class="kino-diktat-prompt">
+                    <span>Nghe câu thoại và gõ lại tiếng Đức:</span>
+                    <button class="kino-mini-btn" id="kinoHintBtn" onclick="giveKinoHint()" title="Gợi ý chữ tiếp theo">
+                      💡 Gợi ý từ
+                    </button>
+                  </div>
+
+                  <div class="kino-input-wrap">
+                    <textarea id="kinoDiktatInput" class="kino-textarea" rows="2" placeholder="Gõ câu bạn nghe được vào đây (hoặc nhấn Enter)..." spellcheck="false" autocomplete="off"></textarea>
+                  </div>
+
+                  <div class="kino-diktat-actions">
+                    <button class="kino-action-btn primary" id="kinoCheckBtn" onclick="checkKinoDiktat()">
+                      ⌨️ Kiểm tra (Enter)
+                    </button>
+                    <button class="kino-action-btn outline" id="kinoShowAnswerBtn" onclick="revealKinoAnswer()">
+                      👁️ Xem đáp án & Nghĩa
+                    </button>
+                  </div>
+
+                  <!-- Feedback & Answer Box -->
+                  <div class="kino-feedback-box hidden" id="kinoFeedbackBox">
+                    <div class="kino-feedback-status" id="kinoFeedbackStatus"></div>
+                    <div class="kino-feedback-detail">
+                      <div class="kino-de-text" id="kinoAnswerDe"></div>
+                      <div class="kino-vi-text" id="kinoAnswerVi"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 2: DUBBING PANEL -->
+              <div class="kino-tab-content hidden" id="panelDub">
+                <div class="kino-dub-card">
+                  <div class="kino-dub-header">
+                    <h4>🎙️ Lồng tiếng cho nhân vật (Synchronsprechen)</h4>
+                    <p>Web sẽ tắt tiếng gốc và phát video để bạn tự nói câu này. Sau đó bạn sẽ được nghe lại thành quả!</p>
+                  </div>
+
+                  <div class="kino-dub-target-box">
+                    <div class="kino-dub-target-label">Câu thoại cần lồng tiếng:</div>
+                    <div class="kino-dub-target-de" id="kinoDubTargetDe">Fertig! Okay. Klingel-klingel! Klingel-klingel!</div>
+                    <div class="kino-dub-target-vi" id="kinoDubTargetVi">Xong rồi! Được rồi. Kính coong! Kính coong!</div>
+                  </div>
+
+                  <div class="kino-dub-actions">
+                    <button class="kino-dub-record-btn" id="kinoDubRecordBtn" onclick="toggleKinoDubbing()">
+                      <span class="mic-icon">🎙️</span>
+                      <span id="kinoDubBtnText">Bắt đầu lồng tiếng</span>
+                    </button>
+
+                    <div class="kino-dub-result-actions hidden" id="kinoDubResultActions">
+                      <button class="kino-action-btn primary" id="kinoDubReplayBtn" onclick="replayKinoDubbing()">
+                        ▶️ Nghe lại bạn lồng tiếng
+                      </button>
+                      <button class="kino-action-btn outline" onclick="toggleKinoDubbing()">
+                        🎙️ Thu âm lại
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="kino-dub-status" id="kinoDubStatus">
+                    Nhấn nút Micro phía trên để bắt đầu!
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Bottom: Timeline List of 72 Sentences -->
+          <div class="kino-v2-timeline-card">
+            <div class="kino-timeline-header" onclick="toggleKinoTimeline()">
+              <div class="kino-timeline-title">
+                <span>📜 Kịch bản 72 câu thoại của tập phim</span>
+                <span class="kino-timeline-count" id="kinoTimelineProgress">(Đã hoàn thành: 0 / 72 câu)</span>
+              </div>
+              <button class="kino-collapse-btn" id="kinoCollapseBtn">Mở rộng ▼</button>
+            </div>
+
+            <div class="kino-timeline-body" id="kinoTimelineBody">
+              <div class="kino-timeline-list" id="kinoTimelineList">
+                <!-- Rendered dynamically via JavaScript -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>

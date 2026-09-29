@@ -1,0 +1,436 @@
+[
+  {
+    "term": "der Supermarkt",
+    "meaning": "siêu thị lớn bán thực phẩm và đồ dùng gia đình",
+    "collocations": [
+      "in den Supermarkt gehen",
+      "im Supermarkt einkaufen",
+      "der örtliche Supermarkt"
+    ],
+    "grammar": "der Supermarkt, die Supermärkte (m.)",
+    "example": "Peppa und ihre Familie sind in den Supermarkt gegangen, um den Wocheneinkauf zu erledigen.",
+    "note": "Từ ghép: super + der Markt (chợ). Chú ý số nhiều biến âm: die Supermärkte.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Alltag",
+      "Einkaufen"
+    ]
+  },
+  {
+    "term": "den Wocheneinkauf erledigen",
+    "meaning": "đi mua sắm đồ dùng dự trữ cho cả tuần",
+    "collocations": [
+      "den Einkauf erledigen",
+      "Aufgaben erledigen",
+      "großer Wocheneinkauf"
+    ],
+    "grammar": "erledigen + Akk. (erledigt, erledigte, hat erledigt)",
+    "example": "Sie sind in den Supermarkt gegangen, um den Wocheneinkauf zu erledigen.",
+    "note": "Người Đức thường có thói quen đi 'Wocheneinkauf' một lần vào cuối tuần cho cả gia đình.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "die Lebensmittel scannen",
+    "meaning": "quét mã vạch các loại thực phẩm / nhu yếu phẩm",
+    "collocations": [
+      "Lebensmittel einkaufen",
+      "Preise scannen",
+      "an der Kasse scannen"
+    ],
+    "grammar": "das Lebensmittel, die Lebensmittel (n.); scannen (scannt, scannte, hat gescannt)",
+    "example": "Mit diesem speziellen Gerät können Sie die Lebensmittel während des Einkaufs scannen.",
+    "note": "das Leben (sự sống) + das Mittel (phương tiện) -> thực phẩm nuôi sống con người.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Einkaufen"
+    ]
+  },
+  {
+    "term": "der Einkaufswagen",
+    "meaning": "chiếc xe đẩy hàng chuyên dùng trong siêu thị",
+    "collocations": [
+      "einen Einkaufswagen schieben",
+      "den Einkaufswagen vollpacken",
+      "eine Münze für den Einkaufswagen"
+    ],
+    "grammar": "der Einkaufswagen, die Einkaufswagen (m.)",
+    "example": "Dieser Einkaufswagen hat ein mega wackeliges Rad, Mama!",
+    "note": "Từ ghép: der Einkauf (việc mua sắm) + der Wagen (chiếc xe).",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "ein wackeliges Rad",
+    "meaning": "bánh xe bị lung lay, lỏng lẻo, lắc lư",
+    "collocations": [
+      "das Rad wackelt",
+      "ein wackeliger Tisch",
+      "weniger wackelig"
+    ],
+    "grammar": "wackelig (Tính từ); das Rad, die Räder (n.)",
+    "example": "Nimm den hier, Peppa. Dieser Einkaufswagen ist weniger wackelig!",
+    "note": "wackeln (động từ: lắc lư) -> wackelig (tính từ: lung lay, không vững).",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "das Toilettenpapier",
+    "meaning": "giấy vệ sinh (dạng cuộn)",
+    "collocations": [
+      "eine Rolle Toilettenpapier",
+      "Klopapier kaufen",
+      "eine Packung Toilettenpapier"
+    ],
+    "grammar": "das Toilettenpapier, die Toilettenpapiere (n.)",
+    "example": "Und als Letztes fehlt uns auf dem Einkaufszettel nur noch Toilettenpapier!",
+    "note": "Trong khẩu ngữ hàng ngày người Đức rất hay gọi tắt là das Klopapier.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "die Selbstbedienungskasse",
+    "meaning": "quầy thanh toán tự phục vụ / quầy tự quét mã",
+    "collocations": [
+      "an der SB-Kasse bezahlen",
+      "Selbstbedienung wählen",
+      "schnelle Selbstbedienungskasse"
+    ],
+    "grammar": "die Selbstbedienungskasse, die Selbstbedienungskassen (f.)",
+    "example": "Ihr könnt die moderne Selbstbedienungskasse benutzen und alles selbst scannen.",
+    "note": "Viết tắt là SB-Kasse (selbst = tự mình, bedienen = phục vụ).",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Technik"
+    ]
+  },
+  {
+    "term": "der Einkaufsroboter",
+    "meaning": "robot hỗ trợ mua sắm / máy thanh toán thông minh",
+    "collocations": [
+      "einen Roboter bedienen",
+      "automatischer Roboter",
+      "moderner Einkaufsroboter"
+    ],
+    "grammar": "der Einkaufsroboter, die Einkaufsroboter (m.)",
+    "example": "Oh, was für ein großer Einkaufsroboter! Wollt ihr zwei alles einscannen?",
+    "note": "Từ ghép: der Einkauf (mua sắm) + der Roboter (người máy).",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Technik"
+    ]
+  },
+  {
+    "term": "der Einpackbereich",
+    "meaning": "khu vực đặt túi đóng gói hàng sau khi quét mã",
+    "collocations": [
+      "in den Einpackbereich stellen",
+      "Waren in den Einpackbereich legen",
+      "Gewichtssensor im Einpackbereich"
+    ],
+    "grammar": "der Einpackbereich, die Einpackbereiche (m.)",
+    "example": "Stellt die Einkaufstaschen bitte zuerst in den Einpackbereich.",
+    "note": "Khu vực cân trọng lượng tự động của máy thanh toán để kiểm tra hàng.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Technik"
+    ]
+  },
+  {
+    "term": "die Ananas",
+    "meaning": "quả dứa / trái thơm",
+    "collocations": [
+      "frische Ananas",
+      "Ananas schälen",
+      "eine süße Ananas"
+    ],
+    "grammar": "die Ananas, die Ananas / Ananasse (f.)",
+    "example": "Die Ananas hat kein Etikett, man muss sie auf dem Bildschirm suchen.",
+    "note": "Quả dứa ở siêu thị không dán tem vạch nên khách phải tự chọn trên màn hình cảm ứng.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Essen"
+    ]
+  },
+  {
+    "term": "der Spielzeugautomat",
+    "meaning": "máy bán đồ chơi tự động (quay bóng đồ chơi)",
+    "collocations": [
+      "am Spielzeugautomaten drehen",
+      "den Hebel nach unten drücken",
+      "ein Spielzeug aus dem Automaten"
+    ],
+    "grammar": "der Spielzeugautomat, die Spielzeugautomaten (m., danh từ yếu N-Deklination)",
+    "example": "Vor dem Supermarkt steht ein bunter Spielzeugautomat voller Überraschungsbälle.",
+    "note": "das Spielzeug (đồ chơi) + der Automat (máy bán hàng tự động).",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Freizeit"
+    ]
+  },
+  {
+    "term": "der Jeton",
+    "meaning": "đồng xu xèng dùng để nhét vào máy trò chơi / máy bán đồ",
+    "collocations": [
+      "einen Jeton kaufen",
+      "den Jeton einwerfen",
+      "zwei Jetons bekommen"
+    ],
+    "grammar": "der Jeton, die Jetons (m., từ mượn tiếng Pháp, phát âm zhe-tong)",
+    "example": "Ihr kauft einen Jeton und drückt ihn in den Geldschlitz des Automaten.",
+    "note": "Đồng xu kim loại hoặc nhựa thay thế tiền mặt tại các khu vui chơi.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "der Geldschlitz",
+    "meaning": "khe nhét tiền xu / khe nhét xèng",
+    "collocations": [
+      "eine Münze in den Geldschlitz stecken",
+      "den Jeton in den Schlitz werfen",
+      "der Automatenschlitz"
+    ],
+    "grammar": "der Geldschlitz, die Geldschlitze (m.)",
+    "example": "Drückt den Jeton einfach fest in den Geldschlitz hinein!",
+    "note": "das Geld (tiền) + der Schlitz (khe hở, rãnh hẹp).",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Technik"
+    ]
+  },
+  {
+    "term": "der Schraubenzieher",
+    "meaning": "chiếc tua-vít / tuốc nơ vít",
+    "collocations": [
+      "einen Schraubenzieher benutzen",
+      "den Schraubenzieher ansetzen",
+      "ein nützliches Werkzeug"
+    ],
+    "grammar": "der Schraubenzieher, die Schraubenzieher (m.)",
+    "example": "Schorschs Preis ist ein kleiner Spielzeug-Schraubenzieher. Das ist nützlich!",
+    "note": "die Schraube (ốc vít) + ziehen (kéo/vặn). Người Đức cũng gọi là der Schraubendreher.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Technik"
+    ]
+  },
+  {
+    "term": "schmelzen",
+    "meaning": "tan chảy (kem, băng, bơ)",
+    "collocations": [
+      "das Eis schmilzt",
+      "in der Sonne schmelzen",
+      "schnell schmelzen"
+    ],
+    "grammar": "nội động từ (schmilzt, schmolz, ist geschmolzen; đi với sein)",
+    "example": "Das sind tolle Spielzeuge, aber unsere Eiscreme beginnt schon zu schmelzen!",
+    "note": "Động từ bất quy tắc chỉ sự biến đổi trạng thái từ rắn sang lỏng.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Grammatik"
+    ]
+  },
+  {
+    "term": "etwas reparieren",
+    "meaning": "sửa chữa đồ vật bị hỏng hóc",
+    "collocations": [
+      "den Automaten reparieren",
+      "das Fahrrad reparieren",
+      "selbst reparieren"
+    ],
+    "grammar": "reparieren + Akk. (repariert, reparierte, hat repariert)",
+    "example": "Keine Sorge, ich repariere den Automaten schnell mit dem Schraubenzieher!",
+    "note": "Động từ có đuôi -ieren (quá khứ phân từ không có tiền tố ge-: repariert).",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "ein Spielzeug entwerfen",
+    "meaning": "tự tay thiết kế / tạo mẫu một món đồ chơi",
+    "collocations": [
+      "Pläne entwerfen",
+      "neue Spielsachen entwerfen",
+      "kreativ entwerfen"
+    ],
+    "grammar": "entwerfen + Akk. (entwirft, entwarf, hat entworfen)",
+    "example": "Hier könnt ihr euer ganz eigenes Spezialspielzeug selbst entwerfen!",
+    "note": "Động từ biểu đạt hoạt động sáng tạo, thiết kế bản vẽ hoặc ý tưởng.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Kreativität"
+    ]
+  },
+  {
+    "term": "verschiedene Vorlieben",
+    "meaning": "những sở thích, gu cá nhân khác nhau",
+    "collocations": [
+      "eine Vorliebe für etwas haben",
+      "persönliche Vorlieben",
+      "verschiedene Geschmäcker"
+    ],
+    "grammar": "die Vorliebe, die Vorlieben (f.)",
+    "example": "Peppa und Schorsch haben beim Spielzeugdesign sehr verschiedene Vorlieben.",
+    "note": "vor (trước) + die Liebe (tình yêu) -> thiên hướng yêu thích điều gì đó hơn.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Gefühle"
+    ]
+  },
+  {
+    "term": "die Outfits vertauschen",
+    "meaning": "đổi nhầm trang phục áo quần cho nhau",
+    "collocations": [
+      "die Rollen vertauschen",
+      "versehentlich vertauschen",
+      "Plätze vertauschen"
+    ],
+    "grammar": "vertauschen + Akk. (vertauschte, hat vertauscht)",
+    "example": "Oje, die Maschine hat die Outfits der beiden Puppen vertauscht!",
+    "note": "Tiền tố ver- trong vertauschen mang ý nghĩa nhầm lẫn, tráo đổi sai vị trí.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "der Magen knurrt",
+    "meaning": "bụng réo ùng ục, cồn cào vì đói bụng",
+    "collocations": [
+      "vor Hunger knurren",
+      "knurrende Geräusche",
+      "Hunger haben"
+    ],
+    "grammar": "der Magen, die Mägen (m.); knurren (knurrte, hat geknurrt)",
+    "example": "Peppa hat großen Hunger, und jetzt knurrt ihr schon der Magen!",
+    "note": "knurren gốc là tiếng gầm gừ của loài chó; khi nói về bụng = bụng đói réo.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Essen",
+      "Redewendung"
+    ]
+  },
+  {
+    "term": "Zwiebeln schneiden",
+    "meaning": "thái / cắt củ hành tây",
+    "collocations": [
+      "Zwiebeln hacken",
+      "Gemüse schneiden",
+      "fein schneiden"
+    ],
+    "grammar": "die Zwiebel, die Zwiebeln (f.); schneiden (schneidet, schnitt, hat geschnitten)",
+    "example": "Weil das Gemüse sauber ist, können wir jetzt vorsichtig die Zwiebeln schneiden.",
+    "note": "Thao tác làm bếp quen thuộc khi chuẩn bị nguyên liệu nấu ăn.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Kochen"
+    ]
+  },
+  {
+    "term": "die Schutzbrille",
+    "meaning": "kính bảo hộ / kính bảo vệ mắt",
+    "collocations": [
+      "eine Schutzbrille tragen",
+      "die Schutzbrille aufsetzen",
+      "Schutz vor Spritzern"
+    ],
+    "grammar": "die Schutzbrille, die Schutzbrillen (f.)",
+    "example": "Zum Glück habe ich beim Kochen noch meine Schutzbrille auf!",
+    "note": "der Schutz (sự bảo vệ) + die Brille (kính mắt). Dùng để chống cay mắt khi thái hành.",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "die Avocado zerdrücken",
+    "meaning": "dầm / nghiền nhuyễn quả bơ",
+    "collocations": [
+      "mit einer Gabel zerdrücken",
+      "Guacamole zubereiten",
+      "weiche Avocado"
+    ],
+    "grammar": "zerdrücken + Akk. (zerdrückte, hat zerdrückt); die Avocado, die Avocados (f.)",
+    "example": "Peppa macht das Zerdrücken der reifen Avocado für die Guacamole riesigen Spaß.",
+    "note": "Tiền tố zer- mang nghĩa làm nát vụn (zerdrücken = dùng lực ép nát).",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Kochen"
+    ]
+  },
+  {
+    "term": "die Füllung",
+    "meaning": "phần nhân bánh / nhân đồ ăn bên trong",
+    "collocations": [
+      "die Füllung für Tacos",
+      "leckere Füllung",
+      "die Füllung herausfallen"
+    ],
+    "grammar": "die Füllung, die Füllungen (f.)",
+    "example": "Ihnen ist beim Essen die leckere Füllung aus dem Taco auf den Teller geflutscht.",
+    "note": "füllen (làm đầy, nhồi nhét) -> die Füllung (phần nhân được nhồi vào).",
+    "deck": "🎬 Video: Peppa Wutz – Im Supermarkt",
+    "tags": [
+      "Video",
+      "Peppa",
+      "Essen"
+    ]
+  }
+]

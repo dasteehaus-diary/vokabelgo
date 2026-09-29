@@ -1,0 +1,362 @@
+[
+  {
+    "term": "der Babysitter",
+    "meaning": "người trông trẻ (khi bố mẹ vắng nhà)",
+    "collocations": [
+      "einen Babysitter rufen",
+      "als Babysitter arbeiten",
+      "ein zuverlässiger Babysitter"
+    ],
+    "grammar": "der Babysitter, die Babysitter (m.) / die Babysitterin (f.)",
+    "example": "Bluey lässt sich ungern von Babysittern ins Bett bringen.",
+    "note": "Từ mượn tiếng Anh được dùng phổ biến trong tiếng Đức; động từ là babysitten.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Familie"
+    ]
+  },
+  {
+    "term": "jemanden ins Bett bringen",
+    "meaning": "dỗ / đưa ai đó đi ngủ (thường dùng cho trẻ nhỏ)",
+    "collocations": [
+      "die Kinder ins Bett bringen",
+      "eine Gute-Nacht-Geschichte vorlesen",
+      "zur Schlafenszeit"
+    ],
+    "grammar": "ins Bett bringen + Akk. (bringt, brachte, hat gebracht)",
+    "example": "Bringst du uns heute Abend ins Bett, Onkel Rad? Aber hallo!",
+    "note": "Cụm động từ chỉ thói quen dỗ trẻ ngủ mỗi tối của gia đình Đức.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "die Patentante",
+    "meaning": "mẹ đỡ đầu (trong lễ rửa tội / theo phong tục phương Tây)",
+    "collocations": [
+      "liebe Patentante",
+      "der Patenonkel",
+      "das Patenkind"
+    ],
+    "grammar": "die Patentante, die Patentanten (f.)",
+    "example": "Frisky ist Blueys liebe Patentante, die heute auf die Kinder aufpasst.",
+    "note": "der Pate (cha đỡ đầu) -> die Patin / die Patentante (mẹ đỡ đầu).",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Familie"
+    ]
+  },
+  {
+    "term": "aufpassen auf...",
+    "meaning": "để mắt, trông nom, chăm sóc cẩn thận",
+    "collocations": [
+      "auf die Kinder aufpassen",
+      "auf das Haus aufpassen",
+      "gut aufpassen"
+    ],
+    "grammar": "aufpassen auf + Akk. (động từ tách: passt auf, passte auf, hat aufgepasst)",
+    "example": "Onkel Rad hat zugestimmt, dass er heute auf die Mädchen aufpasst.",
+    "note": "Ngoài nghĩa trông nom, 'Pass auf!' còn là câu cửa miệng: 'Cẩn thận đấy!'.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "in letzter Minute",
+    "meaning": "vào phút chót, vào khoảnh khắc cận kề cuối cùng",
+    "collocations": [
+      "in letzter Sekunde",
+      "im letzten Moment",
+      "etwas in letzter Minute absagen"
+    ],
+    "grammar": "Cụm trạng ngữ thời gian (Dativ: in der letzten Minute)",
+    "example": "Onkel Rad hat in letzter Minute zugestimmt, einzuspringen.",
+    "note": "Thành ngữ diễn đạt việc xảy ra sát giờ mà không có kế hoạch trước.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Zeit"
+    ]
+  },
+  {
+    "term": "jemanden besser kennenlernen",
+    "meaning": "tìm hiểu và làm quen với ai đó nhiều hơn",
+    "collocations": [
+      "neue Leute kennenlernen",
+      "sich näher kennenlernen",
+      "beim ersten Treffen"
+    ],
+    "grammar": "kennenlernen + Akk. (kết hợp: lernt kennen, lernte kennen, hat kennengelernt)",
+    "example": "Dann müsst ihr uns eben durch ein paar Fragen besser kennenlernen!",
+    "note": "Động từ ghép cực kỳ quan trọng trong giao tiếp tiếng Đức A1-B1.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Kommunikation"
+    ]
+  },
+  {
+    "term": "Fragen stellen und beantworten",
+    "meaning": "đặt câu hỏi và trả lời câu hỏi",
+    "collocations": [
+      "eine Frage stellen",
+      "Fragen beantworten",
+      "eine Frage beantworten"
+    ],
+    "grammar": "jemandem (Dat.) eine Frage stellen; etwas (Akk.) beantworten",
+    "example": "Ihr stellt uns Fragen über uns und wir werden sie euch beantworten.",
+    "note": "Chú ý: Trong tiếng Đức người ta dùng 'eine Frage stellen' chứ không nói 'eine Frage machen'.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Kommunikation"
+    ]
+  },
+  {
+    "term": "die Bohrinsel",
+    "meaning": "giàn khoan dầu ngoài khơi / trên biển",
+    "collocations": [
+      "auf einer Bohrinsel arbeiten",
+      "eine Offshore-Bohrinsel",
+      "mitten im Meer"
+    ],
+    "grammar": "die Bohrinsel, die Bohrinseln (f.)",
+    "example": "Onkel Rad arbeitet auf einer Bohrinsel, deshalb ist er oft monatelang weg.",
+    "note": "Từ ghép: bohren (khoan) + die Insel (hòn đảo).",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Beruf"
+    ]
+  },
+  {
+    "term": "die wahre Liebe",
+    "meaning": "tình yêu đích thực, tình yêu chân chính",
+    "collocations": [
+      "wahre Liebe finden",
+      "an die wahre Liebe glauben",
+      "ewige Liebe"
+    ],
+    "grammar": "die wahre Liebe (f., số ít)",
+    "example": "Bingo glaubt fest daran: Die wahre Liebe hält für immer!",
+    "note": "wahr (thật, đúng đắn) + die Liebe (tình yêu).",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Gefühle"
+    ]
+  },
+  {
+    "term": "für immer halten",
+    "meaning": "kéo dài mãi mãi, bền vững vĩnh cửu",
+    "collocations": [
+      "ewig halten",
+      "lange halten",
+      "nicht für immer halten"
+    ],
+    "grammar": "halten (hỗn hợp: hält, hielt, hat gehalten)",
+    "example": "Hält die wahre Liebe denn etwa nicht für immer?",
+    "note": "Động từ 'halten' ở đây mang nghĩa duy trì sự bền lâu, không phai nhạt.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Redewendung"
+    ]
+  },
+  {
+    "term": "das Lagerfeuer",
+    "meaning": "ngọn lửa trại, đống lửa sưởi ấm ngoài trời",
+    "collocations": [
+      "am Lagerfeuer sitzen",
+      "ein Lagerfeuer anzünden",
+      "Lieder am Lagerfeuer singen"
+    ],
+    "grammar": "das Lagerfeuer, die Lagerfeuer (n.)",
+    "example": "Komm, setz dich zu mir ans gemütliche Lagerfeuer!",
+    "note": "Từ ghép: das Lager (khu trại) + das Feuer (ngọn lửa).",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "den Drachen besiegen",
+    "meaning": "đánh bại con rồng",
+    "collocations": [
+      "den Feind besiegen",
+      "im Kampf besiegen",
+      "einen Gegner besiegen"
+    ],
+    "grammar": "besiegen + Akk. (besiegte, hat besiegt); der Drache, die Drachen (m., danh từ yếu)",
+    "example": "Und dann besiegte der tapfere Prinz den Drachen mit einem einzigen Schlag!",
+    "note": "der Drache là danh từ biến cách N-Deklination (den Drachen).",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Märchen"
+    ]
+  },
+  {
+    "term": "die Prinzessin retten",
+    "meaning": "giải cứu công chúa",
+    "collocations": [
+      "jemanden aus Gefahr retten",
+      "ein Leben retten",
+      "die Welt retten"
+    ],
+    "grammar": "retten + Akk. (rettete, hat gerettet); die Prinzessin, die Prinzessinnen (f.)",
+    "example": "Prinzessin, ich habe dich vor dem Ungeheuer gerettet!",
+    "note": "Mô-típ kinh điển trong các câu chuyện cổ tích Grimm của Đức.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Märchen"
+    ]
+  },
+  {
+    "term": "durcheinander",
+    "meaning": "rối bù, lộn xộn, xáo trộn",
+    "collocations": [
+      "die Haare sind durcheinander",
+      "alles durcheinanderbringen",
+      "völlig durcheinander sein"
+    ],
+    "grammar": "durcheinander (Phó từ / Tính từ vị ngữ)",
+    "example": "Sein Haar war ihr viel zu durcheinander und unordentlich.",
+    "note": "Diễn đạt trạng thái tóc tai bù xù hoặc tâm trí đang bối rối.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "sich gewöhnen an...",
+    "meaning": "dần quen với điều gì, thích nghi với sự thay đổi",
+    "collocations": [
+      "sich an die Kälte gewöhnen",
+      "sich schnell gewöhnen",
+      "an die neue Situation"
+    ],
+    "grammar": "sich gewöhnen an + Akk. (reflexives Verb: gewöhnte sich, hat sich gewöhnt)",
+    "example": "Das ist anfangs neu, aber du wirst dich ganz schnell dran gewöhnen!",
+    "note": "Cấu trúc phản thân + an + Akk rất thông dụng khi làm quen với hoàn cảnh mới.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Grammatik"
+    ]
+  },
+  {
+    "term": "glücklich und zufrieden",
+    "meaning": "hạnh phúc và mãn nguyện viên mãn",
+    "collocations": [
+      "zufrieden leben",
+      "glücklich verheiratet",
+      "ein zufriedenes Leben führen"
+    ],
+    "grammar": "Cặp tính từ cố định (Zwillingsformel)",
+    "example": "Die Prinzessin schnappt sich ihr Lieblingsbuch und lebt glücklich und zufrieden weiter.",
+    "note": "Thành ngữ sóng đôi tương đương câu kết truyện cổ tích: 'und lebten glücklich bis ans Ende ihrer Tage'.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Märchen"
+    ]
+  },
+  {
+    "term": "einschlafen",
+    "meaning": "ngủ thiếp đi, chìm vào giấc ngủ",
+    "collocations": [
+      "schnell einschlafen",
+      "friedlich einschlafen",
+      "beim Lesen einschlafen"
+    ],
+    "grammar": "động từ tách (schläft ein, schlief ein, ist eingeschlafen; đi với sein)",
+    "example": "Guckt ihr etwa laut fernsehen, wenn ich eingeschlafen bin?",
+    "note": "Phân biệt: schlafen (trạng thái ngủ - đi với haben) và einschlafen (bắt đầu ngủ - đi với sein).",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Grammatik"
+    ]
+  },
+  {
+    "term": "total gruselig",
+    "meaning": "cực kỳ rùng rợn, đáng sợ, kinh hãi",
+    "collocations": [
+      "ein gruseliger Film",
+      "eine gruselige Geschichte",
+      "gruselige Geräusche"
+    ],
+    "grammar": "gruselig (Tính từ); total (Phó từ tăng cấp)",
+    "example": "Oma hat sich damals im Wohnzimmer was total Gruseliges angeguckt!",
+    "note": "gruselig miêu tả cảm giác rùng mình, ớn lạnh như trong phim kinh dị.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Gefühle"
+    ]
+  },
+  {
+    "term": "etwas ausprobieren",
+    "meaning": "thử nghiệm, tự mình làm thử một điều mới mẻ",
+    "collocations": [
+      "etwas Neues ausprobieren",
+      "ein Rezept ausprobieren",
+      "einfach mal ausprobieren"
+    ],
+    "grammar": "ausprobieren + Akk. (động từ tách: probiert aus, probierte aus, hat ausprobiert)",
+    "example": "Du musst es einfach ausprobieren, sonst verpasst du die schönsten Dinge!",
+    "note": "Động từ tách khuyến khích ai đó dũng cảm thử trải nghiệm mới.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Alltag"
+    ]
+  },
+  {
+    "term": "festsitzen",
+    "meaning": "bị mắc kẹt, kẹt cứng không thể thoát ra",
+    "collocations": [
+      "im Stau festsitzen",
+      "am Flughafen festsitzen",
+      "in der Falle festsitzen"
+    ],
+    "grammar": "động từ tách (sitzt fest, saß fest, hat/ist festgesessen)",
+    "example": "Sonst wirst du den Rest deines Lebens bei dem stinkenden Drachen festsitzen!",
+    "note": "Nghĩa đen: kẹt xe, kẹt chỗ; nghĩa bóng: mắc kẹt trong nỗi sợ hoặc tình huống khó xử.",
+    "deck": "🎬 Video: Bluey – Die Babysitter",
+    "tags": [
+      "Video",
+      "Bluey",
+      "Redewendung"
+    ]
+  }
+]

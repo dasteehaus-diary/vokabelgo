@@ -1,0 +1,31 @@
+[
+  {
+    "type": "reorder",
+    "question": "Ordne: (Wir / gehen / am Samstag / mit Freunden / in den Park)",
+    "options": null,
+    "answer": "Wir gehen am Samstag mit Freunden in den Park.",
+    "explanation_vi": "am Samstag (TE) → mit Freunden (MO) → in den Park (LO)."
+  },
+  {
+    "type": "transform",
+    "question": "Chuyển câu sau sang phong cách Danh từ (Nominalstil):",
+    "sentence": "Weil er krank ist, bleibt er heute zu Hause.",
+    "input_placeholder": "Wegen seiner...",
+    "answer_patterns": [
+      "Wegen seiner Krankheit bleibt er heute zu Hause",
+      "Wegen Krankheit bleibt er heute zu Hause"
+    ],
+    "explanation_vi": "\"weil + er krank ist\" chuyển thành giới từ \"wegen\" + Genitiv. Danh từ của \"krank\" là \"die Krankheit\"."
+  },
+  {
+    "type": "transform",
+    "question": "Chuyển câu sau sang phong cách Động từ (Verbalstil):",
+    "sentence": "Trotz des starken Regens gehen wir im Park spazieren.",
+    "input_placeholder": "Obwohl es...",
+    "answer_patterns": [
+      "Obwohl es stark regnet gehen wir im Park spazieren",
+      "Obwohl es stark regnete gehen wir im Park spazieren"
+    ],
+    "explanation_vi": "\"Trotz\" chuyển thành liên từ \"obwohl\" tạo câu phụ. \"starker Regen\" chuyển thành động từ \"regnen\" và trạng từ \"stark\"."
+  }
+]

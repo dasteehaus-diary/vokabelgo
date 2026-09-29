@@ -1,0 +1,451 @@
+[
+  {
+    "id": 1,
+    "start": 28.7,
+    "end": 33.29,
+    "text": "Onkel Rad ist da! Hey, Onkel Rad, wo ist er?",
+    "vi": "Bác Rad đến rồi! Này, bác Rad, bác ấy đâu rồi?"
+  },
+  {
+    "id": 2,
+    "start": 33.3,
+    "end": 38.2,
+    "text": "Na, wie geht's dir, Bluey? Ich bin Bingo! Wirklich?",
+    "vi": "Nào, cháu thế nào rồi, Bluey? Cháu là Bingo mà! Thật hả?"
+  },
+  {
+    "id": 3,
+    "start": 38.28,
+    "end": 42.94,
+    "text": "Ja, das ist Bluey. Oh, klar, denn er ist blau! Ich bin ein Mädchen!",
+    "vi": "Vâng, kia mới là Bluey. Ồ, rõ rồi, vì nó màu xanh! Cháu là con gái cơ mà!"
+  },
+  {
+    "id": 4,
+    "start": 43.2,
+    "end": 47.34,
+    "text": "Oh ja, wusste ich doch. Bringst du uns heute Abend ins Bett, Onkel Rad? Aber hallo!",
+    "vi": "Ồ đúng rồi, bác biết mà. Tối nay bác cho bọn cháu đi ngủ nhé, bác Rad? Chắc chắn rồi!"
+  },
+  {
+    "id": 5,
+    "start": 47.44,
+    "end": 52.8,
+    "text": "Hurra! Nicht hurra. Bluey lässt sich ungern von Babysittern ins Bett bringen, Onkel Rad.",
+    "vi": "Hoan hô! Không hoan hô đâu. Bluey không thích để người trông trẻ cho đi ngủ đâu, bác Rad."
+  },
+  {
+    "id": 6,
+    "start": 53.02,
+    "end": 56.85,
+    "text": "Keine Sorge, Bluey! Wer könnte dich denn besser ins Bett bringen als dein Onkel Rad?",
+    "vi": "Đừng lo, Bluey! Còn ai có thể cho cháu đi ngủ tuyệt hơn bác Rad của cháu chứ?"
+  },
+  {
+    "id": 7,
+    "start": 57,
+    "end": 62.47,
+    "text": "Hallo! Frisky! Hey, Mädels! Das ist Onkel Rad!",
+    "vi": "Xin chào! Chị Frisky! Chào các cô gái nhỏ! Đây là bác Rad!"
+  },
+  {
+    "id": 8,
+    "start": 62.52,
+    "end": 69.42,
+    "text": "Hi. Hi. Frisky, kennst du Bandits Bruder Radley schon?",
+    "vi": "Chào anh. Chào em. Frisky, em đã biết Radley - anh trai của Bandit chưa?"
+  },
+  {
+    "id": 9,
+    "start": 69.47,
+    "end": 73.72,
+    "text": "Ähm, ja. Bist du bei der Hochzeit nicht in den Pool gefallen? Könnte sein.",
+    "vi": "Ừm, dạ rồi. Không phải hồi đám cưới anh bị ngã xuống hồ bơi sao? Có thể lắm chứ."
+  },
+  {
+    "id": 10,
+    "start": 73.76,
+    "end": 80.4,
+    "text": "Frisky ist Blueys liebe Patentante! Entschuldige, Frisky, Onkel Rad hat in letzter Minute zugestimmt, dass er heute aufpasst.",
+    "vi": "Frisky là mẹ đỡ đầu đáng yêu của Bluey đấy! Xin lỗi Frisky nhé, bác Rad đồng ý trông trẻ vào phút chót."
+  },
+  {
+    "id": 11,
+    "start": 80.44,
+    "end": 86.36,
+    "text": "Hast du meine Nachricht nicht bekommen? Oh, nein, die habe ich nicht bekommen. Ist schon gut, dann gehe ich wieder.",
+    "vi": "Em không nhận được tin nhắn của chị à? Ồ không, em không nhận được. Không sao đâu, vậy em về đây."
+  },
+  {
+    "id": 12,
+    "start": 86.36,
+    "end": 89.74,
+    "text": "Nein, nicht gehen! Ihr könnt doch beide babysitten!",
+    "vi": "Không, đừng về mà! Cả hai người đều có thể làm người trông trẻ mà!"
+  },
+  {
+    "id": 13,
+    "start": 90.06,
+    "end": 94.96,
+    "text": "Oh na ja, wenn das für euren Onkel Rad okay ist? Voll in Ordnung. Hurra!",
+    "vi": "Ồ thôi được, nếu bác Rad của các cháu thấy ổn? Hoàn toàn ổn luôn. Hoan hô!"
+  },
+  {
+    "id": 14,
+    "start": 94.96,
+    "end": 101.24,
+    "text": "Diese Folge von Bluey heißt: Die Babysitter. Bis später! Viel Spaß! Bis dann.",
+    "vi": "Tập phim Bluey này có tên là: Người trông trẻ. Hẹn gặp lại sau nhé! Chúc vui vẻ! Tạm biệt."
+  },
+  {
+    "id": 15,
+    "start": 101.32,
+    "end": 107.74,
+    "text": "Erzähl mal, Bluey. Warum lässt du dich nicht gern vom Babysitter ins Bett bringen? Na ja, wir haben das schon mal gemacht und ich mochte es nicht.",
+    "vi": "Kể cô nghe nào, Bluey. Sao cháu lại không thích người trông trẻ cho đi ngủ? Dạ, lần trước làm thế và cháu không thích chút nào."
+  },
+  {
+    "id": 16,
+    "start": 107.9,
+    "end": 111.56,
+    "text": "Ach, warum denn nicht? Es ist so anders gewesen.",
+    "vi": "Ủa, sao lại thế chứ? Vì mọi thứ khác lạ quá ạ."
+  },
+  {
+    "id": 17,
+    "start": 111.84,
+    "end": 119.26,
+    "text": "Tja, deine Patentante und ich werden es einfach ganz genauso machen, wie deine Mum und dein Dad es immer tun. Aber ich kenne euch nicht so gut wie Mum und Dad.",
+    "vi": "À, mẹ đỡ đầu và bác sẽ làm y hệt như bố mẹ cháu vẫn thường làm. Nhưng cháu đâu có quen hai người bằng bố mẹ cháu."
+  },
+  {
+    "id": 18,
+    "start": 119.26,
+    "end": 124.48,
+    "text": "Oh ja, da hast du recht. Na ja, dann musst du uns eben besser kennenlernen. Sehr gut, wir können doch \"Wer bin ich?\" spielen!",
+    "vi": "Ồ đúng, cháu nói phải. Thế thì cháu phải làm quen với bọn bác nhiều hơn rồi. Tuyệt quá, chúng ta có thể chơi trò 'Tôi là ai?'!"
+  },
+  {
+    "id": 19,
+    "start": 124.48,
+    "end": 132,
+    "text": "Ja! Wartet, wie geht \"Wer bin ich?\" denn überhaupt? Na ja, ihr stellt uns Fragen über uns und wir werden sie euch dann beantworten.",
+    "vi": "Vâng! Khoan đã, trò 'Tôi là ai?' chơi thế nào cơ? À, các cháu đặt câu hỏi về bọn bác và bọn bác sẽ trả lời."
+  },
+  {
+    "id": 20,
+    "start": 132,
+    "end": 137.72,
+    "text": "Ist einfach, los! Wieso hast du keine Frau? Wow, sicher, dass ich keine habe? Hast du eine Frau?",
+    "vi": "Dễ mà, bắt đầu đi! Sao bác không có vợ? Ồ, cháu chắc là bác không có không? Bác có vợ không?"
+  },
+  {
+    "id": 21,
+    "start": 137.8,
+    "end": 142.44,
+    "text": "Na ja, nein. Und wieso hast du keine Frau? Sie ist dran!",
+    "vi": "À thì, không. Thế còn cô, sao cô không có chồng? Đến lượt cô ấy kìa!"
+  },
+  {
+    "id": 22,
+    "start": 142.54,
+    "end": 146.7,
+    "text": "Wie viele Freunde hast du? Oh, drei? Das sind nicht viele!",
+    "vi": "Cô có bao nhiêu người bạn? Ồ, ba người á? Đâu có nhiều đâu!"
+  },
+  {
+    "id": 23,
+    "start": 146.72,
+    "end": 152.91,
+    "text": "Warum hast du denn nur drei Freunde? Tja, er ist dran! Wieso sehen wir dich immer nur Weihnachten?",
+    "vi": "Sao cô chỉ có ba người bạn thôi thế? À, đến lượt anh ấy! Sao bọn cháu chỉ gặp bác vào dịp Giáng sinh thôi?"
+  },
+  {
+    "id": 24,
+    "start": 152.88,
+    "end": 157.86,
+    "text": "Ich arbeite auf einer Bohrinsel. Ist das der Grund, warum du keine Frau hast? Oh, mag schon sein.",
+    "vi": "Bác làm việc trên giàn khoan dầu ngoài biển. Đó có phải là lý do bác không có vợ không? Ồ, chắc là đúng vậy rồi."
+  },
+  {
+    "id": 25,
+    "start": 157.94,
+    "end": 162.54,
+    "text": "Was ist eine Bohrinsel? Wieso sieht dein Haar so hübsch aus? Mandelmilch-Shampoo!",
+    "vi": "Giàn khoan dầu là gì ạ? Sao tóc cô trông đẹp thế? Dầu gội sữa hạnh nhân đấy!"
+  },
+  {
+    "id": 26,
+    "start": 162.64,
+    "end": 168.64,
+    "text": "Möchtest du mal Kinder haben? Ja. Soll Bosco der Vater werden?",
+    "vi": "Cô có muốn có con không? Có chứ. Chú Bosco có phải là bố của chúng không ạ?"
+  },
+  {
+    "id": 27,
+    "start": 168.9,
+    "end": 172.44,
+    "text": "Nein, Bosco und ich sind jetzt keine Freunde mehr. Wer ist Bosco?",
+    "vi": "Không, cô và Bosco giờ không còn là bạn bè nữa rồi. Bosco là ai vậy?"
+  },
+  {
+    "id": 28,
+    "start": 172.64,
+    "end": 176.17,
+    "text": "Niemand, nächste Frage! Bosco ist ihre wahre Liebe. Nein, nicht mehr.",
+    "vi": "Không là ai cả, câu tiếp theo nào! Bosco là tình yêu đích thực của cô ấy. Không, không còn nữa."
+  },
+  {
+    "id": 29,
+    "start": 176.26,
+    "end": 181.35,
+    "text": "Aber die wahre Liebe hält für immer! Na ja, hält die wahre Liebe etwa nicht für immer?",
+    "vi": "Nhưng tình yêu đích thực là mãi mãi mà! Ừm, chẳng lẽ tình yêu đích thực lại không mãi mãi sao?"
+  },
+  {
+    "id": 30,
+    "start": 181.3,
+    "end": 187.96,
+    "text": "Doch, schon, ich meine, zumindest dachte ich das. Lasst uns lieber im Garten spielen!",
+    "vi": "Có chứ, ý cô là, ít nhất thì trước đây cô từng nghĩ thế. Thôi chúng ta ra vườn chơi đi!"
+  },
+  {
+    "id": 31,
+    "start": 187.98,
+    "end": 193.14,
+    "text": "Ja! Könnt ihr mit uns genau die gleichen Spiele spielen wie Mum und Dad? Okay, was spielen sie denn?",
+    "vi": "Vâng! Hai người có thể chơi đúng những trò như bố mẹ cháu chơi không? Được thôi, bố mẹ cháu chơi trò gì?"
+  },
+  {
+    "id": 32,
+    "start": 193.16,
+    "end": 195.64,
+    "text": "Rattenhuhn! Ratten-was? Komm her und geh weg!",
+    "vi": "Gà chuột! Chuột-gì cơ? Lại đây và đi đi!"
+  },
+  {
+    "id": 33,
+    "start": 195.7,
+    "end": 201.84,
+    "text": "Komm und geh, was genau? Wir müssen nicht die gleichen Spiele spielen, Bluey. Wir spielen Lampenmaus!",
+    "vi": "Lại đây và đi đi là gì cơ? Chúng ta đâu nhất thiết phải chơi trò giống nhau đâu Bluey. Mình chơi trò Chuột đèn pin!"
+  },
+  {
+    "id": 34,
+    "start": 202.08,
+    "end": 230.66,
+    "text": "Lampenmaus war ganz lustig. Aber jetzt möchte ich gar nichts mehr machen, was irgendwie anders ist.",
+    "vi": "Trò Chuột đèn pin cũng vui đấy. Nhưng giờ cháu không muốn làm bất cứ điều gì khác lạ nữa đâu."
+  },
+  {
+    "id": 35,
+    "start": 230.7,
+    "end": 238.45,
+    "text": "Wie wäre es damit? Das ist verrückt! Ja, aber du wirst dich ganz schnell dran gewöhnen.",
+    "vi": "Thế trò này thì sao? Điên rồ thật đấy! Ừ, nhưng cháu sẽ quen nhanh thôi mà."
+  },
+  {
+    "id": 36,
+    "start": 238.46,
+    "end": 246.08,
+    "text": "Ich will auch! Oh Mann, dann versuchen wir's mal. Na hallöchen, Falschrum-Bingo!",
+    "vi": "Cháu cũng muốn chơi! Trời đất, vậy thử xem nào. Chào cô bé Bingo lộn ngược nhé!"
+  },
+  {
+    "id": 37,
+    "start": 246.14,
+    "end": 256.97,
+    "text": "Hi! Bingo, du bist schwer geworden! Komm, setz dich zu mir ans Lagerfeuer! Ja, ich versuche es doch! Wie wär's mit einer Geschichte?",
+    "vi": "Chào chú! Bingo, cháu nặng lên rồi đấy! Lại đây, ngồi bên đống lửa cùng chú nào! Vâng, cháu đang cố đây! Kể một câu chuyện thì sao nhỉ?",
+    "_merged": true
+  },
+  {
+    "id": 38,
+    "start": 257.02,
+    "end": 262.64,
+    "text": "Und dann besiegte der Prinz den Drachen mit einem einzigen Prinzenschlag! Bum! Hurra!",
+    "vi": "Và rồi hoàng tử đã đánh bại con rồng chỉ bằng một cú đấm hoàng tử duy nhất! Bùm! Hoan hô!"
+  },
+  {
+    "id": 39,
+    "start": 262.62,
+    "end": 268.93,
+    "text": "Prinzessin, ich habe dich gerettet. Jetzt können wir heiraten. Und die Prinzessin antwortete: \"Nein danke.\"",
+    "vi": "Công chúa, ta đã cứu nàng rồi. Giờ chúng ta có thể kết hôn. Và công chúa đáp: 'Không, cảm ơn.'"
+  },
+  {
+    "id": 40,
+    "start": 268.94,
+    "end": 272.08,
+    "text": "Er hat ihr nicht gut gefallen. Warum nicht?",
+    "vi": "Cái gì cơ? Nàng ấy không thích chàng hoàng tử đó. Sao lại không thích ạ?"
+  },
+  {
+    "id": 41,
+    "start": 272.09,
+    "end": 278.05,
+    "text": "Tja, sein Haar war zu durcheinander und sie fand ihn ein bisschen zu muskulös. Wisst ihr, was ich meine, Kinder?",
+    "vi": "Chà, tóc chàng ta rối quá và nàng thấy chàng hơi cơ bắp quá đà. Các cháu hiểu ý cô chứ?"
+  },
+  {
+    "id": 42,
+    "start": 278.06,
+    "end": 283.85,
+    "text": "Augenblick! Ich, der Prinz, habe den Drachen besiegt. Ich nehme dich mit in mein Schloss und wir heiraten, so läuft das!",
+    "vi": "Khoan đã! Ta là hoàng tử, ta đã đánh bại con rồng. Ta sẽ đưa nàng về lâu đài và cưới nàng, chuyện phải như thế!"
+  },
+  {
+    "id": 43,
+    "start": 283.85,
+    "end": 288.64,
+    "text": "Hey, ich habe dich aber nicht gebeten, mich zu retten! Möchtest du lieber beim stinkenden Drachen bleiben?",
+    "vi": "Này, tôi đâu có nhờ anh đến cứu tôi đâu! Nàng muốn ở lại với con rồng bốc mùi kia hơn à?"
+  },
+  {
+    "id": 44,
+    "start": 288.64,
+    "end": 293.59,
+    "text": "Ich gewöhne mich an ihn. In Ordnung, ich weck ihn auf! Warte, nein!",
+    "vi": "Tôi đang quen dần với nó rồi. Được thôi, ta sẽ đánh thức nó dậy! Đợi đã, đừng mà!"
+  },
+  {
+    "id": 45,
+    "start": 293.6,
+    "end": 299.47,
+    "text": "Ja, dachte ich mir schon. Ach, Prinzen sind doch alle gleich, dachte sie. Nein, sind wir nicht!",
+    "vi": "Đấy, ta biết ngay mà. Chà, hoàng tử ai cũng giống nhau cả thôi, nàng nghĩ vậy. Không, bọn ta đâu có giống!"
+  },
+  {
+    "id": 46,
+    "start": 299.47,
+    "end": 305.28,
+    "text": "Es gibt gute Prinzen und böse Prinzen, meine Dame. Das weiß doch jedes Kind! Was für einer war dieser Prinz?",
+    "vi": "Có hoàng tử tốt và hoàng tử xấu mà thưa quý cô. Đứa trẻ nào cũng biết điều đó! Chàng hoàng tử này là loại nào ạ?"
+  },
+  {
+    "id": 47,
+    "start": 305.28,
+    "end": 310.18,
+    "text": "Ein guter! Er hat die Prinzessin gerettet! Aber doch nur, weil er gerne gegen Drachen kämpft.",
+    "vi": "Một chàng hoàng tử tốt! Chàng đã cứu công chúa mà! Nhưng chỉ vì chàng thích đánh nhau với rồng thôi."
+  },
+  {
+    "id": 48,
+    "start": 310.24,
+    "end": 315.7,
+    "text": "Schon morgen zieht er los und sucht sich eine neue Prinzessin. Mann, diese Prinzessin ist schwierig zu retten.",
+    "vi": "Ngay ngày mai chàng sẽ lại lên đường đi tìm công chúa mới. Trời ạ, công chúa này khó cứu thật đấy."
+  },
+  {
+    "id": 49,
+    "start": 315.73,
+    "end": 321.94,
+    "text": "Tja, während der Prinz noch über alles nachdenkt, schnappt sie sich ein Buch und lebt glücklich und zufrieden weiter.",
+    "vi": "Chà, trong khi hoàng tử còn đang mải suy nghĩ, nàng cầm lấy một cuốn sách và sống hạnh phúc viên mãn mãi về sau."
+  },
+  {
+    "id": 50,
+    "start": 322.14,
+    "end": 325.74,
+    "text": "Und Ende. Was? Das ist nicht das Ende!",
+    "vi": "Hết chuyện. Cái gì? Đó đâu phải là cái kết!"
+  },
+  {
+    "id": 51,
+    "start": 325.94,
+    "end": 330.21,
+    "text": "Wenn Mum und Dad Geschichten erzählen, gibt es am Ende eine Hochzeit! Prinzessin?",
+    "vi": "Khi bố mẹ kể chuyện, kết thúc luôn là một đám cưới cơ mà! Công chúa?"
+  },
+  {
+    "id": 52,
+    "start": 330.74,
+    "end": 335.18,
+    "text": "Okay, gut, wenn die Kinder das so wollen, dann heiraten sie eben. Und Ende! Hurra!",
+    "vi": "Được rồi, nếu bọn trẻ muốn thế thì họ cưới nhau vậy. Hết chuyện rồi nhé! Hoan hô!"
+  },
+  {
+    "id": 53,
+    "start": 335.18,
+    "end": 341.88,
+    "text": "Na, läuft doch! Gute Nacht, Bingo, hattest du einen schönen... Frisky?",
+    "vi": "Đấy, ổn rồi mà! Chúc ngủ ngon, Bingo, cháu đã có một buổi tối... Frisky?"
+  },
+  {
+    "id": 54,
+    "start": 341.88,
+    "end": 347.82,
+    "text": "Ihr guckt aber nicht mehr fernsehen, wenn ich eingeschlafen bin, oder? Oh, nein, das müssen wir nicht.",
+    "vi": "Hai người sẽ không xem TV nữa sau khi cháu ngủ thiếp đi chứ? Ồ không, bọn cô đâu cần xem TV."
+  },
+  {
+    "id": 55,
+    "start": 347.82,
+    "end": 353.6,
+    "text": "Versprichst du's mir? War euer letzter Babysitter ganz zufällig Oma? Ja.",
+    "vi": "Hai người hứa với cháu nhé? Lần trước người trông trẻ của các cháu có phải là bà nội không? Vâng ạ."
+  },
+  {
+    "id": 56,
+    "start": 353.6,
+    "end": 357.82,
+    "text": "Lass mich raten: Du bist aufgewacht und der Fernseher war viel zu laut? Ja.",
+    "vi": "Để cô đoán nhé: Cháu tỉnh giấc và tiếng TV thì bật quá to đúng không? Vâng ạ."
+  },
+  {
+    "id": 57,
+    "start": 357.82,
+    "end": 363.58,
+    "text": "Meine Mum hört nicht mehr so gut, deswegen stellt sie ihn sehr laut. Sie hat sich was echt total Gruseliges angeguckt!",
+    "vi": "Mẹ anh tai nghe không rõ lắm nên bà bật TV rất to. Bà đã xem một bộ phim cực kỳ rùng rợn luôn ạ!"
+  },
+  {
+    "id": 58,
+    "start": 363.58,
+    "end": 367.67,
+    "text": "Deswegen wirst du nicht gern vom Babysitter ins Bett gebracht, nicht wahr? Ja.",
+    "vi": "Vì thế mà cháu không thích người trông trẻ cho đi ngủ, đúng không? Vâng ạ."
+  },
+  {
+    "id": 59,
+    "start": 367.67,
+    "end": 372.49,
+    "text": "Damals ist es einfach nicht so gut gelaufen. Diesmal wird es anders sein. Das versprechen wir.",
+    "vi": "Lần đó chỉ là không được suôn sẻ thôi. Lần này sẽ khác. Bọn cô chú hứa đấy."
+  },
+  {
+    "id": 60,
+    "start": 372.49,
+    "end": 376.88,
+    "text": "Aber wie kann ich mir sicher sein, dass es nicht wieder passiert? Kannst du nicht.",
+    "vi": "Nhưng làm sao cháu chắc chắn được chuyện đó không lặp lại? Cháu không thể chắc chắn được."
+  },
+  {
+    "id": 61,
+    "start": 376.88,
+    "end": 383.96,
+    "text": "Aber du musst es einfach ausprobieren. Sonst wirst du den Rest deines Lebens bei dem stinkenden Drachen festsitzen.",
+    "vi": "Nhưng cháu cứ phải thử xem sao đã. Nếu không cháu sẽ phải mắc kẹt với con rồng bốc mùi kia suốt cả đời đấy."
+  },
+  {
+    "id": 62,
+    "start": 383.96,
+    "end": 388.33,
+    "text": "Okay, dann probier ich es aus. Das ist mein Mädchen.",
+    "vi": "Được rồi, vậy cháu sẽ thử. Đúng là cô bé ngoan của chú."
+  },
+  {
+    "id": 63,
+    "start": 390,
+    "end": 442.44,
+    "text": "Ein anderes Shampoo mag ich einfach nicht. Das Shampoo ist toll, aber der Conditioner geht wirklich überhaupt nicht.",
+    "vi": "Tôi không thích loại dầu gội nào khác đâu. Dầu gội thì tuyệt thật, nhưng dầu xả thì thực sự không ổn chút nào."
+  },
+  {
+    "id": 64,
+    "start": 442.44,
+    "end": 448.48,
+    "text": "Du hast ja recht. Aber was soll man machen, wenn die Haare sonst immer so durcheinander sind?",
+    "vi": "Em nói đúng đấy. Nhưng biết làm sao được khi tóc tai lúc nào cũng rối bời như thế này chứ?"
+  }
+]

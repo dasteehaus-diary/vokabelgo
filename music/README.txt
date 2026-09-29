@@ -1,0 +1,3 @@
+Chị có thể thả các file nhạc .mp3 hoặc .m4a vào thư mục này để nghe trên VokabelGo nhé!
+Ví dụ: music/chill1.mp3, music/study.mp3...
+Hoặc chị có thể bấm nút [Nạp nhạc] trên máy Cassette trên web để chọn file từ bất kỳ đâu trên máy.
