@@ -281,8 +281,116 @@ assert(window.VokabelDaily.getTodayCount() === 0, 'Clean machine starts at count
 window.VokabelDaily.importData(exported);
 assert(window.VokabelDaily.getTodayCount() === 5, `After cloud import, todayCount restored to 5`);
 assert(window.VokabelDaily.isCompletedToday() === true, `After cloud import, isCompletedToday is true`);
-assert(window.VokabelDaily.getCatchStatus() === 'pending', `After cloud import, catchStatus is 'pending'`);
+// ==========================================
+// QC PATCH TESTS: A, B, C, D
+// ==========================================
 
+console.log('\n--- TEST A: Một lần rate card qua integration path chỉ gọi reviewCard một lần ---');
+let reviewCardCalls = 0;
+const origReviewCard = window.VokabelDaily.reviewCard;
+window.VokabelDaily.reviewCard = function(cardId) {
+  reviewCardCalls++;
+  return origReviewCard.call(window.VokabelDaily, cardId);
+};
+
+// Simulation of index.html rate function integration path:
+// Rate function only calls window.onCardReviewedForFeed(c.id)
+if (window.onCardReviewedForFeed) {
+  window.onCardReviewedForFeed('qc_card_a');
+}
+assert(reviewCardCalls === 1, `reviewCard was called exactly 1 time (actual: ${reviewCardCalls})`);
+window.VokabelDaily.reviewCard = origReviewCard; // restore
+
+console.log('\n--- TEST B: Import local catchStatus = none, cloud catchStatus = pending -> Expected: pending ---');
+localStorage.clear();
+const testDayB = '2026-10-05';
+// Local state
+const localDataB = {
+  version: 1,
+  days: {
+    [testDayB]: {
+      reviewedCardIds: ['c1', 'c2'],
+      completed: false,
+      completedAt: null,
+      catchStatus: 'none'
+    }
+  }
+};
+window.VokabelDaily.importData(localDataB);
+assert(window.VokabelDaily.getCatchStatus(testDayB) === 'none', 'Initial local status is none');
+
+// Cloud state to merge
+const cloudDataB = {
+  version: 1,
+  days: {
+    [testDayB]: {
+      reviewedCardIds: ['c1', 'c2', 'c3', 'c4', 'c5'],
+      completed: true,
+      completedAt: new Date().toISOString(),
+      catchStatus: 'pending'
+    }
+  }
+};
+window.VokabelDaily.importData(cloudDataB);
+const statusB = window.VokabelDaily.getCatchStatus(testDayB);
+assert(statusB === 'pending', `Expected pending after merging none + pending, got: "${statusB}"`);
+
+console.log('\n--- TEST C: Import local claimed, cloud pending -> Expected: claimed ---');
+localStorage.clear();
+const testDayC = '2026-10-06';
+// Local state is already claimed
+const localDataC = {
+  version: 1,
+  days: {
+    [testDayC]: {
+      reviewedCardIds: ['c1', 'c2', 'c3', 'c4', 'c5'],
+      completed: true,
+      completedAt: new Date().toISOString(),
+      catchStatus: 'claimed'
+    }
+  }
+};
+window.VokabelDaily.importData(localDataC);
+assert(window.VokabelDaily.getCatchStatus(testDayC) === 'claimed', 'Initial local status is claimed');
+
+// Cloud state still says pending (e.g., stale cloud sync)
+const cloudDataC = {
+  version: 1,
+  days: {
+    [testDayC]: {
+      reviewedCardIds: ['c1', 'c2', 'c3', 'c4', 'c5'],
+      completed: true,
+      completedAt: new Date().toISOString(),
+      catchStatus: 'pending'
+    }
+  }
+};
+window.VokabelDaily.importData(cloudDataC);
+const statusC = window.VokabelDaily.getCatchStatus(testDayC);
+assert(statusC === 'claimed', `Expected claimed after merging claimed + pending, got: "${statusC}"`);
+
+console.log('\n--- TEST D: Firebase leaderboard: checkinHistory = 20 entries, dailyProgress has 3 days streak -> Expected streak = 3 ---');
+const fbNow = new Date();
+const fbYesterday = new Date(fbNow.getFullYear(), fbNow.getMonth(), fbNow.getDate() - 1);
+const fbYKey = window.VokabelDaily.getLocalDateKey(fbYesterday);
+const fbD2 = new Date(fbNow.getFullYear(), fbNow.getMonth(), fbNow.getDate() - 2);
+const fbD2Key = window.VokabelDaily.getLocalDateKey(fbD2);
+const fbTodayKey = window.VokabelDaily.getTodayDateKey();
+
+const mockFirebaseUser = {
+  profile: { nickname: 'Học viên chăm chỉ', catId: 5, avatarType: 'v2' },
+  checkinHistory: new Array(20).fill(null).map((_, i) => ({ id: `ck_${i}`, date: '2026-09-01' })),
+  dailyProgress: {
+    days: {
+      [fbD2Key]: { reviewedCardIds: ['1','2','3','4','5'], completed: true },
+      [fbYKey]: { reviewedCardIds: ['1','2','3','4','5'], completed: true },
+      [fbTodayKey]: { reviewedCardIds: ['1','2','3','4','5'], completed: true }
+    }
+  }
+};
+
+const formattedUser = window.formatUserForLeaderboard('test_user_fb', mockFirebaseUser);
+assert(formattedUser.streak === 3, `Expected leaderboard streak = 3, got: ${formattedUser.streak} (checkinHistory length 20 was ignored)`);
 
 console.log('\n========================================');
 console.log(`TEST SUMMARY: ${passedCount} PASSED, ${failedCount} FAILED`);

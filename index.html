@@ -13209,7 +13209,6 @@ function rate(v){
   const c=current(); if(!c)return;
   progress[c.id]=v; saveProgress(); updateStats(); next();
   totalCardsReviewedSession++;
-  if(window.VokabelDaily && c && c.id) window.VokabelDaily.reviewCard(c.id);
   if(window.onCardReviewedForFeed) window.onCardReviewedForFeed(c.id);
   if(totalCardsReviewedSession % 10 === 0){
     if(typeof triggerCatMilestone === 'function') triggerCatMilestone('praise');

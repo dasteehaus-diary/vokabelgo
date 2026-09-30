@@ -206,6 +206,66 @@
     renderLeaderboard(users);
   };
 
+  // Helper tính streak từ dailyProgress.days theo quy tắc completed === true
+  function calculateStreakFromDailyProgress(dailyProg) {
+    if (!dailyProg || typeof dailyProg !== 'object') return 0;
+    const days = dailyProg.days || dailyProg.history;
+    if (!days || typeof days !== 'object') return 0;
+
+    function getLocalKey(d) {
+      if (window.VokabelDaily && typeof window.VokabelDaily.getLocalDateKey === 'function') {
+        return window.VokabelDaily.getLocalDateKey(d);
+      }
+      const date = d ? new Date(d) : new Date();
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function getPrevKey(dateKey) {
+      const parts = dateKey.split('-').map(Number);
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      d.setDate(d.getDate() - 1);
+      return getLocalKey(d);
+    }
+
+    const todayKey = (window.VokabelDaily && typeof window.VokabelDaily.getTodayDateKey === 'function')
+      ? window.VokabelDaily.getTodayDateKey()
+      : getLocalKey(new Date());
+
+    const todayRec = days[todayKey];
+    const todayCompleted = Boolean(todayRec && todayRec.completed);
+
+    let streak = 0;
+    let checkKey = todayKey;
+
+    if (todayCompleted) {
+      streak = 1;
+      checkKey = getPrevKey(todayKey);
+    } else {
+      const yesterdayKey = getPrevKey(todayKey);
+      const yesterdayRec = days[yesterdayKey];
+      if (!yesterdayRec || !yesterdayRec.completed) {
+        return 0;
+      }
+      streak = 1;
+      checkKey = getPrevKey(yesterdayKey);
+    }
+
+    while (true) {
+      const rec = days[checkKey];
+      if (rec && rec.completed) {
+        streak++;
+        checkKey = getPrevKey(checkKey);
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
   function formatUserForLeaderboard(uid, data) {
     const isMe = (window.firebase && firebase.auth && firebase.auth().currentUser && firebase.auth().currentUser.uid === uid);
     
@@ -215,9 +275,19 @@
       words = Object.values(data.progress).filter(v => v === 'known' || v === 1 || v === '1').length;
     }
 
-    // Tính chuỗi streak
+    // Tính chuỗi streak:
+    // Ưu tiên:
+    // 1. data.streak nếu có và hợp lệ (số >= 0)
+    // 2. dailyProgress nếu có
+    // 3. checkinHistory như legacy fallback cuối cùng
     let streak = 0;
-    if (data.checkinHistory && Array.isArray(data.checkinHistory)) {
+    if (typeof data.streak === 'number' && !isNaN(data.streak) && data.streak >= 0) {
+      streak = data.streak;
+    } else if (data.streak !== undefined && data.streak !== null && data.streak !== '' && !isNaN(Number(data.streak)) && Number(data.streak) >= 0) {
+      streak = parseInt(data.streak, 10);
+    } else if (data.dailyProgress) {
+      streak = calculateStreakFromDailyProgress(data.dailyProgress);
+    } else if (data.checkinHistory && Array.isArray(data.checkinHistory)) {
       streak = data.checkinHistory.length;
     }
 
@@ -240,6 +310,9 @@
       isMe: Boolean(isMe)
     };
   }
+
+  window.formatUserForLeaderboard = formatUserForLeaderboard;
+  window.calculateStreakFromDailyProgress = calculateStreakFromDailyProgress;
 
   function getLocalCurrentUserForLeaderboard() {
     let name = 'Bạn';

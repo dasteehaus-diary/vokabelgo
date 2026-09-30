@@ -69,6 +69,32 @@
     }
   }
 
+  const CATCH_STATUS_PRIORITY = {
+    'claimed': 4,
+    'playing': 3,
+    'pending': 2,
+    'none': 1
+  };
+
+  // Chuẩn hóa catchStatus thành 4 giá trị chuẩn: 'none', 'pending', 'playing', 'claimed'
+  function normalizeCatchStatus(status) {
+    if (!status || typeof status !== 'string') return 'none';
+    const s = status.toLowerCase().trim();
+    if (CATCH_STATUS_PRIORITY[s]) return s;
+    // Tương thích ngược với các giá trị cũ nếu có
+    if (s === 'caught' || s === 'escaped') return 'claimed';
+    return 'none';
+  }
+
+  // Helper hợp nhất catchStatus theo priority: claimed > playing > pending > none
+  function mergeCatchStatus(localStatus, incomingStatus) {
+    const s1 = normalizeCatchStatus(localStatus);
+    const s2 = normalizeCatchStatus(incomingStatus);
+    const p1 = CATCH_STATUS_PRIORITY[s1] || 1;
+    const p2 = CATCH_STATUS_PRIORITY[s2] || 1;
+    return p1 >= p2 ? s1 : s2;
+  }
+
   // Đảm bảo dữ liệu của một ngày đã tồn tại cấu trúc chuẩn
   function ensureDayRecord(data, dayKey) {
     if (!data.days[dayKey]) {
@@ -83,7 +109,7 @@
       if (!Array.isArray(rec.reviewedCardIds)) rec.reviewedCardIds = [];
       if (typeof rec.completed !== 'boolean') rec.completed = false;
       if (typeof rec.completedAt === 'undefined') rec.completedAt = null;
-      if (!rec.catchStatus) rec.catchStatus = 'none';
+      rec.catchStatus = normalizeCatchStatus(rec.catchStatus);
     }
     return data.days[dayKey];
   }
@@ -248,10 +274,6 @@
       return this.isTodayCompleted();
     },
 
-    getLocalDateKey: function(date) {
-      return getLocalDateKey(date);
-    },
-
     getTodayDateKey: function() {
       return getLocalDateKey();
     },
@@ -267,10 +289,13 @@
       const data = loadData();
       const key = date ? getLocalDateKey(date) : getLocalDateKey();
       const dayRec = ensureDayRecord(data, key);
-      dayRec.catchStatus = status;
+      dayRec.catchStatus = normalizeCatchStatus(status);
       saveData(data);
       return dayRec.catchStatus;
     },
+
+    mergeCatchStatus: mergeCatchStatus,
+    normalizeCatchStatus: normalizeCatchStatus,
 
     getTodayReviewedCardIds: function() {
       const state = this.getTodayState();
@@ -289,6 +314,7 @@
       };
     },
 
+    /* TEST ONLY - Dùng cho bộ test suite, không dùng trong production logic */
     resetTodayForTesting: function() {
       const data = loadData();
       const todayKey = getLocalDateKey();
@@ -327,12 +353,18 @@
           if (!incDay || typeof incDay !== 'object') return;
 
           const localDay = mergedDays[dayKey];
+          const incCompleted = Boolean(incDay.completed);
+
           if (!localDay) {
+            let status = normalizeCatchStatus(incDay.catchStatus);
+            if (incCompleted && status === 'none') {
+              status = 'pending';
+            }
             mergedDays[dayKey] = {
               reviewedCardIds: Array.isArray(incDay.reviewedCardIds) ? [...incDay.reviewedCardIds] : [],
-              completed: Boolean(incDay.completed),
-              completedAt: incDay.completedAt || null,
-              catchStatus: incDay.catchStatus || (incDay.completed ? 'pending' : 'none')
+              completed: incCompleted,
+              completedAt: incDay.completedAt || (incCompleted ? new Date().toISOString() : null),
+              catchStatus: status
             };
           } else {
             // Hợp nhất danh sách ID độc nhất
@@ -341,11 +373,16 @@
               ...(Array.isArray(incDay.reviewedCardIds) ? incDay.reviewedCardIds.map(String) : [])
             ]);
             const isCompleted = Boolean(localDay.completed || incDay.completed || idSet.size >= 5);
+            let status = mergeCatchStatus(localDay.catchStatus, incDay.catchStatus);
+            if (isCompleted && status === 'none') {
+              status = 'pending';
+            }
+
             mergedDays[dayKey] = {
               reviewedCardIds: Array.from(idSet),
               completed: isCompleted,
               completedAt: localDay.completedAt || incDay.completedAt || (isCompleted ? new Date().toISOString() : null),
-              catchStatus: localDay.catchStatus || incDay.catchStatus || (isCompleted ? 'pending' : 'none')
+              catchStatus: status
             };
           }
         });
