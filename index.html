@@ -7218,8 +7218,8 @@ input.search:focus {
     <div class="pillow-shield-box">
       <span style="font-size:18px;">🛋️</span>
       <div style="flex:1;line-height:1.35;">
-        <span style="font-weight:800;display:block;">Gối Mèo Lười (Bảo hiểm chuỗi)</span>
-        <span style="font-size:11px;">Nếu mai bạn bận, chiếc gối sẽ tự động bảo vệ chuỗi điểm danh của bạn!</span>
+        <span style="font-weight:800;display:block;">Gối Mèo Lười · Sắp mở khóa</span>
+        <span style="font-size:11px;">Tính năng bảo vệ chuỗi sẽ được mở ở bản sau.</span>
       </div>
     </div>
   </div>
@@ -7718,7 +7718,7 @@ input.search:focus {
             <div class="stat-card">
               <div class="stat-icon-wrap stat-icon-flame">🔥</div>
               <div>
-                <div class="stat-label">Chuỗi điểm danh</div>
+                <div class="stat-label">Chuỗi ngày học</div>
                 <div class="stat-value"><span id="streakCount">0</span> <span style="font-size:14px;font-weight:600">ngày liên tiếp</span></div>
               </div>
             </div>
@@ -8417,6 +8417,9 @@ input.search:focus {
     </div>
   </div>
 </div>
+
+<!-- Daily Goal & Streak Engine -->
+<script src="daily-progress.js"></script>
 
 <!-- Cloud Engines: Supabase (Chính) & Firebase (Dự phòng) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13206,7 +13209,8 @@ function rate(v){
   const c=current(); if(!c)return;
   progress[c.id]=v; saveProgress(); updateStats(); next();
   totalCardsReviewedSession++;
-  if(window.onCardReviewedForFeed) window.onCardReviewedForFeed();
+  if(window.VokabelDaily && c && c.id) window.VokabelDaily.reviewCard(c.id);
+  if(window.onCardReviewedForFeed) window.onCardReviewedForFeed(c.id);
   if(totalCardsReviewedSession % 10 === 0){
     if(typeof triggerCatMilestone === 'function') triggerCatMilestone('praise');
   }
@@ -14515,11 +14519,25 @@ function saveCheckinEntry(entry){
   if(window.onLocalDataChanged) window.onLocalDataChanged('checkin');
 }
 
+function getLocalDateStr(date) {
+  if (window.VokabelDaily && window.VokabelDaily.getLocalDateKey) {
+    return window.VokabelDaily.getLocalDateKey(date);
+  }
+  const d = date ? new Date(date) : new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function calculateStreak(history){
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (window.VokabelDaily && typeof window.VokabelDaily.getStreak === 'function') {
+    return window.VokabelDaily.getStreak();
+  }
+  const todayStr = getLocalDateStr(new Date());
+  const yesterdayStr = getLocalDateStr(new Date(Date.now() - 86400000));
   
-  const dates = new Set(history.map(h => h.date));
+  const dates = new Set((history || []).map(h => h.date));
   let streak = 0;
   let checkDate = new Date();
   
@@ -14529,7 +14547,7 @@ function calculateStreak(history){
   }
   
   while(true){
-    const dStr = checkDate.toISOString().slice(0, 10);
+    const dStr = getLocalDateStr(checkDate);
     if(dates.has(dStr)){
       streak++;
       checkDate = new Date(checkDate.getTime() - 86400000);
@@ -14617,7 +14635,7 @@ function submitQuickGuestbook() {
 
   const emDef = EMOJI_DEFINITIONS.find(e => e.id === quickPostSelectedEmojiId) || EMOJI_DEFINITIONS[0];
   const now = new Date();
-  const dateStr = now.toISOString().slice(0, 10);
+  const dateStr = getLocalDateStr(now);
   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
   const entry = {
@@ -14695,7 +14713,7 @@ function renderCheckinCalendar(){
     grid.appendChild(cell);
   }
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getLocalDateStr(new Date());
   const dateMap = {};
   history.forEach(h => {
     if(!dateMap[h.date]) dateMap[h.date] = h;
@@ -14971,7 +14989,7 @@ function submitCheckinForm(){
   const emDef = EMOJI_DEFINITIONS.find(e => e.id === selectedModalEmojiId) || EMOJI_DEFINITIONS[0];
 
   const now = new Date();
-  const dateStr = now.toISOString().slice(0, 10);
+  const dateStr = getLocalDateStr(now);
   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
   const entry = {
@@ -14995,6 +15013,14 @@ function submitCheckinForm(){
 
 // Initialize Profile on load
 loadUserProfile();
+
+// Synchronize Daily Goal streak with UI
+window.addEventListener('vokabelgo:daily-progress', function(e){
+  const streakEl = document.getElementById('streakCount');
+  if (streakEl && window.VokabelDaily) {
+    streakEl.textContent = window.VokabelDaily.getStreak();
+  }
+});
 
 // Gentle first-time visitor greeting to choose cat
 try {

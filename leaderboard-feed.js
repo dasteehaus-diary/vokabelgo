@@ -6,42 +6,11 @@
   let activeLeaderboardTab = 'streak'; // 'streak' | 'words' | 'blitz'
   let cachedLeaderboardUsers = [];
 
-  // Lấy số từ đã học trong ngày hôm nay
-  function getTodayKey() {
-    return new Date().toISOString().slice(0, 10);
-  }
-
-  function getDailyLearnedCount() {
-    try {
-      const savedDate = localStorage.getItem('vokabelgo_feed_date');
-      const today = getTodayKey();
-      if (savedDate !== today) {
-        localStorage.setItem('vokabelgo_feed_date', today);
-        localStorage.setItem('vokabelgo_feed_count', '0');
-        return 0;
-      }
-      return parseInt(localStorage.getItem('vokabelgo_feed_count') || '0', 10);
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  function addDailyLearned() {
-    const today = getTodayKey();
-    let count = getDailyLearnedCount();
-    const oldCount = count;
-    count++;
-    try {
-      localStorage.setItem('vokabelgo_feed_date', today);
-      localStorage.setItem('vokabelgo_feed_count', String(count));
-    } catch (e) {}
-
-    updateFeedUI(count, oldCount < 5 && count >= 5);
-  }
-
-  // Cập nhật giao diện Huy hiệu Cho Mèo Ăn & Popover
-  function updateFeedUI(count, justCompleted = false) {
-    if (typeof count === 'undefined') count = getDailyLearnedCount();
+  // Lấy dữ liệu mục tiêu hàng ngày từ VokabelDaily engine
+  function updateFeedUI() {
+    const count = window.VokabelDaily ? window.VokabelDaily.getTodayCount() : 0;
+    const isCompleted = window.VokabelDaily ? window.VokabelDaily.isTodayCompleted() : (count >= 5);
+    const streak = window.VokabelDaily ? window.VokabelDaily.getStreak() : 0;
 
     const badgeEl = document.getElementById('openFeedNudgeBtn');
     const badgeTextEl = document.getElementById('feedBadgeText');
@@ -56,20 +25,16 @@
     if (barFillEl) barFillEl.style.width = pct + '%';
     if (ratioEl) ratioEl.textContent = `Đã học: ${count} / 5 từ`;
 
-    if (count >= 5) {
+    if (isCompleted || count >= 5) {
       if (badgeEl) badgeEl.classList.add('is-fed');
       if (badgeIconEl) badgeIconEl.textContent = '🐟';
-      if (badgeTextEl) badgeTextEl.textContent = 'No bụng ✨';
+      if (badgeTextEl) badgeTextEl.textContent = '5/5 ✨';
       if (statusEl) {
-        statusEl.textContent = 'Đã no bụng! 💖';
+        statusEl.textContent = 'Hoàn thành hôm nay! 💖';
         statusEl.style.color = '#15803D';
       }
       if (quoteEl) {
-        quoteEl.innerHTML = '“Măm măm... No nê rồi meow! Cảm ơn bạn học chăm chỉ nha! <b>Chuỗi ngày chăm chỉ +1</b> ✨”';
-      }
-
-      if (justCompleted && typeof showRetroToast === 'function') {
-        showRetroToast('Măm măm... Bé mèo đã được ăn no nê hôm nay! 🐟💖', '😺');
+        quoteEl.innerHTML = `“Giỏi quá! Hôm nay bạn đã hoàn thành 5 từ.<br>Chuỗi hiện tại: <b>${streak} ngày 🔥</b>”`;
       }
     } else {
       if (badgeEl) badgeEl.classList.remove('is-fed');
@@ -102,10 +67,26 @@
     if (pop) pop.classList.add('hidden');
   };
 
-  // Hook khi người dùng học 1 từ mới
-  window.onCardReviewedForFeed = function() {
-    addDailyLearned();
+  // Hook khi người dùng học 1 từ mới từ Flashcard
+  window.onCardReviewedForFeed = function(cardId) {
+    if (window.VokabelDaily && typeof window.VokabelDaily.reviewCard === 'function' && cardId) {
+      window.VokabelDaily.reviewCard(cardId);
+    }
+    updateFeedUI();
   };
+
+  // Lắng nghe sự kiện hoàn thành mục tiêu 5 từ hàng ngày (Phase 1 Toast)
+  window.addEventListener('vokabelgo:daily-goal-complete', function(e) {
+    if (typeof showRetroToast === 'function') {
+      showRetroToast("Đủ 5/5 từ! Bé mèo chuẩn bị đi câu cá rồi! 🎣🐱", "🐟");
+    }
+    updateFeedUI();
+  });
+
+  // Lắng nghe sự kiện tiến độ thay đổi
+  window.addEventListener('vokabelgo:daily-progress', function(e) {
+    updateFeedUI();
+  });
 
   // ==========================================================================
   // LEADERBOARD ENGINE
@@ -284,7 +265,9 @@
 
     let streak = 0;
     try {
-      if (typeof getCheckinHistory === 'function') {
+      if (window.VokabelDaily && typeof window.VokabelDaily.getStreak === 'function') {
+        streak = window.VokabelDaily.getStreak();
+      } else if (typeof getCheckinHistory === 'function') {
         streak = getCheckinHistory().length;
       }
     } catch (e) {}

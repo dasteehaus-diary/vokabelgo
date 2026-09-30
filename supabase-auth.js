@@ -144,10 +144,14 @@
     } catch (e) {}
 
     let streakCount = 0;
-    try {
-      streakCount = parseInt(localStorage.getItem('vokabelgo_study_streak') || '0', 10);
-      if (!streakCount && checkinHist.length) streakCount = checkinHist.length;
-    } catch (e) {}
+    if (window.VokabelDaily && typeof window.VokabelDaily.getStreak === 'function') {
+      streakCount = window.VokabelDaily.getStreak();
+    } else {
+      try {
+        streakCount = parseInt(localStorage.getItem('vokabelgo_study_streak') || '0', 10);
+        if (!streakCount && checkinHist.length) streakCount = checkinHist.length;
+      } catch (e) {}
+    }
 
     let learnedCount = 0;
     Object.keys(currentProg).forEach(k => {
@@ -155,9 +159,23 @@
     });
 
     let feedCount = 0;
-    try {
-      feedCount = parseInt(localStorage.getItem('vokabelgo_feed_count') || '0', 10);
-    } catch (e) {}
+    if (window.VokabelDaily && typeof window.VokabelDaily.getTodayCount === 'function') {
+      feedCount = Math.min(window.VokabelDaily.getTodayCount(), 5);
+    } else {
+      try {
+        feedCount = parseInt(localStorage.getItem('vokabelgo_feed_count') || '0', 10);
+      } catch (e) {}
+    }
+
+    let dailyProgress = null;
+    if (window.VokabelDaily && typeof window.VokabelDaily.exportData === 'function') {
+      dailyProgress = window.VokabelDaily.exportData();
+    } else {
+      try {
+        const dp = localStorage.getItem('vokabelgo_daily_progress_v1');
+        if (dp) dailyProgress = JSON.parse(dp);
+      } catch (e) {}
+    }
 
     const prof = getLocalUserProfile();
 
@@ -171,6 +189,7 @@
       app_data: {
         profile: prof,
         progress: currentProg,
+        dailyProgress: dailyProgress,
         checkinHistory: checkinHist,
         userCards: userCards,
         matchBest: matchBest,
@@ -253,8 +272,20 @@
         localStorage.setItem('vokabelgo_match_best_score', String(cloudAppData.matchBest));
       }
 
+      // 6. Daily Goal & Streak Engine
+      if (cloudAppData.dailyProgress) {
+        if (window.VokabelDaily && typeof window.VokabelDaily.importData === 'function') {
+          window.VokabelDaily.importData(cloudAppData.dailyProgress);
+        } else {
+          try {
+            localStorage.setItem('vokabelgo_daily_progress_v1', typeof cloudAppData.dailyProgress === 'string' ? cloudAppData.dailyProgress : JSON.stringify(cloudAppData.dailyProgress));
+          } catch(e) {}
+        }
+      }
+
       // Cập nhật giao diện web
       if (typeof updateStats === 'function') updateStats();
+      if (typeof updateFeedUI === 'function') updateFeedUI();
       if (typeof applyUserProfileUI === 'function') applyUserProfileUI();
       if (typeof renderCalendar === 'function') renderCalendar();
       if (typeof renderGuestbook === 'function') renderGuestbook();

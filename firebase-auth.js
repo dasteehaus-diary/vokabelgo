@@ -96,11 +96,20 @@
       else checkinHist = JSON.parse(localStorage.getItem('vokabelgo_checkin_history') || '[]');
     } catch (e) {}
 
-    const matchBest = localStorage.getItem('vokabelgo_match_best_sec') || null;
+    let dailyProg = null;
+    try {
+      if (window.VokabelDaily && typeof window.VokabelDaily.exportData === 'function') {
+        dailyProg = window.VokabelDaily.exportData();
+      } else {
+        const dp = localStorage.getItem('vokabelgo_daily_progress_v1');
+        if (dp) dailyProg = JSON.parse(dp);
+      }
+    } catch (e) {}
 
     return {
       profile: currentProf,
       progress: currentProg,
+      dailyProgress: dailyProg,
       userCards: currentCards,
       checkinHistory: checkinHist,
       matchBest: matchBest,
@@ -210,11 +219,23 @@
       localStorage.setItem('vokabelgo_match_best_sec', cloudData.matchBest);
     }
 
+    // 6. Tiến độ học hàng ngày (Daily Progress & Streak Engine)
+    if (cloudData.dailyProgress) {
+      if (window.VokabelDaily && typeof window.VokabelDaily.importData === 'function') {
+        window.VokabelDaily.importData(cloudData.dailyProgress);
+      } else {
+        try {
+          localStorage.setItem('vokabelgo_daily_progress_v1', typeof cloudData.dailyProgress === 'string' ? cloudData.dailyProgress : JSON.stringify(cloudData.dailyProgress));
+        } catch (e) {}
+      }
+    }
+
     // Cập nhật lại toàn bộ giao diện Web
     try {
       if (typeof refreshDecks === 'function') refreshDecks();
       if (typeof applyFilter === 'function') applyFilter();
       if (typeof updateStats === 'function') updateStats();
+      if (typeof updateFeedUI === 'function') updateFeedUI();
       if (typeof renderCalendar === 'function') renderCalendar();
       if (typeof renderGuestbook === 'function') renderGuestbook();
       if (typeof renderManageList === 'function') renderManageList();
