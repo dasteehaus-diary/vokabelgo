@@ -8421,15 +8421,15 @@ input.search:focus {
 <!-- Daily Goal & Streak Engine -->
 <script src="daily-progress.js"></script>
 
-<!-- Cloud Engines: Supabase (Chính) & Firebase (Dự phòng) -->
+<!-- Cloud Engines: Supabase (Chính thức) & Firebase (Dự phòng) -->
+<script>
+  window.VokabelCloudProvider = 'supabase'; // Supabase là nhà cung cấp Cloud chính thức của VokabelGo
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="supabase-auth.js"></script>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<!-- Firebase Engine (Dự phòng / Cách ly trong namespace VokabelFirebase) -->
 <script src="firebase-config.js"></script>
 <script src="firebase-auth.js"></script>
 <script src="leaderboard-feed.js"></script>
@@ -13154,8 +13154,15 @@ function applyFilter(){
 }
 function current(){ return filtered[index % Math.max(filtered.length,1)]; }
 function val(id){ return document.getElementById(id).value.trim(); }
-function setVal(id,v){ document.getElementById(id).value=v||''; }
-function esc(s){ return String(s||''); }
+function esc(s){
+  if(s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function render(){
   const total=filtered.length;
@@ -13544,7 +13551,7 @@ function renderManageList(){
   const arr=allCards().filter(c=>!q || [c.term,c.meaning,c.deck,(c.tags||[]).join(' ')].join(' ').toLowerCase().includes(q));
   arr.slice(0,300).forEach(c=>{
     const r=document.createElement('div');r.className='card-row';
-    const tags=(c.tags||[]).map(t=>`<span class="badge">${t}</span>`).join('');
+    const tags=(c.tags||[]).map(t=>`<span class="badge">${esc(t)}</span>`).join('');
     r.innerHTML=`<div><div class="title"></div><div class="muted"></div></div>
       <div></div><div>${tags}</div><div class="row"></div>`;
     r.children[0].children[0].textContent=c.term;
@@ -14084,7 +14091,7 @@ function renderPlaylistModal(chan = currentPlModalChan){
         </div>
         <div class="pl-track-actions">
           <button class="pl-btn" onclick="playSpecificTrack('${chan}', ${idx})" title="Phát bài này">▶</button>
-          <button class="pl-btn delete" onclick="deleteTrackById('${chan}', '${t.id}', '${esc(t.title)}')" title="Xóa bài này">🗑️</button>
+          <button class="pl-btn delete" onclick="deleteTrackById('${chan}', '${t.id}')" title="Xóa bài này">🗑️</button>
         </div>
       </div>
     `;

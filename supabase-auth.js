@@ -61,8 +61,9 @@
 
   // Cập nhật giao diện Trạng thái Đăng nhập trên thanh công cụ & Modal
   function updateAuthUI() {
-    const statusBtn = document.getElementById('cloudAuthStatusBtn');
-    const statusText = document.getElementById('cloudAuthStatusText');
+    const statusBtn = document.getElementById('cloudAuthStatusBtn') || document.getElementById('openAuthBtn');
+    const statusText = document.getElementById('cloudAuthStatusText') || document.getElementById('authStatusText');
+    const syncIcon = document.getElementById('cloudSyncIcon') || document.getElementById('authSyncIcon');
     const loggedInView = document.getElementById('authLoggedInView');
     const loggedOutView = document.getElementById('authLoggedOutView');
     const profileNameEl = document.getElementById('authProfileName');
@@ -80,6 +81,9 @@
       if (statusText) {
         const metaName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.full_name;
         statusText.textContent = metaName || (currentUser.email ? currentUser.email.split('@')[0] : 'Đã kết nối');
+      }
+      if (syncIcon) {
+        syncIcon.textContent = '☁️';
       }
 
       if (loggedInView) loggedInView.classList.remove('hidden');
@@ -101,6 +105,9 @@
       }
       if (statusText) {
         statusText.textContent = isConfigured ? 'Đăng nhập' : 'Cấu hình Cloud';
+      }
+      if (syncIcon) {
+        syncIcon.textContent = '☁️';
       }
 
       if (loggedInView) loggedInView.classList.add('hidden');
@@ -341,9 +348,16 @@
   // Huy hiệu trạng thái đồng bộ
   function setSyncBadge(state, label) {
     const badge = document.getElementById('cloudSyncBadge');
-    if (!badge) return;
-    badge.className = 'cloud-sync-badge ' + state;
-    badge.textContent = label;
+    if (badge) {
+      badge.className = 'cloud-sync-badge ' + state;
+      badge.textContent = label;
+    }
+    const syncIcon = document.getElementById('cloudSyncIcon') || document.getElementById('authSyncIcon');
+    if (syncIcon) {
+      if (state === 'syncing') syncIcon.textContent = '🔄';
+      else if (state === 'synced') syncIcon.textContent = '☁️';
+      else if (state === 'error') syncIcon.textContent = '⚠️';
+    }
   }
 
   // ============================================================================
@@ -555,17 +569,28 @@
     window.handleEmailAuth(currentAuthTab);
   };
 
-  // Tải dữ liệu Bảng Xếp Hạng từ Supabase
+  // Tải dữ liệu Bảng Xếp Hạng từ Supabase (Ưu tiên đọc từ view bảo mật vokabelgo_leaderboard)
   window.loadLeaderboardFromSupabase = async function() {
     if (!sbClient) return null;
     try {
-      const { data, error } = await sbClient
-        .from('vokabelgo_users')
+      // 1. Thử đọc từ view bảo mật vokabelgo_leaderboard (chỉ chứa các cột công khai)
+      let { data, error } = await sbClient
+        .from('vokabelgo_leaderboard')
         .select('id, display_name, avatar, streak, words_learned, blitz_score, last_active')
         .order('streak', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      // 2. Nếu view chưa tạo (đang trong quá trình migrate), fallback về bảng vokabelgo_users
+      if (error) {
+        const fallback = await sbClient
+          .from('vokabelgo_users')
+          .select('id, display_name, avatar, streak, words_learned, blitz_score, last_active')
+          .order('streak', { ascending: false })
+          .limit(50);
+        if (fallback.error) throw fallback.error;
+        data = fallback.data;
+      }
+
       return (data || []).map(row => ({
         uid: row.id,
         name: row.display_name || 'Bạn học',
@@ -579,6 +604,18 @@
       console.warn('[Leaderboard] Supabase fetch error:', e);
       return null;
     }
+  };
+
+  // Expose Supabase API & User cho các module khác
+  window.getSupabaseCurrentUser = function() {
+    return currentUser;
+  };
+  window.VokabelSupabase = {
+    getClient: () => sbClient,
+    getUser: () => currentUser,
+    syncDown: syncDownFromCloud,
+    syncUp: triggerCloudSave,
+    updateUI: updateAuthUI
   };
 
   // Cấu hình Supabase Modal

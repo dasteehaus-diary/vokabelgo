@@ -266,8 +266,21 @@
     return streak;
   }
 
+  // Hàm mã hóa ký tự HTML an toàn (SEC-02 Fix)
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function formatUserForLeaderboard(uid, data) {
-    const isMe = (window.firebase && firebase.auth && firebase.auth().currentUser && firebase.auth().currentUser.uid === uid);
+    const sbUser = (typeof window.getSupabaseCurrentUser === 'function') ? window.getSupabaseCurrentUser() : null;
+    const fbUser = (window.firebase && firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser : null;
+    const isMe = Boolean((sbUser && sbUser.id === uid) || (fbUser && fbUser.uid === uid));
     
     // Đếm số từ đã thuộc
     let words = 0;
@@ -307,7 +320,7 @@
       streak: streak,
       words: words,
       matchBest: matchBest,
-      isMe: Boolean(isMe)
+      isMe: isMe
     };
   }
 
@@ -348,7 +361,9 @@
     let matchBest = parseFloat(localStorage.getItem('vokabelgo_match_best_sec') || '9999');
 
     let currentUid = 'local_me';
-    if (window.firebase && firebase.auth && firebase.auth().currentUser) {
+    if (typeof window.getSupabaseCurrentUser === 'function' && window.getSupabaseCurrentUser()) {
+      currentUid = window.getSupabaseCurrentUser().id;
+    } else if (window.firebase && firebase.auth && firebase.auth().currentUser) {
       currentUid = firebase.auth().currentUser.uid;
     }
 
@@ -409,10 +424,10 @@
           <div class="honor-card rank-2 ${top2.isMe ? 'is-me' : ''}">
             <span class="honor-badge">🥈 Á Quân</span>
             <div class="honor-avatar-wrap">
-              <img src="${getAvatar(top2)}" alt="${top2.name}" class="honor-avatar" onerror="this.onerror=null;this.src='img/avatars/v2/cat_12.png';">
+              <img src="${getAvatar(top2)}" alt="${escapeHtml(top2.name)}" class="honor-avatar" onerror="this.onerror=null;this.src='img/avatars/v2/cat_12.png';">
             </div>
-            <div class="honor-name" title="${top2.name}">${top2.name} ${top2.isMe ? '<span class="honor-is-me">Bạn</span>' : ''}</div>
-            <div class="honor-score-pill">${getScoreStr(top2)}</div>
+            <div class="honor-name" title="${escapeHtml(top2.name)}">${escapeHtml(top2.name)} ${top2.isMe ? '<span class="honor-is-me">Bạn</span>' : ''}</div>
+            <div class="honor-score-pill">${escapeHtml(getScoreStr(top2))}</div>
           </div>
         ` : '<div style="visibility:hidden"></div>'}
 
@@ -422,10 +437,10 @@
             <span class="honor-badge">👑 Quán Quân</span>
             <div class="honor-avatar-wrap">
               <span class="honor-crown">👑</span>
-              <img src="${getAvatar(top1)}" alt="${top1.name}" class="honor-avatar" onerror="this.onerror=null;this.src='img/avatars/v2/cat_12.png';">
+              <img src="${getAvatar(top1)}" alt="${escapeHtml(top1.name)}" class="honor-avatar" onerror="this.onerror=null;this.src='img/avatars/v2/cat_12.png';">
             </div>
-            <div class="honor-name" title="${top1.name}">${top1.name} ${top1.isMe ? '<span class="honor-is-me">Bạn</span>' : ''}</div>
-            <div class="honor-score-pill">${getScoreStr(top1)}</div>
+            <div class="honor-name" title="${escapeHtml(top1.name)}">${escapeHtml(top1.name)} ${top1.isMe ? '<span class="honor-is-me">Bạn</span>' : ''}</div>
+            <div class="honor-score-pill">${escapeHtml(getScoreStr(top1))}</div>
           </div>
         ` : '<div style="visibility:hidden"></div>'}
 
@@ -434,10 +449,10 @@
           <div class="honor-card rank-3 ${top3.isMe ? 'is-me' : ''}">
             <span class="honor-badge">🥉 Quý Quân</span>
             <div class="honor-avatar-wrap">
-              <img src="${getAvatar(top3)}" alt="${top3.name}" class="honor-avatar" onerror="this.onerror=null;this.src='img/avatars/v2/cat_12.png';">
+              <img src="${getAvatar(top3)}" alt="${escapeHtml(top3.name)}" class="honor-avatar" onerror="this.onerror=null;this.src='img/avatars/v2/cat_12.png';">
             </div>
-            <div class="honor-name" title="${top3.name}">${top3.name} ${top3.isMe ? '<span class="honor-is-me">Bạn</span>' : ''}</div>
-            <div class="honor-score-pill">${getScoreStr(top3)}</div>
+            <div class="honor-name" title="${escapeHtml(top3.name)}">${escapeHtml(top3.name)} ${top3.isMe ? '<span class="honor-is-me">Bạn</span>' : ''}</div>
+            <div class="honor-score-pill">${escapeHtml(getScoreStr(top3))}</div>
           </div>
         ` : '<div style="visibility:hidden"></div>'}
       </div>
@@ -457,9 +472,9 @@
             return `
               <div class="leaderboard-row ${u.isMe ? 'is-me' : ''}">
                 <span class="lb-rank">#${rank}</span>
-                <img src="${getAvatar(u)}" alt="${u.name}" class="lb-avatar" onerror="this.onerror=null;this.src='img/avatars/v2/cat_12.png';">
-                <span class="lb-name">${u.name} ${u.isMe ? '<span class="honor-is-me">Bạn</span>' : ''}</span>
-                <span class="lb-score">${getScoreStr(u)}</span>
+                <img src="${getAvatar(u)}" alt="${escapeHtml(u.name)}" class="lb-avatar" onerror="this.onerror=null;this.src='img/avatars/v2/cat_12.png';">
+                <span class="lb-name">${escapeHtml(u.name)} ${u.isMe ? '<span class="honor-is-me">Bạn</span>' : ''}</span>
+                <span class="lb-score">${escapeHtml(getScoreStr(u))}</span>
               </div>
             `;
           }).join('')}

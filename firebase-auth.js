@@ -13,6 +13,11 @@
 
   // Khởi tạo Firebase
   function initFirebase() {
+    // Không khởi tạo tự động nếu provider chính thức là Supabase
+    if (window.VokabelCloudProvider && window.VokabelCloudProvider !== 'firebase') {
+      return false;
+    }
+
     if (!window.firebase) {
       console.warn('[VokabelGo Cloud] Thư viện Firebase SDK chưa được tải.');
       updateAuthUI();
@@ -336,7 +341,7 @@
   }
 
   // Giao diện mở/đóng modal Auth
-  window.openAuthModal = function() {
+  function openAuthModal() {
     const modal = document.getElementById('authModal');
     if (!modal) return;
 
@@ -348,15 +353,15 @@
 
     updateAuthUI();
     modal.classList.remove('hidden');
-  };
+  }
 
-  window.closeAuthModal = function() {
+  function closeAuthModal() {
     const modal = document.getElementById('authModal');
     if (modal) modal.classList.add('hidden');
-  };
+  }
 
   // Mở/Đóng Modal Cấu hình Firebase
-  window.openFirebaseConfigModal = function(showNotice = false) {
+  function openFirebaseConfigModal(showNotice = false) {
     const modal = document.getElementById('firebaseConfigModal');
     if (!modal) return;
 
@@ -376,15 +381,15 @@
     }
 
     modal.classList.remove('hidden');
-  };
+  }
 
-  window.closeFirebaseConfigModal = function() {
+  function closeFirebaseConfigModal() {
     const modal = document.getElementById('firebaseConfigModal');
     if (modal) modal.classList.add('hidden');
-  };
+  }
 
-  // Lưu cấu hình Firebase người dùng dán vào
-  window.saveFirebaseConfigFromInput = function() {
+  // Lưu cấu hình Firebase người dùng dán vào (SEC-03 Fix: Bỏ constructor động, phân tích cú pháp an toàn)
+  function saveFirebaseConfigFromInput() {
     const input = document.getElementById('firebaseConfigJsonInput');
     const errEl = document.getElementById('firebaseConfigError');
     if (errEl) errEl.textContent = '';
@@ -397,28 +402,24 @@
     let raw = input.value.trim();
     let configObj = null;
 
-    // Cho phép người dùng dán cả đoạn const firebaseConfig = { ... };
+    // Cho phép người dùng dán cả đoạn const firebaseConfig = { ... }; hoặc JSON thuần
     try {
       if (raw.includes('{') && raw.includes('}')) {
         let jsonPart = raw.substring(raw.indexOf('{'), raw.lastIndexOf('}') + 1);
-        // Sửa các key chưa có dấu ngoặc kép nếu người dùng paste JS object thuần
+        // Sửa các key chưa có dấu ngoặc kép nếu người dùng paste JS object thuần (an toàn)
         jsonPart = jsonPart.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2": ');
         // Thay nháy đơn bằng nháy kép
         jsonPart = jsonPart.replace(/'([^']*)'/g, '"$1"');
         configObj = JSON.parse(jsonPart);
+      } else {
+        configObj = JSON.parse(raw);
       }
     } catch (e) {
-      try {
-        // Thử eval an toàn nếu JSON.parse không bắt được
-        const fn = new Function('return ' + raw.replace(/^const\s+[a-zA-Z0-9_]+\s*=\s*/, ''));
-        configObj = fn();
-      } catch (err2) {
-        if (errEl) errEl.textContent = 'Mã cấu hình không đúng định dạng JSON/JS. Vui lòng kiểm tra lại!';
-        return;
-      }
+      if (errEl) errEl.textContent = 'Mã cấu hình không đúng định dạng JSON chuẩn. Vui lòng kiểm tra lại!';
+      return;
     }
 
-    if (!configObj || !configObj.apiKey || !configObj.projectId) {
+    if (!configObj || typeof configObj !== 'object' || !configObj.apiKey || !configObj.projectId) {
       if (errEl) errEl.textContent = 'Thiếu thông tin apiKey hoặc projectId trong cấu hình!';
       return;
     }
@@ -432,10 +433,10 @@
     setTimeout(() => {
       window.location.reload();
     }, 800);
-  };
+  }
 
   // Đăng nhập Email / Mật khẩu
-  window.handleEmailAuth = async function(mode) {
+  async function handleEmailAuth(mode) {
     const emailInput = document.getElementById('authEmailInput');
     const passInput = document.getElementById('authPasswordInput');
     const nameInput = document.getElementById('authNameInput');
@@ -491,10 +492,10 @@
       }
       if (errEl) errEl.textContent = msg;
     }
-  };
+  }
 
   // Đăng nhập bằng Google
-  window.handleGoogleAuth = async function() {
+  async function handleGoogleAuth() {
     const errEl = document.getElementById('authFormError');
     if (errEl) errEl.textContent = '';
 
@@ -516,10 +517,10 @@
         if (errEl) errEl.textContent = 'Lỗi đăng nhập Google: ' + err.message;
       }
     }
-  };
+  }
 
   // Quên mật khẩu
-  window.handleForgotPassword = async function() {
+  async function handleForgotPassword() {
     const emailInput = document.getElementById('authEmailInput');
     const errEl = document.getElementById('authFormError');
     if (errEl) errEl.textContent = '';
@@ -536,10 +537,10 @@
     } catch (err) {
       if (errEl) errEl.textContent = 'Lỗi gửi email: ' + err.message;
     }
-  };
+  }
 
   // Đăng xuất
-  window.handleAuthLogout = async function() {
+  async function handleAuthLogout() {
     if (!confirm('Bạn có chắc muốn đăng xuất? Tiến độ học đã được lưu an toàn trên Cloud.')) {
       return;
     }
@@ -570,20 +571,20 @@
     } catch (err) {
       console.error('[VokabelGo Cloud] Logout Error:', err);
     }
-  };
+  }
 
   // Đồng bộ thủ công ngay lập tức
-  window.manualSyncCloud = function() {
+  function manualSyncCloud() {
     if (!currentUser) return;
     triggerCloudSave();
     if (typeof showRetroToast === 'function') {
       showRetroToast('Đang đồng bộ dữ liệu lên Cloud...', '🔄');
     }
-  };
+  }
 
   // Chuyển tab Đăng nhập / Đăng ký
   let currentAuthTab = 'login';
-  window.switchAuthTab = function(tab) {
+  function switchAuthTab(tab) {
     currentAuthTab = tab;
     const tabLogin = document.getElementById('authTabLogin');
     const tabReg = document.getElementById('authTabRegister');
@@ -603,20 +604,62 @@
       if (nameField) nameField.classList.add('hidden');
       if (submitBtn) submitBtn.textContent = 'Đăng Nhập ➔';
     }
-  };
+  }
 
-  window.submitAuthForm = function() {
-    window.handleEmailAuth(currentAuthTab);
-  };
+  function submitAuthForm() {
+    handleEmailAuth(currentAuthTab);
+  }
 
   // Hook vào các hàm lưu cục bộ của trang web
-  window.onLocalDataChanged = function(source) {
+  function onLocalDataChanged(source) {
     if (currentUser) {
       triggerCloudSave();
     }
+  }
+
+  // Expose API sang namespace riêng biệt VokabelFirebase để không xung đột với Supabase (AUTH-01 Fix)
+  const firebaseAuthApi = {
+    openAuthModal,
+    closeAuthModal,
+    handleEmailAuth,
+    handleGoogleAuth,
+    handleForgotPassword,
+    handleAuthLogout,
+    manualSyncCloud,
+    switchAuthTab,
+    submitAuthForm,
+    onLocalDataChanged,
+    openFirebaseConfigModal,
+    closeFirebaseConfigModal,
+    saveFirebaseConfigFromInput,
+    initFirebase,
+    getApp: () => fbApp,
+    getAuth: () => fbAuth,
+    getUser: () => currentUser
   };
 
-  // Khởi động khi tải xong trang
+  window.VokabelFirebase = firebaseAuthApi;
+
+  // Luôn cung cấp các hàm quản lý modal cấu hình Firebase nếu người dùng mở bảng này
+  window.openFirebaseConfigModal = openFirebaseConfigModal;
+  window.closeFirebaseConfigModal = closeFirebaseConfigModal;
+  window.saveFirebaseConfigFromInput = saveFirebaseConfigFromInput;
+
+  // CHỈ gắn đè vào window toàn cục nếu Firebase được chọn tường minh là Cloud Provider
+  if (window.VokabelCloudProvider === 'firebase') {
+    window.openAuthModal = openAuthModal;
+    window.closeAuthModal = closeAuthModal;
+    window.handleEmailAuth = handleEmailAuth;
+    window.handleGoogleAuth = handleGoogleAuth;
+    window.handleForgotPassword = handleForgotPassword;
+    window.handleAuthLogout = handleAuthLogout;
+    window.manualSyncCloud = manualSyncCloud;
+    window.switchAuthTab = switchAuthTab;
+    window.submitAuthForm = submitAuthForm;
+    window.onLocalDataChanged = onLocalDataChanged;
+  }
+
+  // Khởi động khi tải xong trang (nếu provider là firebase)
   window.addEventListener('DOMContentLoaded', () => {
     initFirebase();
   });
