@@ -13154,6 +13154,7 @@ function applyFilter(){
 }
 function current(){ return filtered[index % Math.max(filtered.length,1)]; }
 function val(id){ return document.getElementById(id).value.trim(); }
+function setVal(id,v){ const el=document.getElementById(id); if(el) el.value=v||''; }
 function esc(s){
   if(s == null) return '';
   return String(s)
