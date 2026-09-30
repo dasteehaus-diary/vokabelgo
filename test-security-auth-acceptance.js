@@ -1,28 +1,70 @@
 // ==============================================================================
-// VokabelGo - Security, Auth & Flashcard Behavioral Test Suite
-// (SEC-01, SEC-02, SEC-03, AUTH-01 + Flashcard CRUD & RLS Simulation)
+// VokabelGo - Security, Auth & Flashcard Behavioral Acceptance Test Suite
+// (SEC-01, SEC-02, SEC-03, AUTH-01 + Real Code Flashcard CRUD & Runner Verification)
 // ==============================================================================
 
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 const assert = require('assert');
+const { spawnSync } = require('child_process');
 
-let passedTests = 0;
-let failedTests = 0;
+// ------------------------------------------------------------------------------
+// TEST RUNNER INFRASTRUCTURE (ASYNC/AWAIT SUPPORT)
+// ------------------------------------------------------------------------------
+const testQueue = [];
+const isVerificationMode = process.argv.includes('--verify-runner-failure');
 
 function it(desc, fn) {
-  try {
-    fn();
-    console.log(`  ✅ PASS: ${desc}`);
-    passedTests++;
-  } catch (err) {
-    console.error(`  ❌ FAIL: ${desc}`);
-    console.error(`     Error: ${err.message}`);
-    failedTests++;
+  testQueue.push({ desc, fn });
+}
+
+async function runTests() {
+  console.log('=== RUNNING SECURITY, AUTH & BEHAVIORAL ACCEPTANCE TESTS ===\n');
+
+  if (isVerificationMode) {
+    console.log('>>> CHẾ ĐỘ KIỂM TRA BỘ CHẠY BẤT ĐỒNG BỘ (--verify-runner-failure) <<<\n');
+  }
+
+  let passedTests = 0;
+  let failedTests = 0;
+
+  for (const { desc, fn } of testQueue) {
+    try {
+      const res = fn();
+      if (res && typeof res.then === 'function') {
+        await res;
+      }
+      console.log(`  ✅ PASS: ${desc}`);
+      passedTests++;
+    } catch (err) {
+      console.error(`  ❌ FAIL: ${desc}`);
+      console.error(`     Error: ${err && err.message ? err.message : String(err)}`);
+      failedTests++;
+    }
+  }
+
+  console.log('\n========================================');
+  console.log(`ACCEPTANCE TEST SUMMARY: ${passedTests} PASSED, ${failedTests} FAILED`);
+  console.log('========================================\n');
+
+  if (failedTests > 0) {
+    process.exit(1);
+  } else {
+    process.exit(0);
   }
 }
 
-console.log('=== RUNNING SECURITY, AUTH & BEHAVIORAL ACCEPTANCE TESTS ===\n');
+// Nếu đang ở chế độ xác minh thất bại bất đồng bộ:
+// Chạy 1 test cố tình thất bại bằng Promise để xác minh runner bắt lỗi và thoát mã 1.
+if (isVerificationMode) {
+  it('Cố tình thất bại bài kiểm tra bất đồng bộ để kiểm tra test runner', async () => {
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    assert.strictEqual(1, 2, 'Cố tình thất bại bất đồng bộ để xác minh runner bắt lỗi Promise và trả mã thoát khác 0');
+  });
+  runTests();
+  return;
+}
 
 // ------------------------------------------------------------------------------
 // GROUP 1: SEC-02 - HTML Escaping & XSS Protection
@@ -133,9 +175,9 @@ it('AUTH-01: leaderboard-feed.js nhận diện đúng người dùng Supabase qu
 });
 
 // ------------------------------------------------------------------------------
-// GROUP 3: SEC-01 - Supabase RLS & Schema Separation
+// GROUP 3: SEC-01 - Supabase RLS & Schema Separation (Tập tin SQL)
 // ------------------------------------------------------------------------------
-console.log('\n--- TEST GROUP 3: SEC-01 - Supabase RLS & Schema Separation ---');
+console.log('\n--- TEST GROUP 3: SEC-01 - Supabase RLS & Schema Separation (Tập tin SQL) ---');
 
 const schemaContent = fs.readFileSync(path.join(__dirname, 'supabase_schema.sql'), 'utf8');
 const patchContent = fs.readFileSync(path.join(__dirname, 'supabase_security_patch.sql'), 'utf8');
@@ -164,7 +206,6 @@ it('supabase_schema.sql: Tạo view public.vokabelgo_leaderboard cách ly các c
 });
 
 it('supabase_security_patch.sql: Phương án hoàn tác (Rollback) KHÔNG khôi phục USING (true) và bỏ từ ngữ tuyệt đối', () => {
-  // Rollback plan must NOT restore USING (true)
   assert.ok(!patchContent.includes('USING (true)'));
   assert.ok(!patchContent.includes('using (true)'));
   assert.ok(!patchContent.includes('bảo vệ tuyệt đối'));
@@ -179,29 +220,79 @@ it('supabase-auth.js: loadLeaderboardFromSupabase ưu tiên đọc từ view vok
 });
 
 // ------------------------------------------------------------------------------
-// GROUP 4: BEHAVIORAL TESTS - Flashcard Operations (add, edit, clone, clear, persist)
+// GROUP 4: BEHAVIORAL TESTS - Thực thi trực tiếp mã ứng dụng từ index.html
 // ------------------------------------------------------------------------------
-console.log('\n--- TEST GROUP 4: BEHAVIORAL TESTS - Flashcard Operations ---');
+console.log('\n--- TEST GROUP 4: BEHAVIORAL TESTS - Chạy trực tiếp mã thật từ index.html ---');
 
-function createDOMMock() {
-  const store = {};
+// Trích xuất mã kịch bản thật từ index.html (từ `const BASE =` đến hết thẻ `<script>`)
+const appScriptMatch = indexHtmlContent.match(/<script>\s*(const BASE =[\s\S]*?)<\/script>/);
+if (!appScriptMatch) {
+  throw new Error('Không thể trích xuất đoạn script chính (const BASE = ...) từ index.html');
+}
+const appScriptCode = appScriptMatch[1];
+
+// Bộ giả lập môi trường trình duyệt tối thiểu để mã index.html thực thi nguyên bản
+function createAppRuntimeEnvironment(initialStorage = {}) {
+  const store = { ...initialStorage };
   const elements = {};
 
-  const localStorage = {
-    getItem: (k) => (k in store ? store[k] : null),
-    setItem: (k, v) => { store[k] = String(v); },
-    removeItem: (k) => { delete store[k]; },
-    clear: () => { Object.keys(store).forEach(k => delete store[k]); }
-  };
+  function parseHTML(html, createEl) {
+    if (!html || typeof html !== 'string') return [];
+    const root = createEl('div');
+    const stack = [root];
+    const tagRegex = /<(\/)?([a-zA-Z0-9\-]+)([^>]*)>|([^<]+)/g;
+    let match;
+    while ((match = tagRegex.exec(html)) !== null) {
+      const [full, isClose, tagName, attrStr, text] = match;
+      if (text) {
+        if (stack.length > 0 && text.trim()) {
+          const top = stack[stack.length - 1];
+          top.textContent = (top.textContent || '') + text;
+        }
+        continue;
+      }
+      if (isClose) {
+        if (stack.length > 1 && stack[stack.length - 1].tagName.toLowerCase() === tagName.toLowerCase()) {
+          stack.pop();
+        }
+      } else {
+        const el = createEl(tagName);
+        if (attrStr) {
+          const classMatch = attrStr.match(/class=["']([^"']*)["']/);
+          if (classMatch) {
+            el.className = classMatch[1];
+            classMatch[1].split(/\s+/).forEach(c => c && el.classList.add(c));
+          }
+          const idMatch = attrStr.match(/id=["']([^"']*)["']/);
+          if (idMatch) el.id = idMatch[1];
+        }
+        stack[stack.length - 1].appendChild(el);
+        const isVoid = /^(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)$/i.test(tagName);
+        if (!isVoid && !full.endsWith('/>')) {
+          stack.push(el);
+        }
+      }
+    }
+    return root.children;
+  }
 
-  function createElementMock(tagName, id = '') {
+  function createElement(tagName = 'div', id = '') {
+    let _innerHTML = '';
     const el = {
-      tagName: (tagName || 'div').toUpperCase(),
+      tagName: tagName.toUpperCase(),
       id: id,
       className: '',
       value: '',
       textContent: '',
-      innerHTML: '',
+      get innerHTML() {
+        return _innerHTML;
+      },
+      set innerHTML(val) {
+        _innerHTML = String(val || '');
+        this.children = parseHTML(_innerHTML, createElement);
+      },
+      style: {},
+      children: [],
       classList: {
         _classes: new Set(),
         add(c) { this._classes.add(c); },
@@ -215,539 +306,401 @@ function createDOMMock() {
           }
         }
       },
-      style: {},
-      children: [],
       appendChild(child) {
         this.children.push(child);
         return child;
       },
-      querySelector() {
-        return { scrollTop: 0 };
-      }
+      addEventListener() {},
+      removeEventListener() {},
+      setAttribute(k, v) { this[k] = v; },
+      getAttribute(k) { return this[k] || null; },
+      removeAttribute(k) { delete this[k]; },
+      querySelector(sel) {
+        return createElement('div', sel);
+      },
+      querySelectorAll() {
+        return [];
+      },
+      focus() {},
+      blur() {},
+      setSelectionRange() {}
     };
     return el;
   }
 
-  // Pre-create form elements
-  const inputIds = ['editId', 'fTerm', 'fMeaning', 'fDeck', 'fColloc', 'fGrammar', 'fExample', 'fNote', 'fTags', 'bulkImport', 'bulkDeck', 'bulkTags', 'manageSearch'];
-  inputIds.forEach(id => {
-    elements[id] = createElementMock('input', id);
-  });
-
-  const otherIds = ['manageModal', 'cardList', 'deckSelect', 'totalCount', 'frontTerm', 'frontMeta', 'backMeaning', 'position', 'bar', 'knownCount', 'hardCount', 'unknownCount', 'collocations', 'collocBlock', 'grammar', 'grammarBlock', 'example', 'exampleBlock', 'note', 'noteBlock', 'cardTags', 'tagBlock', 'card', 'clearForm', 'saveCard', 'manageBtn', 'closeManage'];
-  otherIds.forEach(id => {
-    elements[id] = createElementMock('div', id);
-  });
-
   const document = {
     getElementById(id) {
       if (!elements[id]) {
-        elements[id] = createElementMock('div', id);
+        elements[id] = createElement('div', id);
       }
       return elements[id];
     },
     createElement(tag) {
-      return createElementMock(tag);
+      return createElement(tag);
+    },
+    querySelector(sel) {
+      return createElement('div', sel);
     },
     querySelectorAll() {
       return [];
     },
-    body: createElementMock('body')
+    addEventListener() {},
+    removeEventListener() {},
+    body: createElement('body'),
+    documentElement: createElement('html'),
+    head: createElement('head')
   };
 
-  return { document, localStorage, elements, store };
-}
+  const localStorage = {
+    getItem: (k) => (k in store ? store[k] : null),
+    setItem: (k, v) => { store[k] = String(v); },
+    removeItem: (k) => { delete store[k]; },
+    clear: () => { Object.keys(store).forEach(k => delete store[k]); }
+  };
 
-// Chạy mô phỏng logic Quản lý thẻ từ index.html
-function setupFlashcardSandbox() {
-  const { document, localStorage, elements, store } = createDOMMock();
-  let alerts = [];
-  const alert = (msg) => alerts.push(msg);
+  const alerts = [];
+  const windowObj = {
+    localStorage,
+    document,
+    location: { href: 'http://localhost/', search: '', hash: '' },
+    navigator: { userAgent: 'NodeTest' },
+    addEventListener() {},
+    removeEventListener() {},
+    setTimeout: (fn) => setTimeout(fn, 0),
+    clearTimeout: clearTimeout,
+    setInterval: () => {},
+    clearInterval: () => {},
+    alert: (msg) => alerts.push(msg),
+    confirm: () => true,
+    prompt: () => '',
+    Audio: class { play() {} pause() {} addEventListener() {} },
+    AudioContext: class { createGain() { return { gain: { value: 1 }, connect() {} }; } destination() {} decodeAudioData() {} },
+    webkitAudioContext: class { createGain() { return { gain: { value: 1 }, connect() {} }; } destination() {} decodeAudioData() {} },
+    VokabelCloudProvider: 'supabase'
+  };
+  windowObj.window = windowObj;
 
-  // Helper functions directly from index.html
-  let uidCounter = 1000;
-  function uid() { return 'u_' + (++uidCounter); }
-  function val(id) { return document.getElementById(id).value.trim(); }
-  function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v || ''; }
-  function esc(s) {
-    if (s == null) return '';
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
+  const sandbox = vm.createContext({
+    ...windowObj,
+    console,
+    JSON,
+    Math,
+    Date,
+    Array,
+    Object,
+    String,
+    Number,
+    Boolean,
+    RegExp,
+    Error,
+    parseInt,
+    parseFloat,
+    isNaN,
+    isFinite
+  });
 
-  let BASE = [
-    { id: 'b_0', source: 'base', term: 'der Apfel', meaning: 'quả táo', deck: 'A1 · Đồ ăn', collocations: ['Apfel essen'], grammar: 'der Apfel, die Äpfel', example: 'Ich esse einen Apfel.', note: 'Giống đực', tags: ['A1', 'Essen'] },
-    { id: 'b_1', source: 'base', term: 'das Buch', meaning: 'cuốn sách', deck: 'A1 · Đồ vật', collocations: ['Buch lesen'], grammar: 'das Buch, die Bücher', example: 'Ich lese ein Buch.', note: 'Giống trung', tags: ['A1', 'Objekt'] }
-  ];
-
-  let userCards = [];
-  try {
-    userCards = JSON.parse(localStorage.getItem('dmf_flash_user_cards_v2') || '[]');
-  } catch (e) {
-    userCards = [];
-  }
-
-  function allCards() { return [...BASE, ...userCards]; }
-
-  function saveUser() {
-    localStorage.setItem('dmf_flash_user_cards_v2', JSON.stringify(userCards));
-  }
-
-  function clearForm() {
-    ['editId', 'fTerm', 'fMeaning', 'fDeck', 'fColloc', 'fGrammar', 'fExample', 'fNote', 'fTags'].forEach(id => setVal(id, ''));
-  }
-
-  function refreshDecks() {
-    const sel = document.getElementById('deckSelect');
-    sel.children = [];
-    const decks = ['Tất cả bộ', ...Array.from(new Set(allCards().map(c => c.deck || 'Khác')))];
-    decks.forEach(d => {
-      const opt = document.createElement('option');
-      opt.value = d;
-      opt.textContent = d;
-      sel.appendChild(opt);
-    });
-  }
-
-  let filtered = allCards();
-  function applyFilter() {
-    filtered = allCards();
-  }
-
-  function renderManageList() {
-    const q = val('manageSearch').toLowerCase();
-    const list = document.getElementById('cardList');
-    list.children = [];
-    const arr = allCards().filter(c => !q || [c.term, c.meaning, c.deck, (c.tags || []).join(' ')].join(' ').toLowerCase().includes(q));
-    arr.forEach(c => {
-      const r = document.createElement('div');
-      r.className = 'card-row';
-      const tags = (c.tags || []).map(t => `<span class="badge">${esc(t)}</span>`).join('');
-      r.innerHTML = `<div><div class="title"></div><div class="muted"></div></div>
-        <div></div><div>${tags}</div><div class="row"></div>`;
-      
-      const col0 = document.createElement('div');
-      const tEl = document.createElement('div'); tEl.textContent = c.term; col0.appendChild(tEl);
-      const dEl = document.createElement('div'); dEl.textContent = c.deck || ''; col0.appendChild(dEl);
-      
-      const col1 = document.createElement('div'); col1.textContent = c.meaning;
-      const col2 = document.createElement('div'); col2.innerHTML = tags;
-      const col3 = document.createElement('div');
-      
-      const editBtn = document.createElement('button');
-      editBtn.textContent = c.source === 'base' ? 'Nhân bản để sửa' : 'Sửa';
-      editBtn.onclick = () => editCard(c.id);
-      col3.appendChild(editBtn);
-
-      r.children = [col0, col1, col2, col3];
-      list.appendChild(r);
-    });
-  }
-
-  function saveCard() {
-    const term = val('fTerm'), meaning = val('fMeaning');
-    if (!term || !meaning) return alert('Cần có Thuật ngữ và Nghĩa.');
-    const id = val('editId');
-    const card = {
-      id: id || uid(),
-      source: 'user',
-      term,
-      meaning,
-      deck: val('fDeck') || 'Thẻ của tôi',
-      collocations: val('fColloc').split('\n').map(x => x.trim()).filter(Boolean),
-      grammar: val('fGrammar'),
-      example: val('fExample'),
-      note: val('fNote'),
-      tags: val('fTags').split(',').map(x => x.trim()).filter(Boolean)
-    };
-    const i = userCards.findIndex(x => x.id === card.id);
-    if (i >= 0) userCards[i] = card; else userCards.push(card);
-    saveUser();
-    clearForm();
-    refreshDecks();
-    applyFilter();
-    renderManageList();
-    alert('Đã lưu thẻ.');
-  }
-
-  function editCard(id) {
-    let c = userCards.find(x => x.id === id);
-    if (!c) {
-      const b = BASE.find(x => x.id === id);
-      if (!b) return;
-      c = { ...b, id: uid(), source: 'user', deck: (b.deck || '') + ' · Bản chỉnh sửa' };
-    }
-    setVal('editId', c.id);
-    setVal('fTerm', c.term);
-    setVal('fMeaning', c.meaning);
-    setVal('fDeck', c.deck);
-    setVal('fColloc', (c.collocations || []).join('\n'));
-    setVal('fGrammar', c.grammar);
-    setVal('fExample', c.example);
-    setVal('fNote', c.note);
-    setVal('fTags', (c.tags || []).join(', '));
-  }
+  // Chạy trực tiếp mã nguồn trích từ index.html
+  vm.runInContext(appScriptCode, sandbox);
 
   return {
-    document,
-    localStorage,
-    elements,
+    sandbox,
     store,
-    val,
-    setVal,
-    clearForm,
-    saveCard,
-    editCard,
-    renderManageList,
-    getUserCards: () => userCards,
-    setUserCards: (arr) => { userCards = arr; },
-    BASE,
-    allCards,
-    alerts
+    elements,
+    alerts,
+    localStorage,
+    document
   };
 }
 
-it('Thao tác 1: clearForm() làm trống tất cả 9 trường nhập liệu qua setVal() mà không lỗi', () => {
-  const sb = setupFlashcardSandbox();
-  sb.setVal('editId', 'test_123');
-  sb.setVal('fTerm', 'Hallo');
-  sb.setVal('fMeaning', 'Xin chào');
-  sb.setVal('fDeck', 'Chào hỏi');
-  sb.setVal('fColloc', 'Hallo zusammen');
-  sb.setVal('fGrammar', 'Interjektion');
-  sb.setVal('fExample', 'Hallo wie gehts');
-  sb.setVal('fNote', 'Lời chào thân mật');
-  sb.setVal('fTags', 'A1, Begrüßung');
+it('Thao tác 1: clearForm() làm trống tất cả 9 trường nhập liệu qua hàm setVal() khôi phục (chạy trực tiếp mã index.html)', () => {
+  const env = createAppRuntimeEnvironment();
 
-  assert.strictEqual(sb.val('fTerm'), 'Hallo');
-  sb.clearForm();
+  // Điền dữ liệu vào form qua hàm setVal() thật
+  vm.runInContext(`
+    setVal('editId', 'test_id_999');
+    setVal('fTerm', 'die Sonne');
+    setVal('fMeaning', 'mặt trời');
+    setVal('fDeck', 'Thiên nhiên');
+    setVal('fColloc', 'die Sonne scheint');
+    setVal('fGrammar', 'die Sonne, -');
+    setVal('fExample', 'Die Sonne scheint heute.');
+    setVal('fNote', 'Giống cái');
+    setVal('fTags', 'A1, Natur');
+  `, env.sandbox);
 
-  assert.strictEqual(sb.val('editId'), '');
-  assert.strictEqual(sb.val('fTerm'), '');
-  assert.strictEqual(sb.val('fMeaning'), '');
-  assert.strictEqual(sb.val('fDeck'), '');
-  assert.strictEqual(sb.val('fColloc'), '');
-  assert.strictEqual(sb.val('fGrammar'), '');
-  assert.strictEqual(sb.val('fExample'), '');
-  assert.strictEqual(sb.val('fNote'), '');
-  assert.strictEqual(sb.val('fTags'), '');
+  assert.strictEqual(env.elements['fTerm'].value, 'die Sonne');
+  assert.strictEqual(env.elements['fMeaning'].value, 'mặt trời');
+
+  // Gọi trực tiếp hàm clearForm() thật của index.html
+  vm.runInContext('clearForm()', env.sandbox);
+
+  // Xác minh cả 9 trường đã được setVal(id, '') làm trống sạch sẽ
+  ['editId', 'fTerm', 'fMeaning', 'fDeck', 'fColloc', 'fGrammar', 'fExample', 'fNote', 'fTags'].forEach(id => {
+    assert.strictEqual(env.elements[id].value, '', `Trường ${id} phải được làm trống qua setVal`);
+  });
 });
 
-it('Thao tác 2: Thêm thẻ mới qua saveCard() -> Thẻ lưu vào userCards & localStorage, giao diện cập nhật và form được làm trống', () => {
-  const sb = setupFlashcardSandbox();
-  sb.setVal('fTerm', 'die Katze');
-  sb.setVal('fMeaning', 'con mèo');
-  sb.setVal('fDeck', 'Động vật');
-  sb.setVal('fTags', 'A1, Tiere, <script>alert(1)</script>');
+it('Thao tác 2: Thêm thẻ mới qua saveCard() -> Lưu vào userCards & localStorage, giao diện cập nhật, form làm trống (chạy trực tiếp mã index.html)', () => {
+  const env = createAppRuntimeEnvironment();
 
-  sb.saveCard();
+  // Nhập dữ liệu thẻ mới kèm payload XSS để kiểm tra đồng thời
+  vm.runInContext(`
+    setVal('fTerm', 'die Katze');
+    setVal('fMeaning', 'con mèo');
+    setVal('fDeck', 'Động vật');
+    setVal('fTags', 'A1, Tiere, <script>alert(1)</script>');
+    saveCard();
+  `, env.sandbox);
 
-  const cards = sb.getUserCards();
-  assert.strictEqual(cards.length, 1);
-  const newCard = cards[0];
+  // 1. Kiểm tra mảng userCards trong mã ứng dụng
+  const userCards = vm.runInContext('userCards', env.sandbox);
+  assert.strictEqual(userCards.length, 1);
+  const newCard = userCards[0];
   assert.strictEqual(newCard.term, 'die Katze');
   assert.strictEqual(newCard.meaning, 'con mèo');
   assert.strictEqual(newCard.deck, 'Động vật');
   assert.strictEqual(newCard.source, 'user');
-  assert.ok(newCard.id.startsWith('u_'));
+  assert.ok(newCard.id.startsWith('u_'), 'ID thẻ người dùng tạo phải bắt đầu bằng u_');
 
-  // Kiểm tra lưu bền vững vào localStorage
-  const savedJson = sb.localStorage.getItem('dmf_flash_user_cards_v2');
-  assert.ok(savedJson, 'Storage item exists');
-  const parsed = JSON.parse(savedJson);
-  assert.strictEqual(parsed.length, 1);
-  assert.strictEqual(parsed[0].term, 'die Katze');
+  // 2. Kiểm tra localStorage được lưu bền vững qua saveUser()
+  const storedJson = env.store['dmf_flash_user_cards_v2'];
+  assert.ok(storedJson, 'Phải tồn tại key dmf_flash_user_cards_v2 trong localStorage');
+  const storedArr = JSON.parse(storedJson);
+  assert.strictEqual(storedArr.length, 1);
+  assert.strictEqual(storedArr[0].term, 'die Katze');
 
-  // Kiểm tra form đã tự động làm trống
-  assert.strictEqual(sb.val('fTerm'), '');
-  assert.strictEqual(sb.val('fMeaning'), '');
+  // 3. Form đã được tự động làm trống qua clearForm()
+  assert.strictEqual(env.elements['fTerm'].value, '');
+  assert.strictEqual(env.elements['fMeaning'].value, '');
 
-  // Kiểm tra danh sách hiển thị thẻ cập nhật và tags được escape an toàn
-  const listEl = sb.document.getElementById('cardList');
-  assert.strictEqual(listEl.children.length, sb.allCards().length);
-  const userCardRow = listEl.children[listEl.children.length - 1];
-  assert.strictEqual(userCardRow.children[0].children[0].textContent, 'die Katze');
-  assert.ok(userCardRow.children[2].innerHTML.includes('&lt;script&gt;alert(1)&lt;/script&gt;'), 'XSS tag in manage list was escaped');
+  // 4. Danh sách quản lý thẻ (cardList) đã được render và XSS tag được escape an toàn
+  const cardListEl = env.elements['cardList'];
+  assert.ok(cardListEl.children.length > 0, 'cardList phải có phần tử con được render');
+  const renderedHTML = cardListEl.children.map(c => c.innerHTML).join(' ');
+  assert.ok(renderedHTML.includes('&lt;script&gt;alert(1)&lt;/script&gt;'), 'Thẻ HTML phải được esc() mã hóa an toàn');
+  assert.ok(!renderedHTML.includes('<script>alert(1)</script>'), 'Không được để lọt thẻ script thô vào DOM');
 });
 
-it('Thao tác 3: Sửa thẻ hiện có qua editCard() và saveCard() -> Dữ liệu cập nhật đúng, không bị nhân đôi', () => {
-  const sb = setupFlashcardSandbox();
-  // Tạo 1 thẻ trước
-  sb.setVal('fTerm', 'der Hund');
-  sb.setVal('fMeaning', 'con chó');
-  sb.saveCard();
+it('Thao tác 3: Sửa thẻ hiện có qua editCard() và saveCard() -> Dữ liệu cập nhật đúng, không bị nhân đôi (chạy trực tiếp mã index.html)', () => {
+  const env = createAppRuntimeEnvironment();
 
-  const cardId = sb.getUserCards()[0].id;
-  // Bấm nút sửa thẻ
-  sb.editCard(cardId);
+  // Tạo thẻ ban đầu
+  vm.runInContext(`
+    setVal('fTerm', 'der Hund');
+    setVal('fMeaning', 'con chó');
+    saveCard();
+  `, env.sandbox);
 
-  // Form được điền đầy đủ dữ liệu cũ qua setVal
-  assert.strictEqual(sb.val('editId'), cardId);
-  assert.strictEqual(sb.val('fTerm'), 'der Hund');
-  assert.strictEqual(sb.val('fMeaning'), 'con chó');
+  const initialCards = vm.runInContext('userCards', env.sandbox);
+  assert.strictEqual(initialCards.length, 1);
+  const cardId = initialCards[0].id;
 
-  // Sửa thông tin
-  sb.setVal('fMeaning', 'chú cún con đáng yêu');
-  sb.setVal('fNote', 'Người bạn bốn chân');
-  sb.saveCard();
+  // Gọi editCard(cardId) thật từ ứng dụng
+  vm.runInContext(`editCard('${cardId}')`, env.sandbox);
 
-  // Kiểm tra mảng userCards vẫn chỉ có 1 thẻ nhưng nội dung đã sửa
-  const cards = sb.getUserCards();
-  assert.strictEqual(cards.length, 1);
-  assert.strictEqual(cards[0].id, cardId);
-  assert.strictEqual(cards[0].meaning, 'chú cún con đáng yêu');
-  assert.strictEqual(cards[0].note, 'Người bạn bốn chân');
+  // Form được điền đầy đủ dữ liệu qua setVal
+  assert.strictEqual(env.elements['editId'].value, cardId);
+  assert.strictEqual(env.elements['fTerm'].value, 'der Hund');
+  assert.strictEqual(env.elements['fMeaning'].value, 'con chó');
 
-  // LocalStorage cập nhật
-  const saved = JSON.parse(sb.localStorage.getItem('dmf_flash_user_cards_v2'));
-  assert.strictEqual(saved[0].meaning, 'chú cún con đáng yêu');
+  // Sửa nghĩa và ghi chú rồi bấm lưu
+  vm.runInContext(`
+    setVal('fMeaning', 'chú cún con đáng yêu');
+    setVal('fNote', 'Người bạn bốn chân trung thành');
+    saveCard();
+  `, env.sandbox);
+
+  // Mảng userCards vẫn chỉ có 1 thẻ duy nhất (không bị trùng lặp) và mang giá trị mới
+  const updatedCards = vm.runInContext('userCards', env.sandbox);
+  assert.strictEqual(updatedCards.length, 1);
+  assert.strictEqual(updatedCards[0].id, cardId);
+  assert.strictEqual(updatedCards[0].meaning, 'chú cún con đáng yêu');
+  assert.strictEqual(updatedCards[0].note, 'Người bạn bốn chân trung thành');
+
+  // LocalStorage cập nhật đồng bộ
+  const savedInStorage = JSON.parse(env.store['dmf_flash_user_cards_v2']);
+  assert.strictEqual(savedInStorage.length, 1);
+  assert.strictEqual(savedInStorage[0].meaning, 'chú cún con đáng yêu');
 });
 
-it('Thao tác 4: Nhân bản thẻ gốc qua editCard(baseId) -> Tạo thẻ user mới có hậu tố "· Bản chỉnh sửa", thẻ gốc không đổi', () => {
-  const sb = setupFlashcardSandbox();
-  const baseCard = sb.BASE[0]; // 'der Apfel'
-  
-  // Bấm nút "Nhân bản để sửa" trên thẻ base
-  sb.editCard(baseCard.id);
+it('Thao tác 4: Nhân bản thẻ gốc qua editCard(baseId) -> Tạo thẻ user mới có hậu tố "· Bản chỉnh sửa", thẻ gốc không đổi (chạy trực tiếp mã index.html)', () => {
+  const env = createAppRuntimeEnvironment();
 
-  // ID tạo mới, không trùng ID gốc
-  const cloneId = sb.val('editId');
-  assert.ok(cloneId.startsWith('u_'));
-  assert.notStrictEqual(cloneId, baseCard.id);
-  assert.strictEqual(sb.val('fTerm'), 'der Apfel');
-  assert.strictEqual(sb.val('fDeck'), 'A1 · Đồ ăn · Bản chỉnh sửa');
+  const baseCardId = vm.runInContext('BASE[0].id', env.sandbox);
+  const baseCardTerm = vm.runInContext('BASE[0].term', env.sandbox);
+  const baseCardMeaning = vm.runInContext('BASE[0].meaning', env.sandbox);
+  const baseCardDeck = vm.runInContext('BASE[0].deck', env.sandbox);
 
-  // Lưu thẻ nhân bản
-  sb.setVal('fMeaning', 'quả táo giòn ngọt');
-  sb.saveCard();
+  // Nhấp "Nhân bản để sửa" trên thẻ gốc
+  vm.runInContext(`editCard('${baseCardId}')`, env.sandbox);
 
-  // Kiểm tra thẻ gốc vẫn nguyên vẹn
-  assert.strictEqual(sb.BASE[0].meaning, 'quả táo');
+  const cloneId = env.elements['editId'].value;
+  assert.ok(cloneId.startsWith('u_'), 'ID nhân bản phải mang tiền tố u_');
+  assert.notStrictEqual(cloneId, baseCardId, 'ID nhân bản không được trùng ID gốc');
+  assert.strictEqual(env.elements['fTerm'].value, baseCardTerm);
+  assert.strictEqual(env.elements['fDeck'].value, `${baseCardDeck} · Bản chỉnh sửa`);
 
-  // Thẻ mới được thêm vào userCards
-  const userCards = sb.getUserCards();
+  // Lưu thẻ nhân bản với nghĩa tùy chỉnh
+  vm.runInContext(`
+    setVal('fMeaning', '${baseCardMeaning} (nghĩa tự định nghĩa)');
+    saveCard();
+  `, env.sandbox);
+
+  // Thẻ gốc BASE[0] vẫn giữ nguyên giá trị ban đầu
+  assert.strictEqual(vm.runInContext('BASE[0].meaning', env.sandbox), baseCardMeaning);
+
+  // Thẻ mới được thêm vào danh sách userCards
+  const userCards = vm.runInContext('userCards', env.sandbox);
   assert.strictEqual(userCards.length, 1);
   assert.strictEqual(userCards[0].id, cloneId);
-  assert.strictEqual(userCards[0].meaning, 'quả táo giòn ngọt');
-  assert.strictEqual(userCards[0].deck, 'A1 · Đồ ăn · Bản chỉnh sửa');
   assert.strictEqual(userCards[0].source, 'user');
+  assert.strictEqual(userCards[0].meaning, `${baseCardMeaning} (nghĩa tự định nghĩa)`);
+  assert.strictEqual(userCards[0].deck, `${baseCardDeck} · Bản chỉnh sửa`);
 });
 
-it('Thao tác 5: Mô phỏng F5 / Tải lại trang -> Thẻ tự tạo và thẻ nhân bản vẫn còn nguyên vẹn trong storage', () => {
-  const sb = setupFlashcardSandbox();
-  // Thêm 2 thẻ
-  sb.setVal('fTerm', 'Tự tạo 1'); sb.setVal('fMeaning', 'Nghĩa 1'); sb.saveCard();
-  sb.setVal('fTerm', 'Tự tạo 2'); sb.setVal('fMeaning', 'Nghĩa 2'); sb.saveCard();
+it('Thao tác 5: Tải lại trang (F5) -> Khởi tạo lại môi trường, thẻ tự tạo và thẻ nhân bản còn nguyên vẹn trong storage và hiển thị đúng (chạy trực tiếp mã index.html)', () => {
+  const env = createAppRuntimeEnvironment();
 
-  // Mô phỏng reload: Lấy snapshot localStorage và khởi tạo môi trường sandbox mới
-  const rawStorage = sb.localStorage.getItem('dmf_flash_user_cards_v2');
-  assert.ok(rawStorage);
+  // Thêm 2 thẻ trong phiên làm việc đầu tiên
+  vm.runInContext(`
+    setVal('fTerm', 'der Apfel'); setVal('fMeaning', 'quả táo'); saveCard();
+    setVal('fTerm', 'die Banane'); setVal('fMeaning', 'quả chuối'); saveCard();
+  `, env.sandbox);
 
-  const reloadedSB = setupFlashcardSandbox();
-  reloadedSB.localStorage.setItem('dmf_flash_user_cards_v2', rawStorage);
-  reloadedSB.setUserCards(JSON.parse(rawStorage));
+  assert.strictEqual(vm.runInContext('userCards.length', env.sandbox), 2);
+  const persistedStorage = { ...env.store };
 
-  assert.strictEqual(reloadedSB.getUserCards().length, 2);
-  assert.strictEqual(reloadedSB.allCards().length, reloadedSB.BASE.length + 2);
-  reloadedSB.renderManageList();
-  const renderedList = reloadedSB.document.getElementById('cardList');
-  assert.strictEqual(renderedList.children.length, reloadedSB.allCards().length);
+  // Mô phỏng F5 / Tải lại trang hoàn toàn:
+  // Khởi tạo một phiên thực thi mới tinh từ appScriptCode của index.html với localStorage được nạp lại
+  const reloadedEnv = createAppRuntimeEnvironment(persistedStorage);
+
+  // Kiểm tra mã index.html khi khởi động đã tự động phân tích và nạp userCards từ localStorage
+  const reloadedUserCards = vm.runInContext('userCards', reloadedEnv.sandbox);
+  assert.strictEqual(reloadedUserCards.length, 2, 'userCards phải nạp đủ 2 thẻ sau khi reload');
+  assert.strictEqual(reloadedUserCards[0].term, 'der Apfel');
+  assert.strictEqual(reloadedUserCards[1].term, 'die Banane');
+
+  // Kiểm tra allCards() bao gồm BASE + VIDEO_FLASHCARDS + userCards
+  const totalCards = vm.runInContext('allCards().length', reloadedEnv.sandbox);
+  const expectedTotal = vm.runInContext('BASE.length + VIDEO_FLASHCARDS.length + userCards.length', reloadedEnv.sandbox);
+  assert.strictEqual(totalCards, expectedTotal);
+
+  // Kiểm tra render danh sách quản lý
+  vm.runInContext('renderManageList()', reloadedEnv.sandbox);
+  const listEl = reloadedEnv.elements['cardList'];
+  assert.ok(listEl.children.length > 0, 'Danh sách quản lý phải hiển thị thẻ sau khi reload');
 });
 
 // ------------------------------------------------------------------------------
-// GROUP 5: BEHAVIORAL TESTS - Supabase Permission & RLS Simulation (Guest, User A, User B)
+// GROUP 5: CLIENT INTEGRATION & DB STATUS NOTICE & ASYNC RUNNER VERIFICATION
 // ------------------------------------------------------------------------------
-console.log('\n--- TEST GROUP 5: BEHAVIORAL TESTS - Supabase Permission & RLS Simulation ---');
+console.log('\n--- TEST GROUP 5: CLIENT INTEGRATION, TRẠNG THÁI DB & BỘ CHẠY BẤT ĐỒNG BỘ ---');
+console.log('📌 THÔNG BÁO VỀ TRẠNG THÁI CƠ SỞ DỮ LIỆU SUPABASE:');
+console.log('   - Chưa kiểm chứng quyền trên cơ sở dữ liệu thật do không có môi trường PostgreSQL/Supabase thật.');
+console.log('   - Đã loại bỏ hoàn toàn mã mô phỏng để không ngộ nhận về kết quả RLS.');
+console.log('   - Cần kiểm chứng quyền RLS thực tế trên Supabase SQL Editor / Dashboard khi triển khai.\n');
 
-// Mô phỏng động cơ Row Level Security (RLS) & View của PostgreSQL / Supabase
-class SupabaseDatabaseSimulator {
-  constructor() {
-    this.usersTable = [
-      {
-        id: 'uuid_alice',
-        email: 'alice@example.com',
-        display_name: 'Alice Học Chăm 🐱',
-        avatar: 'img/avatars/v2/cat_01.png',
-        streak: 14,
-        words_learned: 85,
-        blitz_score: 24,
-        feed_count: 5,
-        app_data: { customCards: ['card_a1'], notes: 'Alice secret notes', progress: { b_0: 'known' } },
-        last_active: '2026-09-30T10:00:00Z'
-      },
-      {
-        id: 'uuid_bob',
-        email: 'bob@example.com',
-        display_name: 'Bob Siêu Tốc 🐾',
-        avatar: 'img/avatars/v2/cat_05.png',
-        streak: 20,
-        words_learned: 110,
-        blitz_score: 18,
-        feed_count: 5,
-        app_data: { customCards: ['card_b1'], notes: 'Bob personal diaries', progress: { b_1: 'known' } },
-        last_active: '2026-09-30T10:30:00Z'
-      }
-    ];
-  }
+it('Client Integration: loadLeaderboardFromSupabase ưu tiên truy vấn view vokabelgo_leaderboard, phân biệt isMe, không lộ thông tin cá nhân', async () => {
+  // Mock Supabase Client phía trình duyệt
+  const mockRows = [
+    { id: 'uid_1', display_name: 'Học viên A', avatar: 'cat_01.png', streak: 15, words_learned: 90, blitz_score: 20 },
+    { id: 'uid_2', display_name: 'Học viên B', avatar: 'cat_02.png', streak: 10, words_learned: 60, blitz_score: 15 }
+  ];
 
-  // Truy vấn bảng vokabelgo_users theo chính sách RLS: USING (auth.uid() = id)
-  queryVokabelgoUsers(authUid, filter = {}) {
-    // Nếu chưa đăng nhập (authUid == null), auth.uid() = id luôn là false -> Trả về mảng rỗng
-    if (!authUid) {
-      return [];
-    }
-
-    return this.usersTable.filter(row => {
-      // 1. Kiểm tra RLS policy
-      if (row.id !== authUid) return false;
-      // 2. Kiểm tra điều kiện filter (WHERE)
-      if (filter.id && row.id !== filter.id) return false;
-      return true;
-    }).map(row => JSON.parse(JSON.stringify(row))); // Trả về bản sao
-  }
-
-  // Cập nhật bảng vokabelgo_users theo RLS: USING (auth.uid() = id) WITH CHECK (auth.uid() = id)
-  updateVokabelgoUsers(authUid, targetId, updates) {
-    if (!authUid || authUid !== targetId) {
-      return { count: 0, error: new Error('new row violates row-level security policy') };
-    }
-    const idx = this.usersTable.findIndex(r => r.id === targetId);
-    if (idx < 0) return { count: 0, error: null };
-    this.usersTable[idx] = { ...this.usersTable[idx], ...updates, id: targetId };
-    return { count: 1, error: null };
-  }
-
-  // Truy vấn VIEW vokabelgo_leaderboard (chạy với quyền Security Definer / Owner, chỉ chọn cột công khai)
-  queryVokabelgoLeaderboard() {
-    return this.usersTable.map(row => ({
-      id: row.id,
-      display_name: row.display_name,
-      avatar: row.avatar,
-      streak: row.streak,
-      words_learned: row.words_learned,
-      blitz_score: row.blitz_score,
-      last_active: row.last_active
-      // Tuyệt đối không chọn email và app_data
-    })).sort((a, b) => b.streak - a.streak);
-  }
-}
-
-it('Kịch bản 1 (Khách chưa đăng nhập): Không thể đọc bảng vokabelgo_users; đọc view leaderboard chỉ nhận thông tin công khai', () => {
-  const db = new SupabaseDatabaseSimulator();
-  const guestUid = null;
-
-  // 1. Khách thử SELECT * FROM vokabelgo_users
-  const userRows = db.queryVokabelgoUsers(guestUid);
-  assert.strictEqual(userRows.length, 0, 'Guest must receive 0 rows from private users table');
-
-  // 2. Khách thử SELECT * FROM vokabelgo_users WHERE id = 'uuid_alice'
-  const targetRow = db.queryVokabelgoUsers(guestUid, { id: 'uuid_alice' });
-  assert.strictEqual(targetRow.length, 0, 'Guest cannot target specific user row');
-
-  // 3. Khách SELECT * FROM vokabelgo_leaderboard
-  const lbRows = db.queryVokabelgoLeaderboard();
-  assert.strictEqual(lbRows.length, 2, 'Guest can see leaderboard entries');
-  lbRows.forEach(row => {
-    assert.ok(row.id);
-    assert.ok(row.display_name);
-    assert.ok(row.streak);
-    assert.strictEqual(row.email, undefined, 'Email must NOT be present in leaderboard row');
-    assert.strictEqual(row.app_data, undefined, 'app_data must NOT be present in leaderboard row');
-  });
-});
-
-it('Kịch bản 2 (Tài khoản Alice): Chỉ đọc được dòng của Alice, không đọc/sửa được email và app_data của Bob', () => {
-  const db = new SupabaseDatabaseSimulator();
-  const aliceUid = 'uuid_alice';
-
-  // 1. Alice query vokabelgo_users -> Chỉ nhận về dòng của Alice
-  const myRows = db.queryVokabelgoUsers(aliceUid);
-  assert.strictEqual(myRows.length, 1);
-  assert.strictEqual(myRows[0].id, 'uuid_alice');
-  assert.strictEqual(myRows[0].email, 'alice@example.com');
-  assert.ok(myRows[0].app_data.notes.includes('Alice secret'));
-
-  // 2. Alice cố gắng query dòng của Bob (SELECT * FROM vokabelgo_users WHERE id = 'uuid_bob')
-  const bobRows = db.queryVokabelgoUsers(aliceUid, { id: 'uuid_bob' });
-  assert.strictEqual(bobRows.length, 0, 'Alice cannot query Bob private row via RLS');
-
-  // 3. Alice cố tình gửi lệnh UPDATE dữ liệu của Bob
-  const updateRes = db.updateVokabelgoUsers(aliceUid, 'uuid_bob', { display_name: 'Hacked by Alice' });
-  assert.strictEqual(updateRes.count, 0, 'Alice cannot update Bob row');
-  assert.ok(updateRes.error);
-});
-
-it('Kịch bản 3 (Tài khoản Bob): Đọc được dòng của Bob, không thể đọc dữ liệu cá nhân của Alice', () => {
-  const db = new SupabaseDatabaseSimulator();
-  const bobUid = 'uuid_bob';
-
-  const myRows = db.queryVokabelgoUsers(bobUid);
-  assert.strictEqual(myRows.length, 1);
-  assert.strictEqual(myRows[0].id, 'uuid_bob');
-  assert.strictEqual(myRows[0].email, 'bob@example.com');
-
-  // Cố query dòng của Alice
-  const aliceRows = db.queryVokabelgoUsers(bobUid, { id: 'uuid_alice' });
-  assert.strictEqual(aliceRows.length, 0, 'Bob cannot read Alice private data');
-});
-
-it('Kịch bản 4: loadLeaderboardFromSupabase tích hợp xử lý đúng dữ liệu view & fallback an toàn', async () => {
-  const db = new SupabaseDatabaseSimulator();
-  
-  // Mock sbClient với view vokabelgo_leaderboard
-  const mockSbClientWithView = {
+  let queriedTable = '';
+  const mockSbClient = {
     from: (table) => {
+      queriedTable = table;
+      return {
+        select: () => ({
+          order: () => ({
+            limit: async () => ({
+              data: mockRows,
+              error: null
+            })
+          })
+        })
+      };
+    }
+  };
+
+  const loadLbMatch = supabaseAuthContent.match(/window\.loadLeaderboardFromSupabase\s*=\s*async\s*function\s*\(\)\s*\{[\s\S]*?\n\s*\};/);
+  assert.ok(loadLbMatch, 'Tìm thấy hàm loadLeaderboardFromSupabase trong supabase-auth.js');
+
+  const currentUser = { id: 'uid_1' };
+  const loadFn = new Function('sbClient', 'currentUser', `
+    let fn = ${loadLbMatch[0].replace('window.loadLeaderboardFromSupabase = ', '')};
+    return fn();
+  `);
+
+  const results = await loadFn(mockSbClient, currentUser);
+  assert.strictEqual(queriedTable, 'vokabelgo_leaderboard', 'Phải ưu tiên đọc từ view bảo mật vokabelgo_leaderboard');
+  assert.strictEqual(results.length, 2);
+  assert.strictEqual(results[0].uid, 'uid_1');
+  assert.strictEqual(results[0].isMe, true, 'Xác định đúng isMe cho tài khoản hiện tại');
+  assert.strictEqual(results[1].uid, 'uid_2');
+  assert.strictEqual(results[1].isMe, false);
+  assert.strictEqual(results[0].email, undefined, 'Không để lộ email trong bảng xếp hạng');
+  assert.strictEqual(results[0].app_data, undefined, 'Không để lộ dữ liệu học tập riêng tư trong bảng xếp hạng');
+});
+
+it('Client Integration: loadLeaderboardFromSupabase kích hoạt fallback khi view chưa sẵn sàng', async () => {
+  const fallbackRows = [
+    { id: 'uid_fb', display_name: 'Fallback Học Viên', avatar: 'cat_03.png', streak: 5, words_learned: 30, blitz_score: 10 }
+  ];
+
+  let queryAttempts = [];
+  const mockSbClientFallback = {
+    from: (table) => {
+      queryAttempts.push(table);
       if (table === 'vokabelgo_leaderboard') {
         return {
           select: () => ({
             order: () => ({
               limit: async () => ({
-                data: db.queryVokabelgoLeaderboard(),
-                error: null
+                data: null,
+                error: { message: 'relation "public.vokabelgo_leaderboard" does not exist' }
               })
             })
           })
         };
       }
       return {
-        select: () => ({ order: () => ({ limit: async () => ({ data: [], error: null }) }) })
+        select: () => ({
+          order: () => ({
+            limit: async () => ({
+              data: fallbackRows,
+              error: null
+            })
+          })
+        })
       };
     }
   };
 
-  // Trích xuất hàm loadLeaderboardFromSupabase từ supabase-auth.js
   const loadLbMatch = supabaseAuthContent.match(/window\.loadLeaderboardFromSupabase\s*=\s*async\s*function\s*\(\)\s*\{[\s\S]*?\n\s*\};/);
-  assert.ok(loadLbMatch, 'Found loadLeaderboardFromSupabase function');
-  
-  // Chạy thử với mock sbClient
-  let currentUser = { id: 'uuid_alice' };
   const loadFn = new Function('sbClient', 'currentUser', `
     let fn = ${loadLbMatch[0].replace('window.loadLeaderboardFromSupabase = ', '')};
     return fn();
   `);
 
-  const leaderboardResults = await loadFn(mockSbClientWithView, currentUser);
-  assert.strictEqual(leaderboardResults.length, 2);
-  assert.strictEqual(leaderboardResults[0].uid, 'uuid_bob');
-  assert.strictEqual(leaderboardResults[0].isMe, false);
-  assert.strictEqual(leaderboardResults[1].uid, 'uuid_alice');
-  assert.strictEqual(leaderboardResults[1].isMe, true, 'Alice is marked as isMe');
-  assert.strictEqual(leaderboardResults[0].email, undefined, 'No email exposed');
+  const results = await loadFn(mockSbClientFallback, null);
+  assert.deepStrictEqual(queryAttempts, ['vokabelgo_leaderboard', 'vokabelgo_users']);
+  assert.strictEqual(results.length, 1);
+  assert.strictEqual(results[0].uid, 'uid_fb');
+});
+
+it('Async Test Runner: Bộ chạy kiểm thử chờ Promise bất đồng bộ và trả mã thoát 1 khi bài bất đồng bộ thất bại', async () => {
+  // Chạy file kiểm thử hiện tại với cờ --verify-runner-failure ở tiến trình con
+  const result = spawnSync(process.execPath, [__filename, '--verify-runner-failure'], { encoding: 'utf8' });
+  const combinedOutput = (result.stdout || '') + (result.stderr || '');
+
+  assert.strictEqual(result.status, 1, `Bộ chạy phải thoát với mã 1 khi có bài kiểm tra bất đồng bộ thất bại (thực tế: ${result.status})`);
+  assert.ok(combinedOutput.includes('❌ FAIL: Cố tình thất bại bài kiểm tra bất đồng bộ'), 'Phải log thất bại rõ ràng');
+  assert.ok(combinedOutput.includes('0 PASSED, 1 FAILED'), 'Bảng tổng kết phải ghi nhận 1 thất bại');
 });
 
 // ------------------------------------------------------------------------------
-// SUMMARY
+// THỰC THI TOÀN BỘ CÁC BÀI KIỂM TRA ĐÃ ĐĂNG KÝ
 // ------------------------------------------------------------------------------
-console.log('\n========================================');
-console.log(`ACCEPTANCE TEST SUMMARY: ${passedTests} PASSED, ${failedTests} FAILED`);
-console.log('========================================\n');
-
-if (failedTests > 0) {
-  process.exit(1);
-} else {
-  process.exit(0);
-}
+runTests();
