@@ -16823,9 +16823,9 @@ function playKinoMixtape(){
         </div>
       </div>
       <div class="reward-header-actions">
-        <button type="button" id="rewardSoundToggleBtn" class="reward-sound-btn" onclick="toggleRewardSound()" title="Bật/Tắt âm thanh hiệu ứng" aria-label="Bật/Tắt âm thanh">
-          <span id="rewardSoundIcon">🔊</span>
-          <span id="rewardSoundLabel">Bật tiếng</span>
+        <button type="button" id="rewardSoundToggleBtn" class="reward-sound-btn mode-original" onclick="cycleAudioMode()" title="Bấm để đổi chế độ âm thanh (Gốc / Hiệu ứng / Cả hai / Tắt)" aria-label="Đổi chế độ âm thanh">
+          <span id="rewardSoundIcon">🎵</span>
+          <span id="rewardSoundLabel">Âm gốc của chị</span>
         </button>
         <button type="button" class="reward-close-btn" onclick="closeRewardPrototypeModal()" title="Đóng bản thử (ESC)" aria-label="Đóng">✕</button>
       </div>
@@ -16834,12 +16834,11 @@ function playKinoMixtape(){
     <!-- Video Stage Container -->
     <div class="reward-stage-wrapper">
       <div class="reward-video-container" id="rewardVideoContainer">
-        <!-- Native Video Element -->
+        <!-- Native Video Element (Âm thanh gốc phát trực tiếp) -->
         <video id="rewardCatVideo"
                class="reward-cat-video"
                src="catfishing/catfishing.mp4"
                playsinline
-               muted
                preload="auto">
         </video>
 
@@ -16877,6 +16876,28 @@ function playKinoMixtape(){
 
     <!-- Timeline & Controls Footer -->
     <div class="reward-modal-footer">
+      <!-- Selector chọn nguồn âm thanh trực quan -->
+      <div class="reward-audio-selector-row">
+        <span class="reward-audio-selector-label">
+          <span>🔊</span>
+          <span>Nguồn âm thanh:</span>
+        </span>
+        <div class="reward-audio-mode-group" role="radiogroup" aria-label="Nguồn âm thanh">
+          <button type="button" class="reward-audio-mode-pill active" id="audioPillOriginal" data-mode="original" onclick="setAudioMode('original')" title="Phát âm thanh gốc có sẵn trong clip của chị">
+            🎵 Âm gốc của chị
+          </button>
+          <button type="button" class="reward-audio-mode-pill" id="audioPillNewFx" data-mode="new_fx" onclick="setAudioMode('new_fx')" title="Phát âm thanh hiệu ứng nhận thưởng 3 nốt nhẹ nhàng">
+            ✨ Hiệu ứng mới
+          </button>
+          <button type="button" class="reward-audio-mode-pill" id="audioPillBoth" data-mode="both" onclick="setAudioMode('both')" title="Phát đồng thời âm thanh gốc và hiệu ứng mới">
+            🎶 Cả hai
+          </button>
+          <button type="button" class="reward-audio-mode-pill" id="audioPillMute" data-mode="mute" onclick="setAudioMode('mute')" title="Tắt toàn bộ âm thanh">
+            🔇 Tắt tiếng
+          </button>
+        </div>
+      </div>
+
       <div class="reward-timeline-indicator" id="rewardTimelineIndicator">
         <span class="timeline-step" id="stepPhaseA">1. Kéo cần 🎣</span>
         <span class="timeline-arrow">→</span>

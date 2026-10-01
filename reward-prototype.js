@@ -1,6 +1,7 @@
 // ==============================================================================
 // VokabelGo - Prototype Hiệu Ứng Nhận Thưởng (Cat Fishing)
 // Prototype trải nghiệm hình ảnh + âm thanh với catfishing.mp4
+// HỖ TRỢ TRỰC TIẾP: Âm thanh gốc của chị, Hiệu ứng mới, hoặc Kết hợp cả hai
 // TUYỆT ĐỐI KHÔNG can thiệp dữ liệu học, Daily Goal, streak hay Fishdex thật.
 // ==============================================================================
 
@@ -21,15 +22,24 @@
     );
   }
 
-  // --- 2. SOUND PREFERENCE STORAGE ---
-  const SOUND_STORAGE_KEY = 'vokabelgo_prototype_sound_enabled';
-  let isSoundEnabled = (function() {
-    const stored = localStorage.getItem(SOUND_STORAGE_KEY);
-    return stored === null ? true : stored !== 'false';
+  // --- 2. AUDIO MODE & STORAGE ---
+  // Các chế độ:
+  // 'original': Âm thanh gốc có sẵn trong video của chị (MẶC ĐỊNH)
+  // 'new_fx': Hiệu ứng chuông nhận thưởng 3 nốt nhẹ nhàng
+  // 'both': Kết hợp cả âm thanh gốc và chuông nhận thưởng
+  // 'mute': Tắt tiếng hoàn toàn
+  const AUDIO_MODE_KEY = 'vokabelgo_prototype_audio_mode';
+  const VALID_MODES = ['original', 'new_fx', 'both', 'mute'];
+
+  let currentAudioMode = (function() {
+    const stored = localStorage.getItem(AUDIO_MODE_KEY);
+    if (stored && VALID_MODES.includes(stored)) {
+      return stored;
+    }
+    return 'original'; // Mặc định luôn nghe được âm thanh gốc của chị!
   })();
 
   // --- 3. WEB AUDIO API SYNTHESIZER ---
-  // Thiết kế âm thanh tinh tế, tự tạo hoàn toàn, trong trẻo, không chói gắt
   let audioCtx = null;
   let activeAudioNodes = [];
 
@@ -58,7 +68,7 @@
 
   // Âm Phase A: Tiếng nước bật nhẹ (1.65s)
   function playWaterSplash() {
-    if (!isSoundEnabled) return;
+    if (currentAudioMode !== 'new_fx' && currentAudioMode !== 'both') return;
     try {
       const ctx = getAudioContext();
       if (!ctx) return;
@@ -118,7 +128,7 @@
 
   // Âm Phase A: Tiếng "vút" / kéo cần nhẹ (1.85s)
   function playWhoosh() {
-    if (!isSoundEnabled) return;
+    if (currentAudioMode !== 'new_fx' && currentAudioMode !== 'both') return;
     try {
       const ctx = getAudioContext();
       if (!ctx) return;
@@ -160,14 +170,13 @@
 
   // Âm Phase B: Tiếng chạm nhỏ khi cá vào thùng (3.20s)
   function playBucketTap() {
-    if (!isSoundEnabled) return;
+    if (currentAudioMode !== 'new_fx' && currentAudioMode !== 'both') return;
     try {
       const ctx = getAudioContext();
       if (!ctx) return;
 
       const now = ctx.currentTime;
 
-      // Wooden bucket tap - warm triangle fundamental + sine overtone
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -199,16 +208,15 @@
     }
   }
 
-  // Âm Phase B: Chuông nhận thưởng 3 nốt đi lên (G5 -> C6 -> E6), dài ~0.8s, trong trẻo, vui, mềm mại (3.26s)
+  // Âm Phase B: Chuông nhận thưởng 3 nốt đi lên (G5 -> C6 -> E6), dài ~0.8s (3.26s)
   function playRewardChime() {
-    if (!isSoundEnabled) return;
+    if (currentAudioMode !== 'new_fx' && currentAudioMode !== 'both') return;
     try {
       const ctx = getAudioContext();
       if (!ctx) return;
 
       const baseTime = ctx.currentTime;
 
-      // 3 nốt arpeggio Đô trưởng cao vút, ấm áp: G5 (784Hz) -> C6 (1046.5Hz) -> E6 (1318.5Hz)
       const notes = [
         { freq: 783.99, start: 0.00, dur: 0.28, vol: 0.22 },
         { freq: 1046.50, start: 0.16, dur: 0.32, vol: 0.25 },
@@ -218,21 +226,17 @@
       notes.forEach(note => {
         const t = baseTime + note.start;
 
-        // Âm chính: Sine wave thuần khiết
         const oscMain = ctx.createOscillator();
         oscMain.type = 'sine';
         oscMain.frequency.setValueAtTime(note.freq, t);
 
-        // Họa âm nhẹ tạo cảm giác marimba/chuông thủy tinh
         const oscHarmonic = ctx.createOscillator();
         oscHarmonic.type = 'sine';
         oscHarmonic.frequency.setValueAtTime(note.freq * 2, t);
 
         const gainNode = ctx.createGain();
         gainNode.gain.setValueAtTime(0.0001, t);
-        // Attack mềm (15ms)
         gainNode.gain.linearRampToValueAtTime(note.vol, t + 0.015);
-        // Exponential decay
         gainNode.gain.exponentialRampToValueAtTime(0.0001, t + note.dur);
 
         const harmGain = ctx.createGain();
@@ -270,12 +274,12 @@
     container.innerHTML = '';
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return; // Không bung sao nếu bật reduced-motion
+    if (prefersReducedMotion) return;
 
-    const starCount = 10; // 8-12 ngôi sao nhỏ
+    const starCount = 10;
     for (let i = 0; i < starCount; i++) {
       const angle = (i * (360 / starCount) + (Math.random() * 16 - 8)) * (Math.PI / 180);
-      const distance = 40 + Math.random() * 32; // 40px - 72px từ tâm miệng thùng
+      const distance = 40 + Math.random() * 32;
       const dx = Math.cos(angle) * distance;
       const dy = Math.sin(angle) * distance;
 
@@ -286,14 +290,12 @@
       star.style.color = STAR_COLORS[i % STAR_COLORS.length];
       star.innerHTML = STAR_SVG;
 
-      // Kích thước ngẫu nhiên nhẹ: 14px - 18px
       const size = 14 + (i % 3) * 2;
       star.style.width = `${size}px`;
       star.style.height = `${size}px`;
 
       container.appendChild(star);
 
-      // Kích hoạt animation
       requestAnimationFrame(() => {
         star.classList.add('burst');
       });
@@ -313,20 +315,11 @@
     const celebration = document.getElementById('rewardCelebrationBanner');
     const stars = document.getElementById('rewardStarsContainer');
 
-    if (bucketGlow) {
-      bucketGlow.classList.remove('active');
-    }
-    if (plusFish) {
-      plusFish.classList.remove('active');
-    }
-    if (celebration) {
-      celebration.classList.remove('active');
-    }
-    if (stars) {
-      stars.innerHTML = '';
-    }
+    if (bucketGlow) bucketGlow.classList.remove('active');
+    if (plusFish) plusFish.classList.remove('active');
+    if (celebration) celebration.classList.remove('active');
+    if (stars) stars.innerHTML = '';
 
-    // Reset timeline step badges
     updateTimelineIndicator('idle');
   }
 
@@ -365,30 +358,24 @@
   function triggerPhaseB() {
     updateTimelineIndicator('B');
 
-    // 1. Âm chạm vào thùng
     playBucketTap();
-
-    // 2. Ngay sau đó là chuông nhận thưởng 3 nốt
     setTimeout(() => {
       if (isPlaying) playRewardChime();
     }, 60);
 
-    // 3. Vòng sáng mềm quanh khu vực thùng
     const bucketGlow = document.getElementById('rewardBucketGlow');
     if (bucketGlow) {
       bucketGlow.classList.remove('active');
-      void bucketGlow.offsetWidth; // Force reflow
+      void bucketGlow.offsetWidth;
       bucketGlow.classList.add('active');
     }
 
-    // 4. Bung 8-12 ngôi sao nhỏ quanh thùng
     createStars();
 
-    // 5. Hiện text "+1 🐟" nảy nhẹ và bay lên
     const plusFish = document.getElementById('rewardPlusFish');
     if (plusFish) {
       plusFish.classList.remove('active');
-      void plusFish.offsetWidth; // Force reflow
+      void plusFish.offsetWidth;
       plusFish.classList.add('active');
     }
   }
@@ -397,18 +384,14 @@
   function triggerPhaseC() {
     updateTimelineIndicator('C');
 
-    // Hiện dòng chữ "Câu được cá rồi!"
     const celebration = document.getElementById('rewardCelebrationBanner');
     if (celebration) {
       celebration.classList.remove('active');
-      void celebration.offsetWidth; // Force reflow
+      void celebration.offsetWidth;
       celebration.classList.add('active');
     }
-
-    // Sao và vòng sáng tan dần tự nhiên theo animation CSS
   }
 
-  // Vòng lặp đồng bộ chính căn theo video.currentTime
   function syncLoop() {
     const video = document.getElementById('rewardCatVideo');
     if (!video) return;
@@ -416,19 +399,16 @@
     if (!video.paused && !video.ended) {
       const t = video.currentTime;
 
-      // Căn mốc Phase A: 1.65s (khi cá vọt khỏi mặt nước)
       if (t >= 1.65 && !phaseAHandled) {
         phaseAHandled = true;
         triggerPhaseA();
       }
 
-      // Căn mốc Phase B: 3.20s (khi cá rơi trúng miệng thùng)
       if (t >= 3.20 && !phaseBHandled) {
         phaseBHandled = true;
         triggerPhaseB();
       }
 
-      // Căn mốc Phase C: 4.30s (khi mèo cười vui nhìn về phía trước)
       if (t >= 4.30 && !phaseCHandled) {
         phaseCHandled = true;
         triggerPhaseC();
@@ -446,7 +426,6 @@
   function onVideoEnded() {
     isPlaying = false;
     updateTimelineIndicator('done');
-    // Giữ khung hình cuối của video, không đặt lại 0, không hiện màn hình đen
     const video = document.getElementById('rewardCatVideo');
     if (video) {
       video.pause();
@@ -454,11 +433,23 @@
   }
 
   // --- 6. PHÁT LẠI / DỪNG TRẢI NGHIỆM ---
+  function applyAudioModeToVideo(video) {
+    if (!video) return;
+    if (currentAudioMode === 'original') {
+      video.muted = false;
+      video.volume = 1.0;
+    } else if (currentAudioMode === 'both') {
+      video.muted = false;
+      video.volume = 0.85;
+    } else {
+      video.muted = true;
+    }
+  }
+
   function startPlayback() {
     const video = document.getElementById('rewardCatVideo');
     if (!video) return;
 
-    // Dừng lượt cũ nếu đang chạy
     stopPlayback();
 
     isPlaying = true;
@@ -467,24 +458,29 @@
     phaseCHandled = false;
     resetEffectElements();
 
-    // Chuẩn bị AudioContext theo tương tác người dùng
     getAudioContext();
 
-    // Video mặc định tắt tiếng gốc để tránh chồng âm
-    video.muted = true;
+    // Bật/tắt âm video theo chế độ được chọn (MẶC ĐỊNH LÀ BẬT TIẾNG GỐC CỦA CHỊ)
+    applyAudioModeToVideo(video);
     video.currentTime = 0;
 
     const playPromise = video.play();
     if (playPromise !== undefined) {
       playPromise
         .then(() => {
-          // Bắt đầu vòng lặp đồng bộ căn theo thời gian thực
           animFrameId = requestAnimationFrame(syncLoop);
         })
         .catch(err => {
-          console.warn('[RewardPrototype] Không thể tự động phát video:', err);
-          // Fallback an toàn: vẫn cho mô phỏng hiệu ứng chạy theo timer
-          runFallbackTimerSimulation();
+          console.warn('[RewardPrototype] Autoplay với tiếng bị giới hạn, thử phát muted:', err);
+          // Nếu trình duyệt chặn phát tiếng unmuted lúc autoplay, phát muted trước
+          video.muted = true;
+          video.play()
+            .then(() => {
+              animFrameId = requestAnimationFrame(syncLoop);
+            })
+            .catch(() => {
+              runFallbackTimerSimulation();
+            });
         });
     }
   }
@@ -506,7 +502,6 @@
     resetEffectElements();
   }
 
-  // Fallback an toàn khi video lỗi tải
   function runFallbackTimerSimulation() {
     const fallbackEl = document.getElementById('rewardVideoFallback');
     if (fallbackEl) fallbackEl.classList.remove('hidden');
@@ -516,57 +511,79 @@
     phaseBHandled = false;
     phaseCHandled = false;
 
-    // Mô phỏng dòng thời gian an toàn
-    setTimeout(() => {
-      if (isPlaying) triggerPhaseA();
-    }, 1650);
-
-    setTimeout(() => {
-      if (isPlaying) triggerPhaseB();
-    }, 3200);
-
-    setTimeout(() => {
-      if (isPlaying) triggerPhaseC();
-    }, 4300);
-
-    setTimeout(() => {
-      if (isPlaying) onVideoEnded();
-    }, 6800);
+    setTimeout(() => { if (isPlaying) triggerPhaseA(); }, 1650);
+    setTimeout(() => { if (isPlaying) triggerPhaseB(); }, 3200);
+    setTimeout(() => { if (isPlaying) triggerPhaseC(); }, 4300);
+    setTimeout(() => { if (isPlaying) onVideoEnded(); }, 6800);
   }
 
-  // --- 7. SOUND TOGGLE CONTROL ---
-  function updateSoundUI() {
+  // --- 7. AUDIO MODE CONTROLS ---
+  function updateAudioUI() {
     const btn = document.getElementById('rewardSoundToggleBtn');
     const icon = document.getElementById('rewardSoundIcon');
     const label = document.getElementById('rewardSoundLabel');
-    if (!btn || !icon || !label) return;
 
-    if (isSoundEnabled) {
-      btn.classList.remove('muted');
-      icon.textContent = '🔊';
-      label.textContent = 'Bật tiếng';
-      btn.title = 'Âm thanh đang bật. Bấm để tắt tiếng';
-    } else {
-      btn.classList.add('muted');
-      icon.textContent = '🔇';
-      label.textContent = 'Tắt tiếng';
-      btn.title = 'Âm thanh đang tắt. Bấm để bật tiếng';
+    const modeConfigs = {
+      original: { icon: '🎵', label: 'Âm gốc của chị', class: 'mode-original', title: 'Đang phát âm thanh gốc của chị. Bấm để đổi chế độ.' },
+      new_fx: { icon: '✨', label: 'Hiệu ứng mới', class: 'mode-new_fx', title: 'Đang phát hiệu ứng nhận thưởng 3 nốt. Bấm để đổi chế độ.' },
+      both: { icon: '🎶', label: 'Cả hai (Hòa âm)', class: 'mode-both', title: 'Đang phát đồng thời âm gốc và hiệu ứng mới. Bấm để đổi chế độ.' },
+      mute: { icon: '🔇', label: 'Tắt tiếng', class: 'mode-mute', title: 'Âm thanh đang tắt. Bấm để bật tiếng.' }
+    };
+
+    const cfg = modeConfigs[currentAudioMode] || modeConfigs.original;
+
+    if (btn && icon && label) {
+      btn.className = `reward-sound-btn ${cfg.class}`;
+      icon.textContent = cfg.icon;
+      label.textContent = cfg.label;
+      btn.title = cfg.title;
     }
+
+    // Cập nhật các pill trong footer
+    const pills = document.querySelectorAll('.reward-audio-mode-pill');
+    pills.forEach(pill => {
+      if (pill.dataset.mode === currentAudioMode) {
+        pill.classList.add('active');
+      } else {
+        pill.classList.remove('active');
+      }
+    });
   }
 
-  function toggleRewardSound() {
-    isSoundEnabled = !isSoundEnabled;
+  function setAudioMode(mode) {
+    if (!VALID_MODES.includes(mode)) return;
+    currentAudioMode = mode;
     try {
-      localStorage.setItem(SOUND_STORAGE_KEY, isSoundEnabled ? 'true' : 'false');
+      localStorage.setItem(AUDIO_MODE_KEY, mode);
     } catch (e) {}
 
-    updateSoundUI();
+    const video = document.getElementById('rewardCatVideo');
+    if (video) {
+      applyAudioModeToVideo(video);
+    }
 
-    if (!isSoundEnabled) {
+    updateAudioUI();
+
+    if (mode === 'mute') {
       stopAllAudio();
     } else {
       getAudioContext();
     }
+  }
+
+  function cycleAudioMode() {
+    const nextMap = {
+      original: 'new_fx',
+      new_fx: 'both',
+      both: 'mute',
+      mute: 'original'
+    };
+    const nextMode = nextMap[currentAudioMode] || 'original';
+    setAudioMode(nextMode);
+  }
+
+  function toggleRewardSound() {
+    cycleAudioMode();
   }
 
   // --- 8. MODAL OPEN / CLOSE ---
@@ -574,14 +591,12 @@
     const modal = document.getElementById('rewardPrototypeModal');
     if (!modal) return;
 
-    // Reset video fallback
     const fallbackEl = document.getElementById('rewardVideoFallback');
     if (fallbackEl) fallbackEl.classList.add('hidden');
 
-    updateSoundUI();
+    updateAudioUI();
     modal.classList.remove('hidden');
 
-    // Bắt đầu phát từ đầu
     startPlayback();
   }
 
@@ -599,7 +614,6 @@
 
   // --- 9. EVENT LISTENERS & SETUP ---
   function setupPrototypeListeners() {
-    // 1. Phím ESC để đóng
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         const modal = document.getElementById('rewardPrototypeModal');
@@ -609,7 +623,6 @@
       }
     });
 
-    // 2. Click backdrop để đóng
     const backdrop = document.getElementById('rewardPrototypeModal');
     if (backdrop) {
       backdrop.addEventListener('click', function(e) {
@@ -619,7 +632,6 @@
       });
     }
 
-    // 3. Xử lý video error
     const video = document.getElementById('rewardCatVideo');
     if (video) {
       video.addEventListener('error', function(e) {
@@ -629,32 +641,26 @@
       });
     }
 
-    // 4. Cập nhật hiển thị các nút Dev dựa trên môi trường
     const isDev = isDevEnvironment();
     const devBtnHeader = document.getElementById('devRewardPreviewBtn');
     const devBtnFeed = document.getElementById('devFeedRewardBtn');
     const floatingBtn = document.getElementById('floatingDevRewardBtn');
 
-    if (devBtnHeader) {
-      devBtnHeader.style.display = isDev ? 'inline-flex' : 'none';
-    }
-    if (devBtnFeed) {
-      devBtnFeed.style.display = isDev ? 'block' : 'none';
-    }
-    if (floatingBtn) {
-      floatingBtn.style.display = isDev ? 'inline-flex' : 'none';
-    }
+    if (devBtnHeader) devBtnHeader.style.display = isDev ? 'inline-flex' : 'none';
+    if (devBtnFeed) devBtnFeed.style.display = isDev ? 'block' : 'none';
+    if (floatingBtn) floatingBtn.style.display = isDev ? 'inline-flex' : 'none';
 
-    updateSoundUI();
+    updateAudioUI();
   }
 
-  // Expose public API an toàn ra window cho UI triggers
+  // Expose API cho UI
   window.openRewardPrototypeModal = openRewardPrototypeModal;
   window.closeRewardPrototypeModal = closeRewardPrototypeModal;
   window.replayRewardPrototype = replayRewardPrototype;
   window.toggleRewardSound = toggleRewardSound;
+  window.setAudioMode = setAudioMode;
+  window.cycleAudioMode = cycleAudioMode;
 
-  // Khởi tạo khi DOM sẵn sàng
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupPrototypeListeners);
   } else {
