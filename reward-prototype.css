@@ -1,0 +1,669 @@
+/* ==============================================================================
+   VokabelGo - Prototype Hiệu Ứng Nhận Thưởng (Cat Fishing)
+   Stylesheet dành riêng cho bản thử nghiệm hình ảnh + âm thanh với catfishing.mp4
+   ============================================================================== */
+
+/* --- DEV TRIGGER BUTTONS --- */
+.dev-reward-preview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ECFDF5;
+  border: 1.5px solid #10B981;
+  color: #065F46;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.dev-reward-preview-btn:hover {
+  background: #D1FAE5;
+  border-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.2);
+}
+
+.dev-reward-preview-btn:active {
+  transform: translateY(1px);
+}
+
+.dev-reward-preview-btn .dev-tag {
+  background: #10B981;
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 5px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Button in daily cat feed nudge popover */
+.dev-feed-reward-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #F0FDF4;
+  border: 1.5px dashed #059669;
+  color: #047857;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dev-feed-reward-btn:hover {
+  background: #DCFCE7;
+  border-color: #047857;
+}
+
+/* Floating pill trigger (always accessible during testing) */
+.floating-dev-reward-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9990;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFDF9;
+  border: 2px solid var(--ink-border, #1E293B);
+  color: var(--ink-text, #0F172A);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 3px 0 var(--ink-border, #1E293B);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.floating-dev-reward-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16), 0 4px 0 var(--ink-border, #1E293B);
+}
+
+.floating-dev-reward-btn:active {
+  transform: translateY(1px);
+}
+
+.floating-dev-reward-btn .floating-badge {
+  background: #F59E0B;
+  color: #FFFFFF;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+/* --- MODAL BACKDROP --- */
+.reward-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: rewardBackdropFadeIn 0.25s ease-out;
+}
+
+.reward-modal-backdrop.hidden {
+  display: none !important;
+}
+
+@keyframes rewardBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* --- MODAL CARD --- */
+.reward-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  background: #FFFDF9;
+  border: 2.5px solid var(--ink-border, #1E293B);
+  border-radius: 24px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25), 0 6px 0 var(--ink-border, #1E293B);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: rewardCardPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes rewardCardPopIn {
+  0% { opacity: 0; transform: scale(0.92) translateY(12px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* --- MODAL HEADER --- */
+.reward-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1.5px solid #F1F5F9;
+}
+
+.reward-header-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reward-header-icon {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: #FEF3C7;
+  border: 1.5px solid #F59E0B;
+  border-radius: 12px;
+}
+
+.reward-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink-text, #0F172A);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reward-modal-subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-muted, #64748B);
+  font-weight: 500;
+}
+
+.reward-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Sound Toggle Button */
+.reward-sound-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #F8FAFC;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reward-sound-btn:hover {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+}
+
+.reward-sound-btn.muted {
+  background: #FEF2F2;
+  border-color: #F87171;
+  color: #B91C1C;
+}
+
+.reward-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #F1F5F9;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 10px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reward-close-btn:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+  transform: rotate(90deg);
+}
+
+/* --- VIDEO STAGE --- */
+.reward-stage-wrapper {
+  padding: 14px 18px 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.reward-video-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 360px;
+  background: #FFFFFF;
+  border: 2px solid var(--ink-border, #1E293B);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.02), 0 6px 20px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reward-cat-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: #FFFFFF;
+  pointer-events: none;
+}
+
+/* --- FALLBACK STATE --- */
+.reward-video-fallback {
+  position: absolute;
+  inset: 0;
+  background: #FFFDF9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  z-index: 5;
+}
+
+.reward-video-fallback.hidden {
+  display: none !important;
+}
+
+.reward-video-fallback .fallback-icon {
+  font-size: 44px;
+  margin-bottom: 8px;
+}
+
+.reward-video-fallback .fallback-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 4px;
+}
+
+.reward-video-fallback .fallback-text {
+  font-size: 12.5px;
+  color: #64748B;
+  margin-bottom: 12px;
+  max-width: 320px;
+}
+
+/* --- OVERLAY EFFECTS LAYER --- */
+.reward-effects-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  overflow: hidden;
+}
+
+/* Glow Ring around Bucket (Position: x = 61.5%, y = 46.5%) */
+.reward-bucket-glow {
+  position: absolute;
+  left: 61.5%;
+  top: 46.5%;
+  width: 130px;
+  height: 130px;
+  transform: translate(-50%, -50%) scale(0.3);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.6) 0%, rgba(245, 158, 11, 0.28) 45%, rgba(245, 158, 11, 0) 70%);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.reward-bucket-glow.active {
+  animation: bucketGlowExpand 0.75s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+}
+
+@keyframes bucketGlowExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.9;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.35);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Stars Container */
+.reward-stars-container {
+  position: absolute;
+  left: 61.5%;
+  top: 46.5%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.reward-star {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.reward-star svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.reward-star.burst {
+  animation: starBurstOut 0.7s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
+@keyframes starBurstOut {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translate(calc(var(--dx) * 0.45), calc(var(--dy) * 0.45)) scale(1.25) rotate(45deg);
+  }
+  70% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) translate(calc(var(--dx) * 0.85), calc(var(--dy) * 0.85)) scale(1.0) rotate(90deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) scale(0.35) rotate(135deg);
+  }
+}
+
+/* Floating "+1 🐟" Pill */
+.reward-plus-fish {
+  position: absolute;
+  left: 61.5%;
+  top: 38%;
+  transform: translate(-50%, -50%) scale(0.6);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 2px solid #F59E0B;
+  border-radius: 999px;
+  padding: 4px 14px;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.28), 0 2px 4px rgba(0, 0, 0, 0.06);
+  font-size: 20px;
+  font-weight: 800;
+  color: #D97706;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 12;
+}
+
+.reward-plus-fish.active {
+  animation: plusFishFloat 1.15s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+@keyframes plusFishFloat {
+  0% {
+    transform: translate(-50%, 0) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(-50%, -8px) scale(1.18);
+    opacity: 1;
+  }
+  45% {
+    transform: translate(-50%, -14px) scale(1.0);
+    opacity: 1;
+  }
+  75% {
+    transform: translate(-50%, -24px) scale(0.96);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -36px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* Celebration Banner: "Câu được cá rồi!" */
+.reward-celebration-banner {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 2px solid #38BDF8;
+  border-radius: 999px;
+  padding: 6px 18px;
+  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.25), 0 2px 0 var(--ink-border, #1E293B);
+  font-size: 15px;
+  font-weight: 800;
+  color: #0F172A;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 12;
+  white-space: nowrap;
+}
+
+.reward-celebration-banner.active {
+  animation: celebrationBannerIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes celebrationBannerIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(16px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+/* --- FOOTER & CONTROLS --- */
+.reward-modal-footer {
+  padding: 10px 18px 16px;
+  border-top: 1.5px solid #F1F5F9;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Timeline Phase Steps */
+.reward-timeline-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #94A3B8;
+  padding: 6px 10px;
+  background: #F8FAFC;
+  border-radius: 12px;
+}
+
+.timeline-step {
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.timeline-step.active {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.timeline-step.done {
+  background: #ECFDF5;
+  color: #065F46;
+}
+
+.timeline-arrow {
+  color: #CBD5E1;
+  font-size: 10px;
+}
+
+/* Footer Action Buttons */
+.reward-footer-btns {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.reward-action-btn {
+  padding: 9px 18px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.reward-action-btn.primary {
+  background: #F59E0B;
+  border: 2px solid var(--ink-border, #1E293B);
+  color: #0F172A;
+  box-shadow: 0 3px 0 var(--ink-border, #1E293B);
+}
+
+.reward-action-btn.primary:hover {
+  background: #FBBF24;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 var(--ink-border, #1E293B);
+}
+
+.reward-action-btn.primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--ink-border, #1E293B);
+}
+
+.reward-action-btn.outline {
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  color: #475569;
+}
+
+.reward-action-btn.outline:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+/* --- ACCESSIBILITY / REDUCED MOTION FALLBACK --- */
+@media (prefers-reduced-motion: reduce) {
+  .reward-modal-backdrop,
+  .reward-modal-card {
+    animation: none !important;
+  }
+
+  .reward-bucket-glow.active {
+    animation: none !important;
+    opacity: 0.6 !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    transition: opacity 0.3s ease !important;
+  }
+
+  .reward-star {
+    display: none !important;
+  }
+
+  .reward-plus-fish.active {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) !important;
+    transition: opacity 0.3s ease !important;
+  }
+
+  .reward-celebration-banner.active {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: translateX(-50%) !important;
+    transition: opacity 0.3s ease !important;
+  }
+}
+
+/* --- RESPONSIVE MOBILE TWEAKS --- */
+@media (max-width: 640px) {
+  .reward-modal-card {
+    border-radius: 20px;
+    max-width: 100%;
+  }
+
+  .reward-modal-header {
+    padding: 12px 14px 8px;
+  }
+
+  .reward-modal-title {
+    font-size: 14.5px;
+  }
+
+  .reward-stage-wrapper {
+    padding: 10px 12px 6px;
+  }
+
+  .reward-plus-fish {
+    font-size: 17px;
+    padding: 3px 10px;
+  }
+
+  .reward-celebration-banner {
+    font-size: 13.5px;
+    padding: 5px 14px;
+    bottom: 8px;
+  }
+
+  .reward-timeline-indicator {
+    font-size: 10.5px;
+    gap: 4px;
+    padding: 4px 6px;
+  }
+
+  .floating-dev-reward-btn {
+    bottom: 14px;
+    right: 14px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}

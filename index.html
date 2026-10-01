@@ -7153,6 +7153,8 @@ input.search:focus {
   to { transform: scale(1); opacity: 1; }
 }
 </style>
+  <!-- Reward Experience Prototype Stylesheet -->
+  <link rel="stylesheet" href="reward-prototype.css">
 </head>
 <body>
 <div class="app">
@@ -7172,6 +7174,13 @@ input.search:focus {
         <span class="feed-badge-icon" id="feedBadgeIcon">🐟</span>
         <span class="feed-badge-text" id="feedBadgeText">0/5 từ</span>
       </div>
+
+      <!-- DEV REWARD PROTOTYPE BUTTON (Dev only) -->
+      <button type="button" id="devRewardPreviewBtn" class="dev-reward-preview-btn" onclick="openRewardPrototypeModal()" title="Xem thử hiệu ứng nhận thưởng với clip mèo câu cá (Chỉ hiển thị trong môi trường Dev)">
+        <span>🎣</span>
+        <span>Xem thử nhận thưởng</span>
+        <span class="dev-tag">DEV</span>
+      </button>
 
       <!-- LEADERBOARD BADGE -->
       <div class="leaderboard-toolbar-badge" id="openLeaderboardBtn" onclick="openLeaderboardModal()" title="Bảng Vàng Vinh Danh Bạn Học">
@@ -7222,6 +7231,11 @@ input.search:focus {
         <span style="font-size:11px;">Tính năng bảo vệ chuỗi sẽ được mở ở bản sau.</span>
       </div>
     </div>
+
+    <!-- PROTOTYPE REWARD PREVIEW IN CAT FEED POPOVER -->
+    <button type="button" id="devFeedRewardBtn" class="dev-feed-reward-btn" onclick="openRewardPrototypeModal()" title="Xem thử hiệu ứng mèo câu cá">
+      🎣 Xem thử nhận thưởng (Prototype)
+    </button>
   </div>
 
   <div class="tabs">
@@ -16785,5 +16799,104 @@ function playKinoMixtape(){
     </div>
   </div>
 </div>
-      </body>
+
+<!-- ============================================================================== -->
+<!-- REWARD EXPERIENCE PROTOTYPE (CAT FISHING PROTOTYPE) -->
+<!-- ============================================================================== -->
+<button type="button" id="floatingDevRewardBtn" class="floating-dev-reward-btn" onclick="openRewardPrototypeModal()" title="Bản thử hiệu ứng nhận thưởng với video mèo câu cá (Dev Only)">
+  <span>🎣</span>
+  <span>Thử nhận thưởng</span>
+  <span class="floating-badge">DEV</span>
+</button>
+
+<div id="rewardPrototypeModal" class="reward-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="rewardModalTitle">
+  <div class="reward-modal-card">
+    <!-- Header -->
+    <div class="reward-modal-header">
+      <div class="reward-header-title-wrap">
+        <span class="reward-header-icon">🐟</span>
+        <div>
+          <h3 id="rewardModalTitle" class="reward-modal-title">
+            Bản thử nhận thưởng · Cat Fishing
+          </h3>
+          <p class="reward-modal-subtitle">Prototype trải nghiệm hình ảnh & âm thanh · Không lưu tiến độ</p>
+        </div>
+      </div>
+      <div class="reward-header-actions">
+        <button type="button" id="rewardSoundToggleBtn" class="reward-sound-btn" onclick="toggleRewardSound()" title="Bật/Tắt âm thanh hiệu ứng" aria-label="Bật/Tắt âm thanh">
+          <span id="rewardSoundIcon">🔊</span>
+          <span id="rewardSoundLabel">Bật tiếng</span>
+        </button>
+        <button type="button" class="reward-close-btn" onclick="closeRewardPrototypeModal()" title="Đóng bản thử (ESC)" aria-label="Đóng">✕</button>
+      </div>
+    </div>
+
+    <!-- Video Stage Container -->
+    <div class="reward-stage-wrapper">
+      <div class="reward-video-container" id="rewardVideoContainer">
+        <!-- Native Video Element -->
+        <video id="rewardCatVideo"
+               class="reward-cat-video"
+               src="catfishing/catfishing.mp4"
+               playsinline
+               muted
+               preload="auto">
+        </video>
+
+        <!-- Video Fallback Card -->
+        <div id="rewardVideoFallback" class="reward-video-fallback hidden">
+          <div class="fallback-icon">🐱🎣</div>
+          <div class="fallback-title">Đang chạy mô phỏng tĩnh</div>
+          <div class="fallback-text">Không thể phát trực tiếp video catfishing.mp4. Hiệu ứng và âm thanh vẫn chạy thử nghiệm bình thường.</div>
+          <button type="button" class="btn primary" onclick="replayRewardPrototype()">Thử lại</button>
+        </div>
+
+        <!-- Visual Effects Overlay -->
+        <div id="rewardEffectsOverlay" class="reward-effects-overlay">
+          <!-- Vòng sáng mềm quanh khu vực miệng thùng (x: 61.5%, y: 46.5%) -->
+          <div id="rewardBucketGlow" class="reward-bucket-glow"></div>
+
+          <!-- 8-12 ngôi sao nhỏ bung ra quanh thùng -->
+          <div id="rewardStarsContainer" class="reward-stars-container"></div>
+
+          <!-- Hiển thị text "+1 🐟" nảy nhẹ và bay lên -->
+          <div id="rewardPlusFish" class="reward-plus-fish">
+            <span>+1</span>
+            <span>🐟</span>
+          </div>
+
+          <!-- Thông báo chúc mừng "Câu được cá rồi!" -->
+          <div id="rewardCelebrationBanner" class="reward-celebration-banner">
+            <span>✨</span>
+            <span>Câu được cá rồi!</span>
+            <span>🎉</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline & Controls Footer -->
+    <div class="reward-modal-footer">
+      <div class="reward-timeline-indicator" id="rewardTimelineIndicator">
+        <span class="timeline-step" id="stepPhaseA">1. Kéo cần 🎣</span>
+        <span class="timeline-arrow">→</span>
+        <span class="timeline-step" id="stepPhaseB">2. Cá vào thùng 🪣</span>
+        <span class="timeline-arrow">→</span>
+        <span class="timeline-step" id="stepPhaseC">3. Mèo mừng 🐱✨</span>
+      </div>
+
+      <div class="reward-footer-btns">
+        <button type="button" id="rewardReplayBtn" class="reward-action-btn primary" onclick="replayRewardPrototype()">
+          <span>🔄 Phát lại từ đầu</span>
+        </button>
+        <button type="button" class="reward-action-btn outline" onclick="closeRewardPrototypeModal()">
+          <span>✕ Đóng</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="reward-prototype.js"></script>
+</body>
 </html>
