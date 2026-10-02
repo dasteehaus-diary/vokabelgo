@@ -258,7 +258,7 @@
     },
 
     // --------------------------------------------------------------------------
-    // 3. TARGET SELECTION (3 REVIEW + 2 NEW)
+    // 3. TARGET SELECTION (FSRS-6 DUE REVIEW + NEW WORDS)
     // --------------------------------------------------------------------------
     selectTargets: function(allCardsList, count) {
       const totalNeeded = typeof count === 'number' ? count : 5;
@@ -272,31 +272,96 @@
       } catch (e) {}
 
       const learningState = VokabelLearningState.load();
+      const srsModule = (typeof window !== 'undefined' && window.VokabelSRS) || (typeof global !== 'undefined' && global.VokabelSRS);
+      let srsState = { cards: {} };
+      if (srsModule && typeof srsModule.load === 'function') {
+        srsState = srsModule.load();
+      } else {
+        try {
+          const rawSrs = localStorage.getItem('vokabelgo_srs_state_v1');
+          if (rawSrs) srsState = JSON.parse(rawSrs) || { cards: {} };
+        } catch (e) {}
+      }
 
-      const unknownPool = [];
-      const hardPool = [];
-      const otherReviewPool = [];
+      const now = Date.now();
+
+      // Phân loại thẻ vào các nhóm ưu tiên:
+      // 1. tier1_dueSrs: thẻ có SRS state và dueAt <= now (đến hạn ôn)
+      // 2. tier2_legacyUrgent: thẻ legacy unknown/hard chưa có SRS state (bootstrap ưu tiên cao)
+      // 3. tier3_legacyKnown: thẻ legacy known chưa có SRS state (bootstrap dần)
+      // 4. newPool: thẻ hoàn toàn mới (chưa từng học, không có firstSeenAt, không có legacy/srs)
+      // 5. tier4_futureSrs: thẻ có SRS state nhưng dueAt > now (chưa đến hạn - CHỈ dùng khi cạn kiệt fallback)
+
+      const tier1_dueSrs = [];
+      const tier2_legacyUrgent = [];
+      const tier3_legacyKnown = [];
+      const tier4_futureSrs = [];
       const newPool = [];
 
       allCardsList.forEach(card => {
         const id = card.id;
+        const srsCard = srsState.cards ? srsState.cards[id] : null;
         const leg = legacyProgress[id];
         const ls = learningState.cards[id];
 
-        if (leg === 'unknown' || (ls && ls.needsReview && ls.failureCount > ls.successCount)) {
-          unknownPool.push(id);
-        } else if (leg === 'hard' || (ls && ls.needsReview)) {
-          hardPool.push(id);
-        } else if (leg === 'known' || (ls && ls.status === 'review') || (ls && ls.status === 'mastered')) {
-          otherReviewPool.push(id);
+        if (srsCard && srsCard.dueAt) {
+          const dueMs = new Date(srsCard.dueAt).getTime();
+          if (dueMs <= now) {
+            // Đến hạn hoặc quá hạn
+            const overdueMs = now - dueMs;
+            const isAgain = (srsCard.lastRating === 1) || (ls && ls.needsReview);
+            tier1_dueSrs.push({ id, dueMs, overdueMs, isAgain });
+          } else {
+            // Chưa đến hạn
+            tier4_futureSrs.push({ id, dueMs });
+          }
+        } else if (ls && ls.firstSeenAt) {
+          // Đã từng học nhưng chưa có SRS record
+          if (leg === 'unknown' || (ls.needsReview && ls.failureCount > ls.successCount)) {
+            tier2_legacyUrgent.push({ id, priority: 1 });
+          } else if (leg === 'hard' || ls.needsReview) {
+            tier2_legacyUrgent.push({ id, priority: 2 });
+          } else {
+            tier3_legacyKnown.push(id);
+          }
+        } else if (leg) {
+          // Có legacy progress
+          if (leg === 'unknown') {
+            tier2_legacyUrgent.push({ id, priority: 1 });
+          } else if (leg === 'hard') {
+            tier2_legacyUrgent.push({ id, priority: 2 });
+          } else if (leg === 'known') {
+            tier3_legacyKnown.push(id);
+          } else {
+            newPool.push(id);
+          }
         } else {
-          // Chưa có legacy progress và chưa có learning state -> new
+          // Thẻ mới tinh: chưa có firstSeenAt, chưa có legacy, chưa có SRS
           newPool.push(id);
         }
       });
 
-      // Review pool: unknown trước, rồi đến hard, rồi đến các từ review khác
-      const reviewPool = [...unknownPool, ...hardPool, ...otherReviewPool];
+      // Sắp xếp Tier 1 (SRS Due):
+      // 1. Thẻ overdue nhiều hơn lên trước (dueMs nhỏ hơn tức là quá hạn lâu hơn)
+      // 2. Thẻ có isAgain / needsReview xếp trước nếu overdue tương đương
+      tier1_dueSrs.sort((a, b) => {
+        if (a.isAgain !== b.isAgain) return a.isAgain ? -1 : 1;
+        return a.dueMs - b.dueMs;
+      });
+
+      // Sắp xếp Tier 2 (Legacy Urgent): unknown trước, rồi đến hard
+      tier2_legacyUrgent.sort((a, b) => a.priority - b.priority);
+
+      // Sắp xếp Tier 4 (Future SRS fallback): thẻ gần đến hạn nhất lên trước
+      tier4_futureSrs.sort((a, b) => a.dueMs - b.dueMs);
+
+      // Tạo review pool chuẩn: [Tier 1, Tier 2, Tier 3]
+      // Tuyệt đối KHÔNG đưa tier4_futureSrs (chưa tới hạn) vào review pool bình thường
+      const reviewPool = [
+        ...tier1_dueSrs.map(x => x.id),
+        ...tier2_legacyUrgent.map(x => x.id),
+        ...tier3_legacyKnown
+      ];
 
       const selectedTargets = [];
       const selectedSet = new Set();
@@ -315,7 +380,7 @@
         return picked;
       }
 
-      // 1. Chọn tối đa 3 review
+      // 1. Chọn tối đa 3 due review
       const pickedReview = pickFrom(reviewPool, targetReviewCount);
 
       // 2. Chọn tối đa 2 new
@@ -333,7 +398,14 @@
         pickFrom(reviewPool, newDeficit);
       }
 
-      // 5. Nếu cả 2 đều thiếu: lấy bất kỳ thẻ nào còn lại trong allCardsList
+      // 5. CẠN KIỆT FALLBACK POLICY:
+      // Nếu đã vét hết cả reviewPool và newPool mà vẫn chưa đủ quota (ví dụ kho thẻ quá ít hoặc toàn bộ thẻ đã được học và chưa đến hạn):
+      // Lấy từ tier4_futureSrs (thẻ có lịch ôn gần nhất) để hoàn thành mục tiêu học hôm nay
+      if (selectedTargets.length < totalNeeded && tier4_futureSrs.length > 0) {
+        pickFrom(tier4_futureSrs.map(x => x.id), totalNeeded - selectedTargets.length);
+      }
+
+      // 6. Fallback cuối cùng nếu vẫn thiếu thẻ
       if (selectedTargets.length < totalNeeded) {
         for (let i = 0; i < allCardsList.length; i++) {
           if (selectedTargets.length >= totalNeeded) break;
@@ -360,14 +432,26 @@
 
       const learningState = VokabelLearningState.load();
 
+      const srsModule = (typeof window !== 'undefined' && window.VokabelSRS) || (typeof global !== 'undefined' && global.VokabelSRS);
+      let srsState = { cards: {} };
+      if (srsModule && typeof srsModule.load === 'function') {
+        srsState = srsModule.load();
+      } else {
+        try {
+          const rawSrs = localStorage.getItem('vokabelgo_srs_state_v1');
+          if (rawSrs) srsState = JSON.parse(rawSrs) || { cards: {} };
+        } catch (e) {}
+      }
+
       const introTargets = [];
       const reviewTargets = [];
 
       targetIds.forEach(id => {
         const leg = legacyProgress[id];
         const ls = learningState.cards[id];
-        // Là từ mới nếu chưa từng có legacy progress và chưa từng ghi nhận firstSeenAt
-        const isNew = (!leg && (!ls || !ls.firstSeenAt));
+        const hasSrs = Boolean(srsState.cards && srsState.cards[id]);
+        // Là từ mới nếu chưa từng có legacy progress, chưa từng ghi nhận firstSeenAt, và chưa có SRS state
+        const isNew = (!leg && (!ls || !ls.firstSeenAt) && !hasSrs);
         if (isNew) {
           introTargets.push(id);
         } else {
@@ -559,8 +643,10 @@
       if (!currentItem || currentItem.type !== 'recall') return null;
 
       const id = currentItem.cardId;
-      const targetState = session.targetStates[id] || { attempts: 0, failures: 0, completed: false };
+      const targetState = session.targetStates[id] || { attempts: 0, failures: 0, completed: false, recallRatings: [] };
       targetState.attempts = (targetState.attempts || 0) + 1;
+      targetState.recallRatings = targetState.recallRatings || [];
+      targetState.recallRatings.push(rating);
 
       let justCompletedTarget = false;
       let justCompletedSession = false;
@@ -582,6 +668,27 @@
         if (!session.completedTargets.includes(id)) {
           session.completedTargets.push(id);
           justCompletedTarget = true;
+
+          // Xác định FSRS rating cho toàn bộ session của target này:
+          // - nếu có bất kỳ unknown -> final FSRS rating = Again (1)
+          // - nếu không unknown nhưng có hard -> Hard (2)
+          // - nếu tất cả recall thành công rõ -> Good (3)
+          let fsrsRating = 3; // Good
+          if (targetState.recallRatings.includes('unknown')) {
+            fsrsRating = 1; // Again
+          } else if (targetState.recallRatings.includes('hard')) {
+            fsrsRating = 2; // Hard
+          }
+          targetState.finalRating = fsrsRating;
+
+          // Commit FSRS CHỈ MỘT LẦN DUY NHẤT khi target hoàn thành session
+          if (!targetState.srsCommitted) {
+            const srs = (typeof window !== 'undefined' && window.VokabelSRS) || (typeof global !== 'undefined' && global.VokabelSRS);
+            if (srs && typeof srs.scheduleReview === 'function') {
+              srs.scheduleReview(id, fsrsRating);
+              targetState.srsCommitted = true;
+            }
+          }
 
           // ĐÚNG MỤC TIÊU: Chỉ gọi VokabelDaily khi target HOÀN THÀNH (qua onCardReviewedForFeed hoặc trực tiếp)
           if (typeof window.onCardReviewedForFeed === 'function') {
@@ -658,6 +765,9 @@
       targetState.completed = true;
       targetState.needsReview = true;
       targetState.method = 'reinforce';
+      targetState.recallRatings = targetState.recallRatings || [];
+      targetState.recallRatings.push('unknown');
+      targetState.finalRating = 1; // Again
 
       VokabelLearningState.recordReinforce(id);
       // P1-3: Chắc chắn thẻ không bị đánh dấu là 'known' trong legacy progress
@@ -675,6 +785,15 @@
       if (!session.completedTargets.includes(id)) {
         session.completedTargets.push(id);
         justCompletedTarget = true;
+
+        // Guided Reinforcement: commit FSRS rating = Again (1)
+        if (!targetState.srsCommitted) {
+          const srs = (typeof window !== 'undefined' && window.VokabelSRS) || (typeof global !== 'undefined' && global.VokabelSRS);
+          if (srs && typeof srs.scheduleReview === 'function') {
+            srs.scheduleReview(id, 1);
+            targetState.srsCommitted = true;
+          }
+        }
 
         if (typeof window.onCardReviewedForFeed === 'function') {
           try { window.onCardReviewedForFeed(id); } catch (e) {}

@@ -202,6 +202,12 @@
       if (fc) fishCollection = JSON.parse(fc);
     } catch (e) {}
 
+    let srsState = null;
+    try {
+      const srs = localStorage.getItem('vokabelgo_srs_state_v1');
+      if (srs) srsState = JSON.parse(srs);
+    } catch (e) {}
+
     const prof = getLocalUserProfile();
 
     return {
@@ -216,6 +222,7 @@
         progress: currentProg,
         learningState: learningState,
         learningSession: learningSession,
+        srsState: srsState,
         dailyProgress: dailyProgress,
         fishCollection: fishCollection,
         checkinHistory: checkinHist,
@@ -368,6 +375,46 @@
             localStorage.setItem('vokabelgo_fish_collection_v1', JSON.stringify(cloudAppData.fishCollection));
           }
         } catch (e) {}
+      }
+
+      // 10. SRS State (vokabelgo_srs_state_v1)
+      if (cloudAppData.srsState && typeof cloudAppData.srsState === 'object') {
+        try {
+          const localSrsStr = localStorage.getItem('vokabelgo_srs_state_v1');
+          if (!localSrsStr) {
+            localStorage.setItem('vokabelgo_srs_state_v1', JSON.stringify(cloudAppData.srsState));
+          } else {
+            const localSrs = JSON.parse(localSrsStr);
+            const cloudSrs = cloudAppData.srsState;
+            const mergedCards = { ...(localSrs.cards || {}) };
+            const cloudCards = cloudSrs.cards || {};
+            for (const cardId in cloudCards) {
+              const cloudCard = cloudCards[cardId];
+              const localCard = mergedCards[cardId];
+              if (!localCard) {
+                mergedCards[cardId] = cloudCard;
+              } else {
+                const cloudTime = new Date(cloudCard.lastScheduledAt || cloudSrs.updatedAt || 0).getTime();
+                const localTime = new Date(localCard.lastScheduledAt || localSrs.updatedAt || 0).getTime();
+                if (cloudTime > localTime) {
+                  mergedCards[cardId] = cloudCard;
+                }
+              }
+            }
+            const cloudOverallTime = new Date(cloudSrs.updatedAt || 0).getTime();
+            const localOverallTime = new Date(localSrs.updatedAt || 0).getTime();
+            const mergedSrs = {
+              version: 1,
+              engine: "fsrs6",
+              engineVersion: "ts-fsrs@5.4.2",
+              updatedAt: new Date(Math.max(cloudOverallTime, localOverallTime, Date.now())).toISOString(),
+              cards: mergedCards
+            };
+            localStorage.setItem('vokabelgo_srs_state_v1', JSON.stringify(mergedSrs));
+          }
+        } catch(e) {
+          console.warn('[VokabelGo Cloud] Lỗi merge srsState:', e);
+        }
       }
 
       // Cập nhật giao diện web
@@ -594,6 +641,7 @@
       localStorage.removeItem('vokabelgo_user_profile');
       localStorage.removeItem('vokabelgo_learning_state_v1');
       localStorage.removeItem('vokabelgo_learning_session_v1');
+      localStorage.removeItem('vokabelgo_srs_state_v1');
       localStorage.removeItem('vokabelgo_daily_progress_v1');
       localStorage.removeItem('vokabelgo_fish_collection_v1');
 
