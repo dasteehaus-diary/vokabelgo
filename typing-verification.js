@@ -29,7 +29,7 @@
       if (!term) return '';
 
       // Loại bỏ annotation plural sau dấu phẩy: ", -n", ", -er", ", -¨er", ", pl.", ", die ..."
-      term = term.replace(/,\s*(-[^\s,]*|pl\.?|Pl\.?|die\s+[a-zA-ZäöüÄÖÜß]+)$/i, '').trim();
+      term = term.replace(/,\s*(-[^\s,]*|pl\.?|Pl\.?|die\s+[^,]+)$/i, '').trim();
 
       // Collapse whitespace
       term = term.replace(/\s+/g, ' ').trim();
@@ -52,6 +52,11 @@
 
       // Loại trừ nhiều biến thể ngăn cách bằng / hoặc ;
       if (rawTerm.includes('/') || rawTerm.includes(';')) return false;
+
+      // P1-1: Loại trừ các thẻ chứa metadata ngữ pháp (ví dụ: " + Dat.", " + Akk.", " + Genitiv", " + Passiv")
+      if (rawTerm.includes('+') || /\b(dat\.|akk\.|genitiv|gen\.|passiv|infinitiv)\b/i.test(rawTerm)) {
+        return false;
+      }
 
       // Loại trừ các tags: Inhalt, Grammatik, Fragen
       const tags = Array.isArray(card.tags) ? card.tags : [];

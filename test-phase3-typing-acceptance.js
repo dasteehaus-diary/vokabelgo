@@ -73,6 +73,8 @@ global.document = {
   addEventListener: () => {}
 };
 global.showRetroToast = () => {};
+global.renderSessionInteraction = () => {};
+mockWindow.renderSessionInteraction = () => {};
 
 // 2. Load vendored ts-fsrs & core scripts
 const FSRS = require('./vendor/ts-fsrs/index.cjs');
@@ -627,10 +629,260 @@ check(typeof window.VokabelSession.flushPendingSrsCommits === 'function', 'flush
 check(typeof window.VokabelSRS.scheduleReview === 'function', 'VokabelSRS.scheduleReview intact');
 check(typeof window.VokabelSRS.isDueForDailySession === 'function', 'isDueForDailySession intact');
 
+// --------------------------------------------------------------------------
+// TEST R — Enter input
+// --------------------------------------------------------------------------
+console.log('\n--- TEST R: Enter key inside #sessionTypingInput ---');
+localStorage.clear();
+window.VokabelSession.resetTodayForTesting();
+
+localStorage.setItem('vokabelgo_srs_state_v1', JSON.stringify({
+  version: 1,
+  engine: "fsrs6",
+  cards: {
+    'r_target': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 3, lastRating: 3, fsrsCard: {} },
+    'r_2': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    'r_3': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    'r_4': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    'r_5': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} }
+  }
+}));
+
+const rCards = [
+  { id: 'r_target', term: 'die Entscheidung', meaning: 'quyết định' },
+  { id: 'r_2', term: 'Wort 2', meaning: 'Từ 2' },
+  { id: 'r_3', term: 'Wort 3', meaning: 'Từ 3' },
+  { id: 'r_4', term: 'Wort 4', meaning: 'Từ 4' },
+  { id: 'r_5', term: 'Wort 5', meaning: 'Từ 5' }
+];
+global.allCards = () => rCards;
+mockWindow.allCards = () => rCards;
+
+const rSession = window.VokabelSession.createTodaySession(rCards);
+mockWindow.isStudySessionMode = true;
+
+// Mock input element
+const mockTypingInput = {
+  value: 'die Entscheidung',
+  focus: () => {},
+  blur: () => {},
+  tagName: 'INPUT',
+  id: 'sessionTypingInput'
+};
+mockWindow.document = global.document;
+const origGetById = global.document.getElementById;
+global.document.getElementById = (id) => {
+  if (id === 'sessionTypingInput') return mockTypingInput;
+  return origGetById(id);
+};
+global.document.activeElement = mockTypingInput;
+
+// Load handleSessionTypingInputKeydown & handleSessionTypingSubmit from index.html
+const indexHtmlForR = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+const keydownMatch = indexHtmlForR.match(/function\s+handleSessionTypingInputKeydown[\s\S]*?\n\}/);
+const submitMatch = indexHtmlForR.match(/function\s+handleSessionTypingSubmit[\s\S]*?\n\}/);
+eval(keydownMatch[0]);
+eval(submitMatch[0]);
+mockWindow.handleSessionTypingSubmit = handleSessionTypingSubmit;
+global.handleSessionTypingSubmit = handleSessionTypingSubmit;
+
+// Case 1: Enter with isComposing = true -> should NOT submit
+let compPrevented = false;
+handleSessionTypingInputKeydown({
+  key: 'Enter',
+  isComposing: true,
+  preventDefault: () => { compPrevented = true; },
+  stopPropagation: () => {}
+});
+check(compPrevented === false, 'IME isComposing does not submit');
+check(window.VokabelSession.getTodaySession().targetStates['r_target'].typingSubmitted === false, 'Target not submitted during IME composition');
+
+// Case 2: Normal Enter key -> submits answer exactly once
+let enterPrevented = false;
+let enterStopped = false;
+handleSessionTypingInputKeydown({
+  key: 'Enter',
+  isComposing: false,
+  preventDefault: () => { enterPrevented = true; },
+  stopPropagation: () => { enterStopped = true; }
+});
+check(enterPrevented === true, 'Enter calls preventDefault');
+check(enterStopped === true, 'Enter calls stopPropagation');
+const rTargetAfterSubmit = window.VokabelSession.getTodaySession().targetStates['r_target'];
+check(rTargetAfterSubmit.typingSubmitted === true, 'Answer submitted via Enter key in input');
+check(rTargetAfterSubmit.attempts === 1, 'Target has exactly 1 attempt recorded');
+
+// Case 3: Enter again while typingSubmitted === true -> must NOT double submit
+handleSessionTypingInputKeydown({
+  key: 'Enter',
+  isComposing: false,
+  preventDefault: () => {},
+  stopPropagation: () => {}
+});
+check(window.VokabelSession.getTodaySession().targetStates['r_target'].attempts === 1, 'Enter does not double-submit while feedback is showing');
+
+global.document.getElementById = origGetById;
+
+// --------------------------------------------------------------------------
+// TEST S — Final typing target lifecycle
+// --------------------------------------------------------------------------
+console.log('\n--- TEST S: Final typing target lifecycle ---');
+localStorage.clear();
+window.VokabelSession.resetTodayForTesting();
+
+localStorage.setItem('vokabelgo_srs_state_v1', JSON.stringify({
+  version: 1,
+  engine: "fsrs6",
+  cards: {
+    's_1': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    's_2': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    's_3': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    's_4': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    's_5': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 3, lastRating: 3, fsrsCard: {} }
+  }
+}));
+
+const sCards = [
+  { id: 's_1', term: 'Wort 1', meaning: 'Nghĩa 1' },
+  { id: 's_2', term: 'Wort 2', meaning: 'Nghĩa 2' },
+  { id: 's_3', term: 'Wort 3', meaning: 'Nghĩa 3' },
+  { id: 's_4', term: 'Wort 4', meaning: 'Nghĩa 4' },
+  { id: 's_5', term: 'die Entscheidung', meaning: 'quyết định' }
+];
+global.allCards = () => sCards;
+mockWindow.allCards = () => sCards;
+
+const sSession = window.VokabelSession.createTodaySession(sCards);
+
+// Complete targets 1 to 4 via recall
+window.VokabelSession.handleRecallAnswer('known'); // s_1
+window.VokabelSession.handleRecallAnswer('known'); // s_2
+window.VokabelSession.handleRecallAnswer('known'); // s_3
+window.VokabelSession.handleRecallAnswer('known'); // s_4
+
+const sSessBefore5 = window.VokabelSession.getTodaySession();
+check(sSessBefore5.completedTargets.length === 4, 'Session currently has 4/5 completed targets');
+check(sSessBefore5.queue[sSessBefore5.queueIndex].cardId === 's_5', 'Target 5 is s_5');
+check(sSessBefore5.queue[sSessBefore5.queueIndex].type === 'typing', 'Target 5 interaction is typing');
+
+// Submit correct answer for target 5
+let sMilestoneEventFired = 0;
+mockWindow.addEventListener('vokabelgo:daily-goal-complete', () => { sMilestoneEventFired++; });
+
+const sSubmitRes = window.VokabelSession.handleTypingSubmit('Die Entscheidung');
+check(sSubmitRes.result === 'correct', 'Target 5 typing result is correct');
+check(sSubmitRes.justCompletedTarget === true, 'Target 5 is completed');
+
+const sSessFeedbackStage = window.VokabelSession.getTodaySession();
+check(sSessFeedbackStage.completed === false, 'Session is NOT yet marked completed while in feedback stage');
+check(sSessFeedbackStage.targetStates['s_5'].typingSubmitted === true, 'typingSubmitted is true for target 5');
+check(sSessFeedbackStage.targetStates['s_5'].lastObjectiveResult === 'correct', 'lastObjectiveResult is correct');
+
+// Advance interaction via Continue (after 300-500ms feedback)
+const sContinueRes = window.VokabelSession.handleTypingContinue();
+check(sContinueRes.completed === true, 'Session is marked completed after handleTypingContinue()');
+check(sContinueRes.justCompletedSession === true, 'justCompletedSession is true on final continue');
+
+const sDailySummary = window.VokabelDaily.getSummary();
+check(sDailySummary.todayCount === 5, 'Daily goal count is exactly 5/5');
+check(sDailySummary.completed === true, 'Daily goal completed is true');
+check(sDailySummary.catchStatus === 'pending', 'Cat fishing reward catchStatus is pending');
+
+// --------------------------------------------------------------------------
+// TEST T — Refresh final feedback (F5)
+// --------------------------------------------------------------------------
+console.log('\n--- TEST T: Refresh final feedback (F5) ---');
+localStorage.clear();
+window.VokabelSession.resetTodayForTesting();
+
+let tSrsCommitCount = 0;
+const origScheduleReviewT = window.VokabelSRS.scheduleReview;
+window.VokabelSRS.scheduleReview = function(id, rating, reviewTime) {
+  if (id === 't_5') tSrsCommitCount++;
+  return origScheduleReviewT.call(window.VokabelSRS, id, rating, reviewTime);
+};
+
+localStorage.setItem('vokabelgo_srs_state_v1', JSON.stringify({
+  version: 1,
+  engine: "fsrs6",
+  cards: {
+    't_1': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    't_2': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    't_3': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    't_4': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    't_5': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 3, lastRating: 3, fsrsCard: {} }
+  }
+}));
+
+const tCards = [
+  { id: 't_1', term: 'Wort 1', meaning: 'Nghĩa 1' },
+  { id: 't_2', term: 'Wort 2', meaning: 'Nghĩa 2' },
+  { id: 't_3', term: 'Wort 3', meaning: 'Nghĩa 3' },
+  { id: 't_4', term: 'Wort 4', meaning: 'Nghĩa 4' },
+  { id: 't_5', term: 'die Entscheidung', meaning: 'quyết định' }
+];
+global.allCards = () => tCards;
+mockWindow.allCards = () => tCards;
+
+const tSession = window.VokabelSession.createTodaySession(tCards);
+window.VokabelSession.handleRecallAnswer('known'); // 1
+window.VokabelSession.handleRecallAnswer('known'); // 2
+window.VokabelSession.handleRecallAnswer('known'); // 3
+window.VokabelSession.handleRecallAnswer('known'); // 4
+
+// Submit correct for target 5
+window.VokabelSession.handleTypingSubmit('die Entscheidung');
+check(tSrsCommitCount === 1, 'Target 5 SRS committed once on submit');
+
+// Simulate F5 reload before continue
+const tReloaded = window.VokabelSession.loadSession();
+check(tReloaded.completed === false, 'F5 reload preserves uncompleted session in feedback stage');
+check(tReloaded.targetStates['t_5'].typingSubmitted === true, 'F5 reload preserves typingSubmitted state');
+check(tReloaded.targetStates['t_5'].lastObjectiveResult === 'correct', 'F5 reload preserves feedback correct');
+
+// Learner clicks Continue on reloaded session
+const tContinueRes = window.VokabelSession.handleTypingContinue();
+check(tContinueRes.completed === true, 'Continue completes 5/5 session');
+check(tSrsCommitCount === 1, 'SRS committed strictly ONCE across submit + F5 + continue (no duplicate commit)');
+check(window.VokabelDaily.getTodayCount() === 5, 'Daily goal count is strictly 5 (no duplicate completion)');
+
+window.VokabelSRS.scheduleReview = origScheduleReviewT;
+
+// --------------------------------------------------------------------------
+// TEST U — Grammar metadata excluded
+// --------------------------------------------------------------------------
+console.log('\n--- TEST U: Grammar metadata excluded ---');
+const uGuttun = { term: 'jemandem guttun + Dat.', meaning: 'tốt cho ai đó' };
+const uModal = { term: 'Modalverb + Passiv', meaning: 'động từ khuyết thiếu thể bị động' };
+const uAusserhalb = { term: 'außerhalb + Genitiv', meaning: 'bên ngoài' };
+const uGeste = { term: 'die Geste, -n', meaning: 'cử chỉ' };
+const uAusdruck = { term: 'der Gesichtsausdruck, die Gesichtsausdrücke', meaning: 'nét mặt' };
+
+check(TV.isTypingEligible(uGuttun) === false, 'jemandem guttun + Dat. is excluded from typing');
+check(TV.isTypingEligible(uModal) === false, 'Modalverb + Passiv is excluded from typing');
+check(TV.isTypingEligible(uAusserhalb) === false, 'außerhalb + Genitiv is excluded from typing');
+
+check(TV.isTypingEligible(uGeste) === true, 'die Geste, -n is eligible for typing');
+check(TV.getCanonicalTypingAnswer(uGeste) === 'die Geste', 'die Geste, -n canonical is die Geste');
+
+check(TV.isTypingEligible(uAusdruck) === true, 'der Gesichtsausdruck, die Gesichtsausdrücke is eligible for typing');
+check(TV.getCanonicalTypingAnswer(uAusdruck) === 'der Gesichtsausdruck', 'der Gesichtsausdruck, die Gesichtsausdrücke canonical is der Gesichtsausdruck');
+
+// --------------------------------------------------------------------------
+// TEST V — Full regression runner
+// --------------------------------------------------------------------------
+console.log('\n--- TEST V: Full regression suite verification ---');
+check(fs.existsSync(path.join(__dirname, 'test-all.js')), 'test-all.js unified runner exists');
+check(fs.existsSync(path.join(__dirname, 'test-security-auth-acceptance.js')), 'test-security-auth-acceptance.js exists');
+check(fs.existsSync(path.join(__dirname, 'test-pedagogical-ux-acceptance.js')), 'test-pedagogical-ux-acceptance.js exists');
+check(fs.existsSync(path.join(__dirname, 'test-phase1-acceptance.js')), 'test-phase1-acceptance.js exists');
+check(fs.existsSync(path.join(__dirname, 'test-core-learning-loop-acceptance.js')), 'test-core-learning-loop-acceptance.js exists');
+check(fs.existsSync(path.join(__dirname, 'test-fsrs-srs-acceptance.js')), 'test-fsrs-srs-acceptance.js exists');
+
 console.log('\n====================================================');
 console.log(`ACCEPTANCE SUMMARY: ${passedTests} / ${totalTests} PASSED`);
 if (passedTests === totalTests) {
-  console.log('🎉 ALL PHASE 3 TESTS (TEST A -> TEST Q) PASSED SUCCESSFULLY!');
+  console.log('🎉 ALL PHASE 3 TESTS (TEST A -> TEST V) PASSED SUCCESSFULLY!');
 } else {
   console.log('⚠️ SOME TESTS FAILED. PLEASE REVIEW OUTPUT ABOVE.');
 }
@@ -639,3 +891,4 @@ console.log('====================================================\n');
 if (passedTests !== totalTests) {
   process.exit(1);
 }
+

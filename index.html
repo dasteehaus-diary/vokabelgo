@@ -7512,7 +7512,7 @@ input.search:focus {
                 </div>
 
                 <div class="session-typing-input-wrap" id="sessionTypingInputWrap">
-                  <input type="text" id="sessionTypingInput" class="session-typing-input" placeholder="Gõ từ hoặc cụm tiếng Đức..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Nhập từ hoặc cụm tiếng Đức tương ứng">
+                  <input type="text" id="sessionTypingInput" class="session-typing-input" placeholder="Gõ từ hoặc cụm tiếng Đức..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Nhập từ hoặc cụm tiếng Đức tương ứng" onkeydown="handleSessionTypingInputKeydown(event)">
                   
                   <div class="session-umlaut-bar" id="sessionUmlautBar" role="toolbar" aria-label="Ký tự đặc biệt tiếng Đức">
                     <button type="button" class="btn-session-umlaut" data-char="ä" title="Chèn ä" onclick="insertSessionUmlaut('ä', event)">ä</button>
@@ -14054,6 +14054,10 @@ function renderSessionInteraction() {
         if (inputWrap) inputWrap.classList.remove('hidden');
         if (fbBox) fbBox.classList.add('hidden');
         if (inputEl) {
+          if (!inputEl._sessionKeydownBound) {
+            inputEl.addEventListener('keydown', handleSessionTypingInputKeydown);
+            inputEl._sessionKeydownBound = true;
+          }
           inputEl.value = '';
           inputEl.disabled = false;
           setTimeout(() => inputEl.focus(), 50);
@@ -14144,6 +14148,29 @@ function handleSessionReinforceContinue(e) {
   }
   renderSessionInteraction();
 }
+
+function handleSessionTypingInputKeydown(e) {
+  if (e.key === 'Enter') {
+    if (e.isComposing) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!window.isStudySessionMode || !window.VokabelSession) return;
+    const session = window.VokabelSession.getTodaySession();
+    if (!session || session.completed) return;
+
+    const cur = session.queue[session.queueIndex];
+    if (!cur || cur.type !== 'typing') return;
+
+    const ts = session.targetStates[cur.cardId] || {};
+    // Enter khi typingSubmitted === false -> handleSessionTypingSubmit()
+    // Enter khi feedback đang hiện / typingSubmitted === true -> không double-submit
+    if (!ts.typingSubmitted) {
+      handleSessionTypingSubmit(e);
+    }
+  }
+}
+window.handleSessionTypingInputKeydown = handleSessionTypingInputKeydown;
 
 function handleSessionTypingSubmit(e) {
   if (e) e.stopPropagation();

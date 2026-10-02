@@ -1133,11 +1133,10 @@
 
       session.targetStates[id] = targetState;
 
-      if (session.completedTargets.length >= session.targetIds.length) {
-        session.completed = true;
-        session.completedAt = new Date().toISOString();
-        justCompletedSession = true;
-      }
+      // P0-2: Không set session.completed ngay trong handleTypingSubmit
+      // vì người học vẫn đang xem feedback và tương tác typing chưa kết thúc (chờ Continue hoặc auto-delay).
+      // session.completed sẽ được set khi gọi handleTypingContinue() sau bước feedback.
+      justCompletedSession = false;
 
       this.saveSession(session);
 
@@ -1169,6 +1168,17 @@
       }
 
       session.queueIndex = (session.queueIndex || 0) + 1;
+
+      // P0-2: Kiểm tra hoàn thành session khi kết thúc bước typing cuối cùng
+      let justCompletedSession = false;
+      if (session.completedTargets.length >= session.targetIds.length && !session.completed) {
+        session.completed = true;
+        session.completedAt = new Date().toISOString();
+        justCompletedSession = true;
+      }
+
+      session.justCompletedSession = justCompletedSession;
+
       this.saveSession(session);
       return session;
     },
