@@ -162,7 +162,7 @@
 
     let learnedCount = 0;
     Object.keys(currentProg).forEach(k => {
-      if (currentProg[k] && currentProg[k].box >= 1) learnedCount++;
+      if (currentProg[k] === 'known' || (currentProg[k] && currentProg[k].box >= 1)) learnedCount++;
     });
 
     let feedCount = 0;
@@ -184,6 +184,18 @@
       } catch (e) {}
     }
 
+    let learningState = null;
+    try {
+      const ls = localStorage.getItem('vokabelgo_learning_state_v1');
+      if (ls) learningState = JSON.parse(ls);
+    } catch (e) {}
+
+    let learningSession = null;
+    try {
+      const lsess = localStorage.getItem('vokabelgo_learning_session_v1');
+      if (lsess) learningSession = JSON.parse(lsess);
+    } catch (e) {}
+
     const prof = getLocalUserProfile();
 
     return {
@@ -196,6 +208,8 @@
       app_data: {
         profile: prof,
         progress: currentProg,
+        learningState: learningState,
+        learningSession: learningSession,
         dailyProgress: dailyProgress,
         checkinHistory: checkinHist,
         userCards: userCards,
@@ -288,6 +302,27 @@
             localStorage.setItem('vokabelgo_daily_progress_v1', typeof cloudAppData.dailyProgress === 'string' ? cloudAppData.dailyProgress : JSON.stringify(cloudAppData.dailyProgress));
           } catch(e) {}
         }
+      }
+
+      // 7. Core Learning State (vokabelgo_learning_state_v1)
+      if (cloudAppData.learningState && typeof cloudAppData.learningState === 'object') {
+        try {
+          if (window.VokabelLearningState && typeof window.VokabelLearningState.importData === 'function') {
+            window.VokabelLearningState.importData(cloudAppData.learningState);
+          } else {
+            localStorage.setItem('vokabelgo_learning_state_v1', JSON.stringify(cloudAppData.learningState));
+          }
+        } catch(e) {}
+      }
+
+      // 8. Active Learning Session (vokabelgo_learning_session_v1)
+      if (cloudAppData.learningSession && typeof cloudAppData.learningSession === 'object') {
+        try {
+          const localSess = localStorage.getItem('vokabelgo_learning_session_v1');
+          if (!localSess) {
+            localStorage.setItem('vokabelgo_learning_session_v1', JSON.stringify(cloudAppData.learningSession));
+          }
+        } catch(e) {}
       }
 
       // Cập nhật giao diện web

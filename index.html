@@ -7155,119 +7155,252 @@ input.search:focus {
 </style>
   <!-- Reward Experience Prototype Stylesheet -->
   <link rel="stylesheet" href="reward-prototype.css">
+  <!-- Modern Pedagogical Learning UX Stylesheet -->
+  <link rel="stylesheet" href="learning-ux.css">
 </head>
 <body>
 <div class="app">
-  <div class="header">
-    <div class="brand-group">
+  <!-- MODERN 4-HUB PEDAGOGICAL HEADER -->
+  <header class="app-header-modern">
+    <div class="brand-group-modern" onclick="setPrimaryHub('today')" title="Về trang Hôm nay">
       <div class="brand-logo-icon">🐱</div>
-      <div class="brand-text">
-        <h1>VokabelGo <span class="brand-badge">B1·B2 DEUTSCH</span></h1>
-        <p>Học từ vựng tiếng Đức chuyên sâu · Cùng bé mèo đồng hành</p>
+      <div>
+        <h1>VokabelGo <span class="brand-badge-modern">B1·B2 DEUTSCH</span></h1>
       </div>
     </div>
-    <div class="toolbar">
-      <select id="deckSelect"></select>
-      <input id="search" class="search" placeholder="🔍 Tìm từ, nghĩa, collocation…">
-      <!-- DAILY CAT FEED NUDGE BADGE -->
-      <div class="feed-toolbar-badge" id="openFeedNudgeBtn" onclick="toggleFeedNudgePopover()" title="Cho bé mèo ăn cá hôm nay (Mục tiêu 5 từ)">
-        <span class="feed-badge-icon" id="feedBadgeIcon">🐟</span>
-        <span class="feed-badge-text" id="feedBadgeText">0/5 từ</span>
-      </div>
 
-      <!-- DEV REWARD PROTOTYPE BUTTON (Dev only) -->
-      <button type="button" id="devRewardPreviewBtn" class="dev-reward-preview-btn" onclick="openRewardPrototypeModal()" title="Xem thử hiệu ứng nhận thưởng với clip mèo câu cá (Chỉ hiển thị trong môi trường Dev)">
-        <span>🎣</span>
-        <span>Xem thử nhận thưởng</span>
-        <span class="dev-tag">DEV</span>
+    <!-- 4 MAIN LEARNER HUBS -->
+    <nav class="main-nav-hubs" aria-label="Điều hướng chính">
+      <button type="button" class="nav-hub-btn active" data-nav="today" onclick="setPrimaryHub('today')">
+        <span class="nav-hub-icon">🏠</span>
+        <span>Hôm Nay</span>
+      </button>
+      <button type="button" class="nav-hub-btn" data-nav="study" onclick="setPrimaryHub('study')">
+        <span class="nav-hub-icon">📖</span>
+        <span>Học Từ</span>
+      </button>
+      <button type="button" class="nav-hub-btn" data-nav="kino" onclick="setPrimaryHub('kino')">
+        <span class="nav-hub-icon">🎬</span>
+        <span>Kino</span>
+      </button>
+      <button type="button" class="nav-hub-btn" data-nav="library" onclick="setPrimaryHub('library')">
+        <span class="nav-hub-icon">📚</span>
+        <span>Thư Viện</span>
+      </button>
+    </nav>
+
+    <!-- RIGHT UTILITY GROUP -->
+    <div class="header-utility-group">
+      <!-- Global Audio Mute Toggle (Simple 🔊 / 🔇) -->
+      <button type="button" id="globalAudioToggleBtn" class="header-audio-toggle-btn" onclick="toggleGlobalAudio()" title="Bật / Tắt âm thanh" aria-label="Bật hoặc tắt âm thanh">
+        <span id="globalAudioIcon">🔊</span>
       </button>
 
-      <!-- LEADERBOARD BADGE -->
-      <div class="leaderboard-toolbar-badge" id="openLeaderboardBtn" onclick="openLeaderboardModal()" title="Bảng Vàng Vinh Danh Bạn Học">
-        <span class="leaderboard-badge-icon">🏆</span>
-        <span class="leaderboard-badge-text">Bảng vàng</span>
+      <!-- Dev Reward Button (Dev only) -->
+      <button type="button" id="devRewardPreviewBtn" class="dev-reward-preview-btn" onclick="openRewardPrototypeModal()" title="Xem thử hiệu ứng nhận thưởng (Dev Only)" style="display:none;">
+        <span class="dev-tag">DEV</span>
+        <span>🎣 Thử thưởng</span>
+      </button>
+
+      <!-- Profile & Settings Button -->
+      <div class="header-profile-btn" id="openAvatarBtn" onclick="toggleProfileDropdown(event)" title="Hồ sơ, cài đặt & đồng bộ">
+        <img id="headerAvatarImg" src="img/avatars/v2/cat_12.png" alt="Avatar mèo" class="header-profile-avatar">
+        <span class="header-profile-name" id="headerProfileName">Chị</span>
+        <span style="font-size:10px;color:var(--ink-muted);">▾</span>
       </div>
 
-      <div class="auth-toolbar-badge" id="openAuthBtn" onclick="openAuthModal()" title="Tài khoản & Đồng bộ Đám mây (Đăng nhập / Đổi người học)">
-        <span class="auth-sync-icon" id="authSyncIcon">🔑</span>
-        <span class="auth-status-text" id="authStatusText">Đăng nhập</span>
+      <!-- Profile & Settings Dropdown Menu -->
+      <div id="profileDropdownMenu" class="profile-dropdown-menu hidden" onclick="event.stopPropagation()">
+        <div class="dropdown-header-info">
+          <img id="dropdownAvatarImg" src="img/avatars/v2/cat_12.png" alt="Avatar mèo" class="header-profile-avatar" style="width:34px;height:34px;">
+          <div>
+            <div style="font-size:13.5px;font-weight:800;color:var(--ink-text);" id="dropdownProfileName">Bạn học</div>
+            <div style="font-size:11px;color:var(--ink-muted);">Bé mèo đồng hành</div>
+          </div>
+        </div>
+        <button type="button" class="dropdown-menu-item" onclick="openCatPickerModal(); closeProfileDropdown();">
+          <span>🐱</span>
+          <span>Đổi bé mèo đồng hành</span>
+        </button>
+        <div class="dropdown-menu-item" id="openAuthBtn" onclick="openAuthModal(); closeProfileDropdown();" title="Tài khoản & Đồng bộ Đám mây" style="cursor:pointer;">
+          <span class="auth-sync-icon" id="authSyncIcon">🔑</span>
+          <span class="auth-status-text" id="authStatusText">Đăng nhập / Đồng bộ Cloud</span>
+        </div>
+        <div class="dropdown-menu-item" id="openLeaderboardBtn" onclick="openLeaderboardModal(); closeProfileDropdown();" title="Bảng Vàng Bạn Học" style="cursor:pointer;">
+          <span class="leaderboard-badge-icon">🏆</span>
+          <span>Bảng vàng vinh danh</span>
+        </div>
+        <button type="button" class="dropdown-menu-item" id="catTourNavBtn" onclick="startCatSpotlightTour(); closeProfileDropdown();">
+          <span>🧭</span>
+          <span>Bé mèo hướng dẫn web</span>
+        </button>
+        <div class="dropdown-menu-divider"></div>
+        <button type="button" class="dropdown-menu-item" id="manageBtn" onclick="openManageModal(); closeProfileDropdown();">
+          <span>⚙️</span>
+          <span>Quản lý & Sao lưu thẻ</span>
+        </button>
       </div>
-      <div class="user-profile-badge" id="openAvatarBtn" title="Bấm để đổi bé mèo đồng hành & tên bạn học">
-        <img id="headerAvatarImg" src="img/avatars/v2/cat_12.png" alt="Avatar mèo" class="header-avatar">
-        <div class="profile-info">
-          <span class="profile-nickname" id="headerProfileName">Chị</span>
-          <span class="profile-sub">🐱 Đổi bé mèo</span>
+
+      <!-- Preserved Hidden Feed Badge & Popover Elements for full script compatibility -->
+      <div id="openFeedNudgeBtn" class="hidden" onclick="toggleFeedNudgePopover()" style="display:none;">
+        <span id="feedBadgeIcon">🐟</span>
+        <span id="feedBadgeText">0/5 từ</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hidden Legacy Tabs Container for full backward compatibility -->
+  <div class="tabs hidden" style="display:none;" aria-hidden="true">
+    <button class="active" data-mode="flash"><span>Thẻ học</span></button>
+    <button data-mode="mcq"><span>Trắc nghiệm</span></button>
+    <button data-mode="typing"><span>Tự gõ</span></button>
+    <button data-mode="match"><span>Ghép cặp</span></button>
+    <button data-mode="diktat"><span>Rạp Phim Kino</span></button>
+    <button data-mode="checkin"><span>Lịch & Lưu bút</span></button>
+  </div>
+
+  <!-- =========================================================================
+       HUB 1: HÔM NAY (TODAY HUB) - CENTRAL LEARNING DASHBOARD
+       ========================================================================= -->
+  <section id="todayMode" class="today-dashboard-container">
+    <!-- Welcome Bar -->
+    <div class="today-welcome-bar">
+      <div class="welcome-cat-group">
+        <img id="todayCatAvatarImg" src="img/avatars/v2/cat_12.png" alt="Avatar bé mèo" class="welcome-cat-avatar">
+        <div>
+          <h2 class="welcome-text-title" id="todayGreetingText">Chào bạn! Cùng bé mèo học tiếp nhé 🐾</h2>
+          <p class="welcome-text-sub" id="todayMotivationalSub">Mục tiêu 5 từ vựng mỗi ngày · Không áp lực, nhớ thật lâu.</p>
         </div>
       </div>
-      <button type="button" id="catTourNavBtn" class="cat-tour-nav-btn" onclick="startCatSpotlightTour()" title="Bé mèo hướng dẫn các chức năng của web">🧭 Hướng dẫn</button>
-      <button id="manageBtn" title="Quản lý thẻ, thêm mới và sao lưu">⚙ Quản lý thẻ</button>
-    </div>
-  </div>
-
-  <!-- FEED NUDGE POPOVER -->
-  <div id="feedNudgePopover" class="feed-nudge-popover hidden">
-    <div class="feed-pop-header">
-      <div class="feed-pop-title">🐟 Nuôi Mèo No Bụng</div>
-      <button class="modal-close" onclick="closeFeedNudgePopover()" style="padding:2px 8px;font-size:12px;">✕</button>
-    </div>
-    <div style="font-size:12.5px;color:var(--ink-muted);">Mục tiêu nhẹ nhàng hôm nay: Học tối thiểu 5 từ để tặng bé mèo 1 đĩa cá tươi ngon!</div>
-    
-    <div class="feed-progress-bar-wrap">
-      <div id="feedProgressBarFill" class="feed-progress-bar-fill"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:var(--ink-text);margin-bottom:8px;">
-      <span id="feedProgressRatio">Đã học: 0 / 5 từ</span>
-      <span id="feedStatusLabel" style="color:#D97706;">Đang đói bụng... 🐾</span>
+      <div class="today-date-badge" id="todayDateStr">Hôm nay</div>
     </div>
 
-    <div class="feed-quote-box" id="feedCatQuote">
-      "Đói bụng quá meow... Bạn học 5 từ cho mình ăn cá với nha! 💭"
-    </div>
+    <!-- 🎯 HERO LEARNING CARD: THE SINGLE PRIMARY LEARNING ACTION -->
+    <div class="today-hero-card">
+      <div class="today-hero-top">
+        <span class="today-session-badge">🎯 MỤC TIÊU HÔM NAY</span>
+        <span class="today-time-estimate">⏱️ Khoảng 5–7 phút</span>
+      </div>
 
-    <div class="pillow-shield-box">
-      <span style="font-size:18px;">🛋️</span>
-      <div style="flex:1;line-height:1.35;">
-        <span style="font-weight:800;display:block;">Gối Mèo Lười · Sắp mở khóa</span>
-        <span style="font-size:11px;">Tính năng bảo vệ chuỗi sẽ được mở ở bản sau.</span>
+      <h3 class="today-hero-title" id="todayHeroTitle">Bắt đầu bài học hôm nay 🚀</h3>
+      <p class="today-hero-desc" id="todayHeroDesc">Học tối thiểu 5 từ vựng qua Active Recall. Đạt mốc để xem mèo câu cá trúng thưởng!</p>
+
+      <!-- Daily 5-word Progress Track -->
+      <div class="today-hero-progress-box">
+        <div class="progress-label-row">
+          <span id="todayHeroProgressRatio">Đã học: 0 / 5 từ</span>
+          <span id="todayHeroProgressStatus" style="color:var(--primary); font-weight:800;">Chưa hoàn thành</span>
+        </div>
+        <div class="today-progress-track">
+          <div id="todayHeroProgressFill" class="today-progress-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Single Primary Action Button -->
+      <button type="button" class="today-primary-cta" id="todayPrimaryCta" onclick="handleTodayPrimaryAction()">
+        <span id="todayCtaIcon">🚀</span>
+        <span id="todayCtaText">Bắt đầu phiên học ngay (0/5 từ)</span>
+      </button>
+
+      <!-- Resume State Hint -->
+      <div class="today-resume-hint" id="todayResumeHint">
+        <span>Tiếp tục từ:</span>
+        <span class="resume-deck-tag" id="todayResumeDeckTag">Tất cả bộ · Thẻ 1</span>
       </div>
     </div>
 
-    <!-- PROTOTYPE REWARD PREVIEW IN CAT FEED POPOVER -->
-    <button type="button" id="devFeedRewardBtn" class="dev-feed-reward-btn" onclick="openRewardPrototypeModal()" title="Xem thử hiệu ứng mèo câu cá">
-      🎣 Xem thử nhận thưởng (Prototype)
-    </button>
-  </div>
+    <!-- Quick Metrics Strip (No dark patterns, warm & supportive) -->
+    <div class="today-metrics-strip">
+      <div class="metric-card-modern">
+        <span class="metric-card-icon">🎯</span>
+        <span class="metric-card-val" id="todayMetricGoal">5 từ</span>
+        <span class="metric-card-label">Mục tiêu ngày</span>
+      </div>
+      <div class="metric-card-modern">
+        <span class="metric-card-icon">🧠</span>
+        <span class="metric-card-val" id="todayMetricKnown">0</span>
+        <span class="metric-card-label">Từ đã nhớ</span>
+      </div>
+      <div class="metric-card-modern">
+        <span class="metric-card-icon">🔥</span>
+        <span class="metric-card-val" id="todayMetricStreak">0 ngày</span>
+        <span class="metric-card-label">Chuỗi ngày học</span>
+      </div>
+      <div class="metric-card-modern" onclick="setPrimaryHub('library'); setLibraryTab('fish');" style="cursor:pointer;" title="Bấm để xem Hồ cá">
+        <span class="metric-card-icon">🐟</span>
+        <span class="metric-card-val" id="todayMetricFish">0 chú</span>
+        <span class="metric-card-label">Giỏ cá đã câu</span>
+      </div>
+    </div>
 
-  <div class="tabs">
-    <button class="active" data-mode="flash">
-      <img src="img/icons/tab_flash.png" alt="Flashcards" class="tab-custom-icon">
-      <span>Thẻ học</span>
-    </button>
-    <button data-mode="mcq">
-      <img src="img/icons/tab_mcq.png" alt="Trắc nghiệm" class="tab-custom-icon">
-      <span>Trắc nghiệm</span>
-    </button>
-    <button data-mode="typing">
-      <img src="img/icons/tab_typing.png" alt="Tự gõ" class="tab-custom-icon">
-      <span>Tự gõ từ</span>
-    </button>
-    <button data-mode="match">
-      <img src="img/icons/tab_match.png" alt="Ghép cặp" class="tab-custom-icon">
-      <span>Ghép cặp</span>
-    </button>
-        <button data-mode="diktat">
-      <span style="font-size:20px;line-height:1;margin-bottom:2px">🎬</span>
-      <span>Rạp Phim Kino</span>
-    </button>
-    <button data-mode="checkin">
-      <img src="img/icons/tab_checkin.png" alt="Lịch điểm danh" class="tab-custom-icon">
-      <span>Lịch & Lưu bút</span>
-    </button>
-  </div>
+    <!-- Secondary Pathways Grid -->
+    <div>
+      <div class="today-pathways-header">
+        <span>Lựa chọn học tập khác</span>
+      </div>
+      <div class="today-pathways-grid" style="margin-top:12px;">
+        <div class="pathway-card" onclick="setPrimaryHub('study'); setStudySubMode('flash');">
+          <div>
+            <div class="pathway-icon">📇</div>
+            <div class="pathway-title">Thẻ Ghi Nhớ & Ôn Tập</div>
+            <div class="pathway-sub">Chủ động lật thẻ, nghe phát âm và ôn tập sâu toàn bộ từ vựng B1·B2.</div>
+          </div>
+          <div class="pathway-cta-text">Mở thẻ học ➔</div>
+        </div>
 
-  
+        <div class="pathway-card" onclick="setPrimaryHub('kino');">
+          <div>
+            <div class="pathway-icon">🎬</div>
+            <div class="pathway-title">Rạp Phim Kino</div>
+            <div class="pathway-sub">Xem clip tiếng Đức, nghe chép chính tả và lồng tiếng theo nhân vật.</div>
+          </div>
+          <div class="pathway-cta-text">Vào rạp phim ➔</div>
+        </div>
 
-  <div class="panel">
+        <div class="pathway-card" onclick="setPrimaryHub('library'); setLibraryTab('fish');">
+          <div>
+            <div class="pathway-icon">🐟</div>
+            <div class="pathway-title">Hồ Cá & Bộ Sưu Tập</div>
+            <div class="pathway-sub">Xem các loài cá đã câu được sau các mốc học tập, từ vựng và chỉ số.</div>
+          </div>
+          <div class="pathway-cta-text">Khám phá Hồ cá ➔</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       HUB 2: HỌC TỪ (STUDY HUB CONTAINER)
+       ========================================================================= -->
+  <div class="panel hidden" id="studyAreaContainer">
+    <!-- STUDY SUB-NAVIGATION BAR (Switch between Flashcard, MCQ, Typing, Match + Deck Picker) -->
+    <div class="study-subnav-bar">
+      <div class="study-mode-pills" role="tablist" aria-label="Chế độ học từ">
+        <button type="button" class="study-mode-pill active" data-studymode="flash" onclick="setStudySubMode('flash')">
+          <span>📇</span>
+          <span>Thẻ học</span>
+        </button>
+        <button type="button" class="study-mode-pill" data-studymode="mcq" onclick="setStudySubMode('mcq')">
+          <span>📝</span>
+          <span>Trắc nghiệm</span>
+        </button>
+        <button type="button" class="study-mode-pill" data-studymode="typing" onclick="setStudySubMode('typing')">
+          <span>✍️</span>
+          <span>Tự gõ từ</span>
+        </button>
+        <button type="button" class="study-mode-pill" data-studymode="match" onclick="setStudySubMode('match')">
+          <span>⚡</span>
+          <span>Ghép cặp</span>
+        </button>
+      </div>
+
+      <!-- Integrated Study Tools (Deck select & Search) -->
+      <div class="study-tools-wrap">
+        <select id="deckSelect" class="study-deck-select" title="Chọn bộ từ vựng"></select>
+        <input id="search" class="study-search-input" placeholder="🔍 Tìm từ, nghĩa, cụm…">
+      </div>
+    </div>
+
     <div class="topline">
       <div class="progress-wrap">
         <div class="progress"><div id="bar"></div></div>
@@ -7277,8 +7410,20 @@ input.search:focus {
     </div>
 
     <div class="study-area">
+      <!-- FLASHCARD WITH ACTIVE RECALL & PROGRESSIVE DISCLOSURE -->
       <section id="flashMode">
-        <div class="flash-actions-bar">
+        <!-- SESSION HEADER BAR (Visible only during active 5-target study session) -->
+        <div id="sessionHeaderBar" class="session-header-bar hidden">
+          <div class="session-header-left">
+            <span class="session-badge intro" id="sessionStepBadge">✨ TỪ MỚI</span>
+            <span class="session-targets-indicator" id="sessionTargetsIndicator">🎯 0/5 mục tiêu</span>
+          </div>
+          <div class="session-header-right">
+            <button type="button" class="btn-session-exit" onclick="exitSessionToFreeStudy()" title="Thoát phiên hôm nay để ôn tự do">Ôn tự do ✕</button>
+          </div>
+        </div>
+
+        <div class="flash-actions-bar" id="flashActionsBar">
           <button id="speakBtn" class="flash-action-btn" title="Nghe phát âm tiếng Đức (Phím S)">
             <img src="img/icons/tool_speak.png" alt="Phát âm" class="tool-custom-icon">
             <span>Nghe đọc (S)</span>
@@ -7293,28 +7438,101 @@ input.search:focus {
           </button>
         </div>
         <div class="card-shell">
+          <!-- SESSION COMPLETE CONTAINER (Shown when 5/5 targets are completed in session) -->
+          <div id="sessionCompleteBox" class="session-complete-box hidden">
+            <div class="session-complete-icon">🎉</div>
+            <h3 class="session-complete-title">Hoàn thành 5 mục tiêu hôm nay!</h3>
+            <p class="session-complete-desc" id="sessionCompleteDesc">Bạn đã hoàn thành phiên học với 5 từ vựng xuất sắc. Bé mèo đã sẵn sàng nhận thưởng!</p>
+            <div class="session-complete-actions">
+              <button type="button" class="btn-session-reward-cta" id="btnSessionClaimReward" onclick="handleSessionClaimReward()">
+                <span>🎣</span>
+                <span>Nhận thưởng Mèo câu cá ngay!</span>
+              </button>
+              <button type="button" class="btn-session-secondary-cta" onclick="exitSessionToFreeStudy()">
+                <span>📚</span>
+                <span>Ôn tự do các thẻ khác</span>
+              </button>
+              <button type="button" class="btn-session-secondary-cta" onclick="setPrimaryHub('today')">
+                <span>🏠</span>
+                <span>Về trang Hôm nay</span>
+              </button>
+            </div>
+          </div>
+
           <div class="card" id="card">
+            <!-- FRONT FACE: ACTIVE RECALL (Prompt only + Reveal CTA) -->
             <div class="face front">
               <div class="term" id="frontTerm"></div>
               <div class="hint" id="frontMeta"></div>
-              <div class="hint">Bấm vào thẻ để lật · Space cũng được</div>
+
+              <!-- 1. Normal / Active Recall Front Action -->
+              <div class="active-recall-front-action" id="activeRecallFrontAction">
+                <button type="button" class="btn-reveal-answer" onclick="revealFlashcardAnswer(event)" title="Bấm để lật xem đáp án (hoặc phím Space)">
+                  <span>👁️</span>
+                  <span>Xem đáp án (Space)</span>
+                </button>
+                <div class="hint" style="font-size:12px; margin-top:4px;">Cố gắng tự nhớ nghĩa trước khi lật thẻ nhé!</div>
+              </div>
+
+              <!-- 2. Session INTRO Action Box -->
+              <div class="session-intro-box hidden" id="sessionIntroBox">
+                <div class="session-intro-meaning-label">NGHĨA TIẾNG VIỆT</div>
+                <div class="session-intro-meaning" id="sessionIntroMeaning"></div>
+                <div class="session-intro-example" id="sessionIntroExample"></div>
+                <div class="session-intro-cta-wrap">
+                  <button type="button" class="btn-session-continue" onclick="handleSessionIntroContinue(event)" title="Bấm hoặc nhấn Space/Enter để tiếp tục">
+                    <span>Tiếp tục (Space) →</span>
+                  </button>
+                  <div class="session-intro-note">Từ mới! Hãy đọc kỹ và phát âm trước khi bước vào câu hỏi kiểm tra trí nhớ.</div>
+                </div>
+              </div>
+
+              <!-- 3. Session REINFORCE Action Box (Fail-safe after 3 failures) -->
+              <div class="session-reinforce-box hidden" id="sessionReinforceBox">
+                <div class="session-reinforce-guidance">💡 <strong>Hướng dẫn củng cố:</strong> Từ này cần thêm thời gian để ghi nhớ. Hãy xem kỹ đáp án và ví dụ bên dưới:</div>
+                <div class="session-reinforce-meaning" id="sessionReinforceMeaning"></div>
+                <div class="session-reinforce-details" id="sessionReinforceDetails"></div>
+                <div class="session-reinforce-cta-wrap">
+                  <button type="button" class="btn-session-reinforce-continue" onclick="handleSessionReinforceContinue(event)" title="Hoàn thành mục tiêu này trong phiên học">
+                    <span>Đã hiểu, hoàn thành mục tiêu này (Space) →</span>
+                  </button>
+                  <div class="session-reinforce-note">Mục tiêu này được tính hoàn thành cho hôm nay. Hệ thống sẽ lên lịch ôn lại cho bạn trong các phiên tới!</div>
+                </div>
+              </div>
             </div>
+
+            <!-- BACK FACE: REVEAL + RATINGS + PROGRESSIVE DISCLOSURE -->
             <div class="face back">
-              <div class="block"><h3>NGHĨA</h3><div class="meaning" id="backMeaning"></div></div>
-              <div class="block" id="collocBlock"><h3>CỤM NÊN NHỚ</h3><div class="tags" id="collocations"></div></div>
-              <div class="block" id="grammarBlock"><h3>NGỮ PHÁP / CẤU TRÚC</h3><div id="grammar"></div></div>
-              <div class="block" id="exampleBlock"><h3>VÍ DỤ</h3><div class="example" id="example"></div></div>
-              <div class="block" id="noteBlock"><h3>ĐIỂM DỄ NHẦM / GHI NHỚ</h3><div id="note"></div></div>
-              <div class="block" id="tagBlock"><h3>NHÓM / TAG</h3><div class="tags" id="cardTags"></div></div>
+              <div class="block">
+                <h3>NGHĨA</h3>
+                <div class="meaning" id="backMeaning"></div>
+              </div>
+
+              <!-- Rating Controls (Chưa nhớ / Còn khó / Nhớ được) -->
+              <div class="controls" style="margin: 14px 0 8px;">
+                <button class="unknown" data-rate="unknown" title="Phím tắt 1">1 · Chưa nhớ</button>
+                <button class="hard" data-rate="hard" title="Phím tắt 2">2 · Còn khó</button>
+                <button class="known" data-rate="known" title="Phím tắt 3">3 · Nhớ được</button>
+                <button id="nextBtn" class="primary" title="Phím tắt ➔">Tiếp →</button>
+              </div>
+
+              <!-- Progressive Disclosure: Collapsible deep details -->
+              <button type="button" class="progressive-disclosure-toggle" id="btnToggleCardDetails" onclick="toggleFlashcardDetails(event)" title="Xem thêm cụm từ, ngữ pháp, ví dụ">
+                <span>📖</span>
+                <span id="toggleCardDetailsText">Xem thêm chi tiết & ngữ pháp ▾</span>
+              </button>
+
+              <div class="card-deep-details collapsed" id="cardDeepDetails">
+                <div class="block" id="collocBlock"><h3>CỤM NÊN NHỚ</h3><div class="tags" id="collocations"></div></div>
+                <div class="block" id="grammarBlock"><h3>NGỮ PHÁP / CẤU TRÚC</h3><div id="grammar"></div></div>
+                <div class="block" id="exampleBlock"><h3>VÍ DỤ</h3><div class="example" id="example"></div></div>
+                <div class="block" id="noteBlock"><h3>ĐIỂM DỄ NHẦM / GHI NHỚ</h3><div id="note"></div></div>
+                <div class="block" id="tagBlock"><h3>NHÓM / TAG</h3><div class="tags" id="cardTags"></div></div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="controls">
-          <button class="unknown" data-rate="unknown">1 · Chưa nhớ</button>
-          <button class="hard" data-rate="hard">2 · Khó</button>
-          <button class="known" data-rate="known">3 · Đã nhớ</button>
-          <button id="nextBtn" class="primary">Tiếp →</button>
-        </div>
+
         <div class="shortcut-pill">
           <span class="sc-title">
             <svg class="sc-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"></rect><path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M6 12h.001M10 12h.001M14 12h.001M18 12h.001M7 16h10"></path></svg>
@@ -7826,10 +8044,73 @@ input.search:focus {
         </div>
       </section>
 
-
-
     </div>
   </div>
+
+  <!-- =========================================================================
+       HUB 4: THƯ VIỆN (LIBRARY HUB) - DECKS, FISH COLLECTION, GUESTBOOK, MANAGE
+       ========================================================================= -->
+  <section id="libraryMode" class="library-container hidden">
+    <!-- Library Subnav Tabs -->
+    <div class="library-subnav" role="tablist" aria-label="Thư viện">
+      <button type="button" class="library-nav-tab active" data-lib="decks" onclick="setLibraryTab('decks')">
+        <span>📚</span>
+        <span>Bộ thẻ học</span>
+      </button>
+      <button type="button" class="library-nav-tab" data-lib="fish" onclick="setLibraryTab('fish')">
+        <span>🐟</span>
+        <span>Hồ cá & Giỏ cá</span>
+      </button>
+      <button type="button" class="library-nav-tab" data-lib="checkin" onclick="setLibraryTab('checkin')">
+        <span>📅</span>
+        <span>Lịch & Lưu bút</span>
+      </button>
+      <button type="button" class="library-nav-tab" data-lib="manage" onclick="setLibraryTab('manage')">
+        <span>⚙️</span>
+        <span>Quản lý thẻ</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: DECKS VIEW -->
+    <div id="libDecksView">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;font-size:18px;font-weight:800;color:var(--ink-text);">Các Bộ Thẻ Đang Có</h3>
+        <button type="button" class="btn primary" onclick="openManageModal()" style="font-size:13px;padding:6px 14px;">+ Thêm thẻ mới</button>
+      </div>
+      <div class="library-decks-grid" id="libraryDecksGrid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- TAB 2: FISH COLLECTION (HỒ CÁ) -->
+    <div id="libFishView" class="hidden">
+      <div class="fish-collection-header">
+        <div>
+          <h3 style="margin:0 0 4px;font-size:18px;font-weight:800;color:var(--ink-text);">🐟 Hồ Cá Của Bé Mèo</h3>
+          <p style="margin:0;font-size:13px;color:var(--ink-muted);">Mỗi ngày hoàn thành 5 từ vựng, bé mèo sẽ câu được một chú cá quý kèm từ vựng tiếng Đức!</p>
+        </div>
+        <div style="font-size:13px;font-weight:800;color:var(--primary);" id="libFishTotalCount">Đã câu: 0 chú cá</div>
+      </div>
+      <div class="fish-collection-grid" id="libraryFishGrid">
+        <!-- Rendered by JS from vokabelgo_fish_collection_v1 -->
+      </div>
+    </div>
+
+    <!-- TAB 3: CHECKIN & GUESTBOOK (MOUNTED DYNAMICALLY) -->
+    <div id="libCheckinView" class="hidden">
+      <!-- Container for checkinMode in Library -->
+    </div>
+
+    <!-- TAB 4: MANAGE SHORTCUT -->
+    <div id="libManageView" class="hidden">
+      <div class="box" style="text-align:center;padding:30px 20px;">
+        <span style="font-size:40px;display:block;margin-bottom:12px;">⚙️</span>
+        <h3 style="margin:0 0 8px;font-size:18px;font-weight:800;">Quản Lý Thư Viện Thẻ Học</h3>
+        <p style="font-size:13.5px;color:var(--ink-muted);max-width:480px;margin:0 auto 18px;">Thêm thẻ mới, chỉnh sửa thẻ tự tạo, nhập file CSV/JSON hàng loạt hoặc sao lưu thẻ về máy tính.</p>
+        <button type="button" class="btn primary" onclick="openManageModal()" style="padding:10px 24px;font-weight:800;">Mở Bảng Quản Lý Thẻ ➔</button>
+      </div>
+    </div>
+  </section>
 
 </div>
 
@@ -8447,6 +8728,7 @@ input.search:focus {
 <script src="firebase-config.js"></script>
 <script src="firebase-auth.js"></script>
 <script src="leaderboard-feed.js"></script>
+<script src="learning-session.js"></script>
 
 <script>
 const BASE = [
@@ -13192,6 +13474,11 @@ function render(){
   }
   const c=current();
   document.getElementById('card').classList.remove('flipped');
+  const deepDetails = document.getElementById('cardDeepDetails');
+  if(deepDetails) deepDetails.classList.add('collapsed');
+  const toggleBtn = document.getElementById('toggleCardDetailsText');
+  if(toggleBtn) toggleBtn.textContent = 'Xem thêm chi tiết & ngữ pháp ▾';
+
   document.getElementById('frontTerm').textContent=reverse?c.meaning:c.term;
   document.getElementById('frontMeta').textContent=(c.deck||'') + ((c.tags||[]).length?' · '+c.tags.join(' · '):'');
   document.getElementById('backMeaning').textContent=reverse?c.term:c.meaning;
@@ -13214,6 +13501,14 @@ function render(){
   document.getElementById('position').textContent=`${index+1} / ${total}`;
   document.getElementById('bar').style.width=`${((index+1)/total)*100}%`;
   updateStats();
+
+  // Save learning resume state
+  saveLearningResumeState({
+    lastMode: 'flash',
+    lastDeck: document.getElementById('deckSelect') ? document.getElementById('deckSelect').value : 'Tất cả bộ',
+    lastCardIndex: index,
+    totalCards: total
+  });
 }
 function updateStats(){
   const ids=filtered.map(c=>c.id);
@@ -13222,20 +13517,28 @@ function updateStats(){
   const _kc=document.getElementById('knownCount'),_hc=document.getElementById('hardCount'),_uc=document.getElementById('unknownCount');
   if(_kc)_kc.textContent=k;if(_hc)_hc.textContent=h;if(_uc)_uc.textContent=u;
   document.getElementById('statusLine').textContent=`Đã nhớ ${k} · Khó ${h} · Chưa nhớ ${u}`;
+  if(typeof updateTodayDashboard === 'function') updateTodayDashboard();
 }
 function next(){
   if(!filtered.length)return;
   index=(index+1)%filtered.length; render();
 }
 function rate(v){
+  if (window.isStudySessionMode && window.VokabelSession) {
+    handleSessionRate(v);
+    return;
+  }
   const c=current(); if(!c)return;
   progress[c.id]=v; saveProgress(); updateStats(); next();
   totalCardsReviewedSession++;
-  if(window.onCardReviewedForFeed) window.onCardReviewedForFeed(c.id);
+  // TEST 4 Exploit guard: Only successfully remembered cards count toward daily feed/milestone
+  if (v === 'known' || v === 3 || v === '3') {
+    if(window.onCardReviewedForFeed) window.onCardReviewedForFeed(c.id);
+  }
   if(totalCardsReviewedSession % 10 === 0){
     if(typeof triggerCatMilestone === 'function') triggerCatMilestone('praise');
   }
-  if(v === 1 || v === '1'){
+  if(v === 1 || v === '1' || v === 'unknown'){
     consecutiveHardCards++;
     if(consecutiveHardCards >= 3){
       if(typeof triggerCatMilestone === 'function') triggerCatMilestone('comfort');
@@ -13244,7 +13547,42 @@ function rate(v){
   } else {
     consecutiveHardCards = 0;
   }
+  if(typeof updateTodayDashboard === 'function') updateTodayDashboard();
+
+  // Check if daily milestone of 5 cards reached
+  if (window.VokabelDaily && typeof window.VokabelDaily.getTodayState === 'function') {
+    const dState = window.VokabelDaily.getTodayState();
+    if (dState.completed && dState.catchStatus === 'pending') {
+      setTimeout(() => {
+        if (typeof openRewardPrototypeModal === 'function') {
+          openRewardPrototypeModal();
+        }
+      }, 700);
+    }
+  }
 }
+
+function revealFlashcardAnswer(e){
+  if(e) e.stopPropagation();
+  const cardEl = document.getElementById('card');
+  if(cardEl) cardEl.classList.add('flipped');
+}
+
+function toggleFlashcardDetails(e){
+  if(e) e.stopPropagation();
+  const details = document.getElementById('cardDeepDetails');
+  const label = document.getElementById('toggleCardDetailsText');
+  if(!details) return;
+  const isCollapsed = details.classList.contains('collapsed');
+  if(isCollapsed){
+    details.classList.remove('collapsed');
+    if(label) label.textContent = 'Thu gọn chi tiết & ngữ pháp ▴';
+  } else {
+    details.classList.add('collapsed');
+    if(label) label.textContent = 'Xem thêm chi tiết & ngữ pháp ▾';
+  }
+}
+
 document.getElementById('card').onclick=()=>document.getElementById('card').classList.toggle('flipped');
 document.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>rate(b.dataset.rate));
 document.getElementById('nextBtn').onclick=next;
@@ -13262,32 +13600,739 @@ function speak(){
   const u=new SpeechSynthesisUtterance(c.term.replace(/[|]/g,''));
   u.lang='de-DE';u.rate=.9;speechSynthesis.speak(u);
 }
-function setMode(m){
-  mode=m;
-  try{ localStorage.setItem('vokabelgo_active_mode', m); }catch(e){}
-  document.querySelectorAll('.tabs [data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
-  document.getElementById('flashMode').classList.toggle('hidden',m!=='flash');
-  document.getElementById('mcqMode').classList.toggle('hidden',m!=='mcq');
-  document.getElementById('typingMode').classList.toggle('hidden',m!=='typing');
-  document.getElementById('matchMode').classList.toggle('hidden',m!=='match');
-  const checkinSection = document.getElementById('checkinMode');
-  if(checkinSection) checkinSection.classList.toggle('hidden', m!=='checkin');
-  const diktatSection = document.getElementById('diktatMode');
-  if(diktatSection) {
-    diktatSection.classList.toggle('hidden', m!=='diktat');
-    diktatSection.style.display = (m === 'diktat') ? 'block' : 'none';
-  }
-  
-  const toplineEl = document.querySelector('.topline');
-  if(toplineEl) toplineEl.style.display = (m === 'checkin' || m === 'diktat') ? 'none' : 'flex';
 
-  if(m==='mcq')newQuestion();
-  if(m==='typing')newTyping();
-  if(m==='match')startMatchGame();
-  if(m==='checkin')renderCheckinCalendar();
-  if(m==='diktat')initKinoV2();
+/* =========================================================================
+   4-HUB NAVIGATION & PEDAGOGICAL CONTROLLER
+   ========================================================================= */
+let currentPrimaryHub = 'today';
+let currentStudySubMode = 'flash';
+let currentLibraryTab = 'decks';
+
+function setPrimaryHub(hub){
+  currentPrimaryHub = hub;
+  try { localStorage.setItem('vokabelgo_active_hub', hub); } catch(e){}
+
+  document.querySelectorAll('.nav-hub-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.nav === hub);
+  });
+
+  const todaySec = document.getElementById('todayMode');
+  const studySec = document.getElementById('studyAreaContainer');
+  const kinoSec = document.getElementById('diktatMode');
+  const librarySec = document.getElementById('libraryMode');
+
+  if (todaySec) todaySec.classList.toggle('hidden', hub !== 'today');
+  if (studySec) studySec.classList.toggle('hidden', hub !== 'study');
+  if (kinoSec) {
+    kinoSec.classList.toggle('hidden', hub !== 'kino');
+    kinoSec.style.display = (hub === 'kino') ? 'block' : 'none';
+  }
+  if (librarySec) librarySec.classList.toggle('hidden', hub !== 'library');
+
+  if (hub === 'today') {
+    updateTodayDashboard();
+  } else if (hub === 'study') {
+    setStudySubMode(currentStudySubMode);
+  } else if (hub === 'kino') {
+    if (typeof initKinoV2 === 'function') initKinoV2();
+    saveLearningResumeState({
+      lastMode: 'diktat',
+      lastVideo: currentKinoVideoKey,
+      lastSentence: typeof kinoCurrentSentenceIdx !== 'undefined' ? kinoCurrentSentenceIdx : 0
+    });
+  } else if (hub === 'library') {
+    setLibraryTab(currentLibraryTab);
+  }
+}
+
+function setStudySubMode(m){
+  currentStudySubMode = m;
+  mode = m;
+  try { localStorage.setItem('vokabelgo_active_mode', m); } catch(e){}
+
+  document.querySelectorAll('.study-mode-pill').forEach(pill => {
+    pill.classList.toggle('active', pill.dataset.studymode === m);
+  });
+
+  // Keep legacy tab sync
+  document.querySelectorAll('.tabs [data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+
+  document.getElementById('flashMode').classList.toggle('hidden', m !== 'flash');
+  document.getElementById('mcqMode').classList.toggle('hidden', m !== 'mcq');
+  document.getElementById('typingMode').classList.toggle('hidden', m !== 'typing');
+  document.getElementById('matchMode').classList.toggle('hidden', m !== 'match');
+
+  const toplineEl = document.querySelector('.topline');
+  if (toplineEl) toplineEl.style.display = 'flex';
+
+  if (m === 'mcq') newQuestion();
+  if (m === 'typing') newTyping();
+  if (m === 'match') startMatchGame();
+  if (m === 'flash') {
+    if (window.isStudySessionMode && window.VokabelSession && window.VokabelSession.getTodaySession()) {
+      renderSessionInteraction();
+    } else {
+      render();
+    }
+  }
+}
+
+function setLibraryTab(tab){
+  currentLibraryTab = tab;
+  document.querySelectorAll('.library-nav-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.lib === tab);
+  });
+
+  const decksView = document.getElementById('libDecksView');
+  const fishView = document.getElementById('libFishView');
+  const checkinView = document.getElementById('libCheckinView');
+  const manageView = document.getElementById('libManageView');
+
+  if (decksView) decksView.classList.toggle('hidden', tab !== 'decks');
+  if (fishView) fishView.classList.toggle('hidden', tab !== 'fish');
+  if (checkinView) checkinView.classList.toggle('hidden', tab !== 'checkin');
+  if (manageView) manageView.classList.toggle('hidden', tab !== 'manage');
+
+  if (tab === 'decks') renderLibraryDecks();
+  if (tab === 'fish') renderLibraryFishCollection();
+  if (tab === 'checkin') {
+    const checkinModeEl = document.getElementById('checkinMode');
+    if (checkinModeEl && checkinView && checkinModeEl.parentNode !== checkinView) {
+      checkinView.appendChild(checkinModeEl);
+    }
+    if (checkinModeEl) checkinModeEl.classList.remove('hidden');
+    if (typeof renderCheckinCalendar === 'function') renderCheckinCalendar();
+  }
+}
+
+// Full backward compatibility for setMode(m)
+function setMode(m){
+  if (m === 'today') {
+    setPrimaryHub('today');
+  } else if (m === 'flash' || m === 'mcq' || m === 'typing' || m === 'match') {
+    setPrimaryHub('study');
+    setStudySubMode(m);
+  } else if (m === 'diktat') {
+    setPrimaryHub('kino');
+  } else if (m === 'checkin' || m === 'library') {
+    setPrimaryHub('library');
+    setLibraryTab('checkin');
+  } else {
+    setPrimaryHub('study');
+    setStudySubMode('flash');
+  }
 }
 document.querySelectorAll('.tabs [data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+
+/* ==========================================================================
+   CORE LEARNING LOOP (PHASE 1): SESSION INTEGRATION
+   ========================================================================== */
+window.isStudySessionMode = false;
+
+function startOrResumeTodaySession() {
+  if (!window.VokabelSession) return;
+  const list = typeof allCards === 'function' ? allCards() : [];
+  if (!list.length) return;
+
+  window.isStudySessionMode = true;
+  setPrimaryHub('study');
+  setStudySubMode('flash');
+
+  let session = window.VokabelSession.getTodaySession();
+  if (!session) {
+    session = window.VokabelSession.createTodaySession(list);
+  }
+
+  renderSessionInteraction();
+}
+
+function renderSessionInteraction() {
+  if (!window.VokabelSession) return;
+  const list = typeof allCards === 'function' ? allCards() : [];
+  const cardsMap = {};
+  list.forEach(c => { cardsMap[c.id] = c; });
+
+  const interaction = window.VokabelSession.getCurrentInteraction(cardsMap);
+  if (!interaction) return;
+
+  const headerBar = document.getElementById('sessionHeaderBar');
+  if (headerBar) headerBar.classList.remove('hidden');
+
+  const cardEl = document.getElementById('card');
+  const completeBox = document.getElementById('sessionCompleteBox');
+
+  if (interaction.completed) {
+    if (cardEl) cardEl.classList.add('hidden');
+    if (completeBox) completeBox.classList.remove('hidden');
+    const badge = document.getElementById('sessionStepBadge');
+    if (badge) {
+      badge.textContent = '⭐ HOÀN THÀNH';
+      badge.className = 'session-badge completed';
+    }
+    const indicator = document.getElementById('sessionTargetsIndicator');
+    if (indicator) indicator.textContent = '🎯 5/5 mục tiêu';
+
+    let summary = { catchStatus: 'none' };
+    if (window.VokabelDaily && typeof window.VokabelDaily.getSummary === 'function') {
+      summary = window.VokabelDaily.getSummary();
+    }
+    const btnReward = document.getElementById('btnSessionClaimReward');
+    if (btnReward) {
+      btnReward.style.display = summary.catchStatus === 'pending' ? 'inline-flex' : 'none';
+    }
+    return;
+  }
+
+  if (completeBox) completeBox.classList.add('hidden');
+  if (cardEl) {
+    cardEl.classList.remove('hidden');
+    cardEl.classList.remove('flipped');
+  }
+
+  const deepDetails = document.getElementById('cardDeepDetails');
+  if (deepDetails) deepDetails.classList.add('collapsed');
+  const toggleBtn = document.getElementById('toggleCardDetailsText');
+  if (toggleBtn) toggleBtn.textContent = 'Xem thêm chi tiết & ngữ pháp ▾';
+
+  const c = interaction.card || { id: interaction.cardId, term: interaction.cardId, meaning: '' };
+
+  const badge = document.getElementById('sessionStepBadge');
+  const indicator = document.getElementById('sessionTargetsIndicator');
+  if (indicator) {
+    indicator.textContent = `🎯 ${interaction.completedCount}/${interaction.totalTargets} mục tiêu`;
+  }
+
+  // Update top progress bar & stats
+  const posEl = document.getElementById('position');
+  if (posEl) posEl.textContent = `Mục tiêu ${interaction.completedCount + 1} / ${interaction.totalTargets}`;
+  const barEl = document.getElementById('bar');
+  if (barEl) barEl.style.width = `${((interaction.completedCount) / interaction.totalTargets) * 100}%`;
+  const statLine = document.getElementById('statusLine');
+  if (statLine) statLine.textContent = `Phiên học hôm nay · Bước ${interaction.queueIndex + 1}/${interaction.queueTotal}`;
+
+  // Fill card content
+  const frontTerm = document.getElementById('frontTerm');
+  if (frontTerm) frontTerm.textContent = c.term || '';
+  const frontMeta = document.getElementById('frontMeta');
+  if (frontMeta) frontMeta.textContent = (c.deck || '') + ((c.tags || []).length ? ' · ' + c.tags.join(' · ') : '');
+
+  const backMeaning = document.getElementById('backMeaning');
+  if (backMeaning) backMeaning.textContent = c.meaning || '';
+
+  const coll = document.getElementById('collocations');
+  if (coll) {
+    coll.innerHTML = '';
+    (c.collocations || []).forEach(x => {
+      const s = document.createElement('span'); s.className = 'tag'; s.textContent = x; coll.appendChild(s);
+    });
+    const collocBlock = document.getElementById('collocBlock');
+    if (collocBlock) collocBlock.classList.toggle('hidden', !(c.collocations || []).length);
+  }
+
+  const grammar = document.getElementById('grammar');
+  if (grammar) grammar.textContent = c.grammar || '';
+  const grammarBlock = document.getElementById('grammarBlock');
+  if (grammarBlock) grammarBlock.classList.toggle('hidden', !c.grammar);
+
+  const example = document.getElementById('example');
+  if (example) example.textContent = c.example || '';
+  const exampleBlock = document.getElementById('exampleBlock');
+  if (exampleBlock) exampleBlock.classList.toggle('hidden', !c.example);
+
+  const note = document.getElementById('note');
+  if (note) note.textContent = c.note || '';
+  const noteBlock = document.getElementById('noteBlock');
+  if (noteBlock) noteBlock.classList.toggle('hidden', !c.note);
+
+  const tags = document.getElementById('cardTags');
+  if (tags) {
+    tags.innerHTML = '';
+    [c.deck, ...(c.tags || [])].filter(Boolean).forEach(x => {
+      const s = document.createElement('span'); s.className = 'tag'; s.textContent = x; tags.appendChild(s);
+    });
+    const tagBlock = document.getElementById('tagBlock');
+    if (tagBlock) tagBlock.classList.toggle('hidden', !c.deck && !(c.tags || []).length);
+  }
+
+  const recallAction = document.getElementById('activeRecallFrontAction');
+  const introBox = document.getElementById('sessionIntroBox');
+  const reinfBox = document.getElementById('sessionReinforceBox');
+
+  if (interaction.type === 'intro') {
+    if (badge) {
+      badge.textContent = '✨ TỪ MỚI';
+      badge.className = 'session-badge intro';
+    }
+    if (recallAction) recallAction.classList.add('hidden');
+    if (reinfBox) reinfBox.classList.add('hidden');
+    if (introBox) {
+      introBox.classList.remove('hidden');
+      const mEl = document.getElementById('sessionIntroMeaning');
+      if (mEl) mEl.textContent = c.meaning || '';
+      const exEl = document.getElementById('sessionIntroExample');
+      if (exEl) {
+        if (c.example) {
+          exEl.textContent = `Ví dụ: ${c.example}`;
+          exEl.style.display = 'block';
+        } else {
+          exEl.style.display = 'none';
+        }
+      }
+    }
+  } else if (interaction.type === 'reinforce') {
+    if (badge) {
+      badge.textContent = '💡 CỦNG CỐ KIẾN THỨC';
+      badge.className = 'session-badge reinforce';
+    }
+    if (recallAction) recallAction.classList.add('hidden');
+    if (introBox) introBox.classList.add('hidden');
+    if (reinfBox) {
+      reinfBox.classList.remove('hidden');
+      const mEl = document.getElementById('sessionReinforceMeaning');
+      if (mEl) mEl.textContent = c.meaning || '';
+      const dEl = document.getElementById('sessionReinforceDetails');
+      if (dEl) {
+        let details = [];
+        if (c.grammar) details.push(`Ngữ pháp: ${c.grammar}`);
+        if (c.example) details.push(`Ví dụ: ${c.example}`);
+        if (c.note) details.push(`Lưu ý: ${c.note}`);
+        dEl.textContent = details.join(' · ');
+        dEl.style.display = details.length ? 'block' : 'none';
+      }
+    }
+  } else {
+    // 'recall'
+    if (badge) {
+      badge.textContent = '🧠 ACTIVE RECALL';
+      badge.className = 'session-badge recall';
+    }
+    if (introBox) introBox.classList.add('hidden');
+    if (reinfBox) reinfBox.classList.add('hidden');
+    if (recallAction) recallAction.classList.remove('hidden');
+  }
+
+  saveLearningResumeState({
+    lastMode: 'flash',
+    isSession: true,
+    lastDeck: interaction.session.deck || 'Tất cả bộ'
+  });
+}
+
+function handleSessionIntroContinue(e) {
+  if (e) e.stopPropagation();
+  if (!window.VokabelSession) return;
+  window.VokabelSession.handleIntroContinue();
+  renderSessionInteraction();
+}
+
+function handleSessionReinforceContinue(e) {
+  if (e) e.stopPropagation();
+  if (!window.VokabelSession) return;
+  const res = window.VokabelSession.handleReinforceContinue();
+  if (res && res.justCompletedSession) {
+    if (typeof updateTodayDashboard === 'function') updateTodayDashboard();
+    checkDailyMilestoneAndReward();
+  }
+  renderSessionInteraction();
+}
+
+function handleSessionRate(rating) {
+  if (!window.VokabelSession) return;
+  const res = window.VokabelSession.handleRecallAnswer(rating);
+  if (!res) return;
+
+  if (res.justCompletedTarget) {
+    if (typeof showRetroToast === 'function') {
+      showRetroToast(`🎯 Đạt mục tiêu ${res.session.completedTargets.length}/5!`, '⭐');
+    }
+  }
+
+  if (res.justCompletedSession) {
+    if (typeof updateTodayDashboard === 'function') updateTodayDashboard();
+    checkDailyMilestoneAndReward();
+  }
+
+  renderSessionInteraction();
+}
+
+function checkDailyMilestoneAndReward() {
+  if (window.VokabelDaily && typeof window.VokabelDaily.getTodayState === 'function') {
+    const dState = window.VokabelDaily.getTodayState();
+    if (dState.completed && dState.catchStatus === 'pending') {
+      setTimeout(() => {
+        if (typeof openRewardPrototypeModal === 'function') {
+          openRewardPrototypeModal();
+        }
+      }, 700);
+    }
+  }
+}
+
+function handleSessionClaimReward() {
+  if (typeof openRewardPrototypeModal === 'function') {
+    openRewardPrototypeModal();
+  }
+}
+
+function exitSessionToFreeStudy() {
+  window.isStudySessionMode = false;
+  const sBar = document.getElementById('sessionHeaderBar');
+  if (sBar) sBar.classList.add('hidden');
+  const scBox = document.getElementById('sessionCompleteBox');
+  if (scBox) scBox.classList.add('hidden');
+  const cardEl = document.getElementById('card');
+  if (cardEl) {
+    cardEl.classList.remove('hidden');
+    cardEl.classList.remove('flipped');
+  }
+  const introBox = document.getElementById('sessionIntroBox');
+  if (introBox) introBox.classList.add('hidden');
+  const reinfBox = document.getElementById('sessionReinforceBox');
+  if (reinfBox) reinfBox.classList.add('hidden');
+  const actAction = document.getElementById('activeRecallFrontAction');
+  if (actAction) actAction.classList.remove('hidden');
+  render();
+}
+
+function handleSessionKeydown(e) {
+  const s = window.VokabelSession ? window.VokabelSession.getTodaySession() : null;
+  if (!s || s.completed) return;
+  const currentItem = s.queue[s.queueIndex];
+  if (!currentItem) return;
+
+  if (currentItem.type === 'intro') {
+    if (e.code === 'Space' || e.key === 'Enter' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleSessionIntroContinue(e);
+    } else if (e.key === 's' || e.key === 'S') {
+      speak();
+    }
+  } else if (currentItem.type === 'reinforce') {
+    if (e.code === 'Space' || e.key === 'Enter' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleSessionReinforceContinue(e);
+    } else if (e.key === 's' || e.key === 'S') {
+      speak();
+    }
+  } else if (currentItem.type === 'recall') {
+    const cardEl = document.getElementById('card');
+    const isFlipped = cardEl && cardEl.classList.contains('flipped');
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (cardEl) cardEl.classList.toggle('flipped');
+    } else if (e.key === '1') {
+      handleSessionRate('unknown');
+    } else if (e.key === '2') {
+      handleSessionRate('hard');
+    } else if (e.key === '3') {
+      handleSessionRate('known');
+    } else if (e.key === 's' || e.key === 'S') {
+      speak();
+    }
+  }
+}
+
+/* --- TODAY DASHBOARD LOGIC --- */
+function updateTodayDashboard(){
+  let profileName = 'Chị';
+  let catId = 12;
+  try {
+    const raw = localStorage.getItem('vokabelgo_user_profile');
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p.nickname) profileName = p.nickname;
+      if (p.catId) catId = p.catId;
+    }
+  } catch(e){}
+
+  const greetingEl = document.getElementById('todayGreetingText');
+  if (greetingEl) greetingEl.textContent = `Chào ${profileName}! Cùng bé mèo học tiếp nhé 🐾`;
+
+  const catImg = document.getElementById('todayCatAvatarImg');
+  if (catImg && typeof getAvatarSrc === 'function') {
+    catImg.src = getAvatarSrc('v2', catId);
+  }
+
+  const dateEl = document.getElementById('todayDateStr');
+  if (dateEl) {
+    const now = new Date();
+    const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    dateEl.textContent = `${days[now.getDay()]}, ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+  }
+
+  let summary = { todayCount: 0, completed: false, catchStatus: 'none', streak: 0 };
+  if (window.VokabelDaily && typeof window.VokabelDaily.getSummary === 'function') {
+    summary = window.VokabelDaily.getSummary();
+  }
+
+  let sessionState = null;
+  if (window.VokabelSession && typeof window.VokabelSession.getTodaySessionState === 'function') {
+    sessionState = window.VokabelSession.getTodaySessionState();
+  }
+
+  const ratioEl = document.getElementById('todayHeroProgressRatio');
+  const statusEl = document.getElementById('todayHeroProgressStatus');
+  const fillEl = document.getElementById('todayHeroProgressFill');
+  const titleEl = document.getElementById('todayHeroTitle');
+  const descEl = document.getElementById('todayHeroDesc');
+  const ctaBtn = document.getElementById('todayPrimaryCta');
+  const ctaText = document.getElementById('todayCtaText');
+  const ctaIcon = document.getElementById('todayCtaIcon');
+
+  let count = summary.todayCount || 0;
+  if (sessionState) {
+    count = sessionState.completedCount;
+  }
+  const isCompleted = summary.completed || (sessionState && sessionState.isCompleted);
+  const percent = Math.min((count / 5) * 100, 100);
+
+  if (ratioEl) ratioEl.textContent = `Đã học: ${count} / 5 từ`;
+  if (fillEl) fillEl.style.width = `${percent}%`;
+
+  if (isCompleted) {
+    if (statusEl) {
+      statusEl.textContent = 'Hoàn thành mục tiêu! ⭐';
+      statusEl.style.color = '#10B981';
+    }
+    if (summary.catchStatus === 'pending') {
+      if (titleEl) titleEl.textContent = 'Bé mèo câu được cá rồi! 🎣✨';
+      if (descEl) descEl.textContent = 'Bạn đã đạt mốc 5 từ hôm nay. Nhận cá tươi cho bé mèo và mở khóa thẻ từ vựng!';
+      if (ctaText) ctaText.textContent = 'Nhận thưởng Mèo câu cá ngay!';
+      if (ctaIcon) ctaIcon.textContent = '🎣';
+      if (ctaBtn) ctaBtn.className = 'today-primary-cta highlight-reward';
+    } else {
+      if (titleEl) titleEl.textContent = 'Đã hoàn thành phiên hôm nay! 🎉';
+      if (descEl) descEl.textContent = 'Bé mèo đã no bụng. Bạn có thể tiếp tục ôn luyện thêm hoặc chiêm ngưỡng Hồ cá!';
+      if (ctaText) ctaText.textContent = 'Tiếp tục ôn luyện từ vựng';
+      if (ctaIcon) ctaIcon.textContent = '📖';
+      if (ctaBtn) ctaBtn.className = 'today-primary-cta completed';
+    }
+  } else {
+    if (statusEl) {
+      statusEl.textContent = count > 0 ? `Còn ${5 - count} từ nữa` : 'Chưa hoàn thành';
+      statusEl.style.color = 'var(--primary)';
+    }
+    if (titleEl) titleEl.textContent = count > 0 ? 'Tiếp tục bài học hôm nay 🐾' : 'Bắt đầu bài học hôm nay 🚀';
+    if (descEl) descEl.textContent = 'Học tối thiểu 5 từ qua Active Recall để nhớ sâu và câu cá cùng bé mèo.';
+    if (ctaText) ctaText.textContent = count > 0 ? `Tiếp tục học (${count}/5 từ)` : 'Bắt đầu học ngay (0/5 từ)';
+    if (ctaIcon) ctaIcon.textContent = '🚀';
+    if (ctaBtn) ctaBtn.className = 'today-primary-cta';
+  }
+
+  const knownCount = Object.values(progress).filter(v => v === 'known').length;
+  const knownEl = document.getElementById('todayMetricKnown');
+  if (knownEl) knownEl.textContent = knownCount;
+
+  const streakEl = document.getElementById('todayMetricStreak');
+  if (streakEl) streakEl.textContent = summary.streak > 0 ? `${summary.streak} ngày` : 'Khởi động';
+
+  let fishCount = 0;
+  try {
+    const rawFish = localStorage.getItem('vokabelgo_fish_collection_v1');
+    if (rawFish) fishCount = JSON.parse(rawFish).length;
+  } catch(e){}
+  const fishEl = document.getElementById('todayMetricFish');
+  if (fishEl) fishEl.textContent = `${fishCount} chú`;
+
+  const resumeState = getLearningResumeState();
+  const resumeDeckTag = document.getElementById('todayResumeDeckTag');
+  if (resumeDeckTag && resumeState) {
+    if (resumeState.lastMode === 'diktat') {
+      resumeDeckTag.textContent = `🎬 Rạp phim Kino · Câu ${(resumeState.lastSentence || 0) + 1}`;
+    } else {
+      const deckName = resumeState.lastDeck || 'Tất cả bộ';
+      const cIdx = (resumeState.lastCardIndex || 0) + 1;
+      resumeDeckTag.textContent = `${deckName} · Thẻ ${cIdx}`;
+    }
+  }
+}
+
+function handleTodayPrimaryAction(){
+  let summary = { completed: false, catchStatus: 'none' };
+  if (window.VokabelDaily && typeof window.VokabelDaily.getSummary === 'function') {
+    summary = window.VokabelDaily.getSummary();
+  }
+
+  if (summary.completed && summary.catchStatus === 'pending') {
+    if (typeof openRewardPrototypeModal === 'function') {
+      openRewardPrototypeModal();
+    }
+    return;
+  }
+
+  if (window.VokabelSession) {
+    startOrResumeTodaySession();
+    return;
+  }
+
+  resumeLastLearningSession();
+}
+
+function saveLearningResumeState(st){
+  try {
+    const existing = getLearningResumeState() || {};
+    const updated = { ...existing, ...st, updatedAt: Date.now() };
+    localStorage.setItem('vokabelgo_resume_state_v1', JSON.stringify(updated));
+  } catch(e){}
+}
+
+function getLearningResumeState(){
+  try {
+    const raw = localStorage.getItem('vokabelgo_resume_state_v1');
+    return raw ? JSON.parse(raw) : null;
+  } catch(e){
+    return null;
+  }
+}
+
+function resumeLastLearningSession(){
+  const st = getLearningResumeState();
+  if (st && st.lastMode === 'diktat') {
+    setPrimaryHub('kino');
+    return;
+  }
+
+  setPrimaryHub('study');
+  setStudySubMode('flash');
+
+  if (st && st.lastDeck) {
+    const sel = document.getElementById('deckSelect');
+    if (sel) {
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === st.lastDeck) {
+          sel.value = st.lastDeck;
+          break;
+        }
+      }
+    }
+    applyFilter();
+    if (typeof st.lastCardIndex === 'number' && filtered.length > st.lastCardIndex) {
+      index = st.lastCardIndex;
+      render();
+    }
+  }
+}
+
+/* --- GLOBAL AUDIO & PROFILE DROPDOWN --- */
+function toggleGlobalAudio(){
+  let muted = localStorage.getItem('vokabelgo_global_mute') === 'true';
+  muted = !muted;
+  localStorage.setItem('vokabelgo_global_mute', muted ? 'true' : 'false');
+
+  const icon = document.getElementById('globalAudioIcon');
+  const btn = document.getElementById('globalAudioToggleBtn');
+  if (icon) icon.textContent = muted ? '🔇' : '🔊';
+  if (btn) btn.classList.toggle('muted', muted);
+
+  if (typeof setAudioMode === 'function') {
+    setAudioMode(muted ? 'mute' : 'original');
+  }
+}
+
+function toggleProfileDropdown(e){
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('profileDropdownMenu');
+  if (menu) menu.classList.toggle('hidden');
+}
+
+function closeProfileDropdown(){
+  const menu = document.getElementById('profileDropdownMenu');
+  if (menu) menu.classList.add('hidden');
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#openAvatarBtn') && !e.target.closest('#profileDropdownMenu')) {
+    closeProfileDropdown();
+  }
+});
+
+/* --- LIBRARY VIEWS RENDERING --- */
+function renderLibraryDecks(){
+  const grid = document.getElementById('libraryDecksGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const allD = decks();
+  allD.forEach(deckName => {
+    const deckCards = allCards().filter(c => deckName === 'Tất cả bộ' || (c.deck || 'Khác') === deckName);
+    const knownCount = deckCards.filter(c => progress[c.id] === 'known').length;
+    const cardEl = document.createElement('div');
+    cardEl.className = 'deck-item-card';
+    cardEl.innerHTML = `
+      <div class="deck-card-top">
+        <div>
+          <h4 class="deck-card-title">${esc(deckName)}</h4>
+          <div class="deck-card-count">${deckCards.length} từ · Đã nhớ ${knownCount}/${deckCards.length}</div>
+        </div>
+        <span style="font-size:24px;">${deckName.startsWith('🎬') ? '🎬' : '📚'}</span>
+      </div>
+      <button type="button" class="btn-study-this-deck" onclick="studySpecificDeck('${esc(deckName)}')">
+        <span>📖</span>
+        <span>Học bộ này</span>
+      </button>
+    `;
+    grid.appendChild(cardEl);
+  });
+}
+
+function studySpecificDeck(deckName){
+  const sel = document.getElementById('deckSelect');
+  if (sel) {
+    sel.value = deckName;
+    applyFilter();
+  }
+  setPrimaryHub('study');
+  setStudySubMode('flash');
+}
+
+function renderLibraryFishCollection(){
+  const grid = document.getElementById('libraryFishGrid');
+  const countEl = document.getElementById('libFishTotalCount');
+  if (!grid) return;
+
+  let collection = [];
+  try {
+    const raw = localStorage.getItem('vokabelgo_fish_collection_v1');
+    if (raw) collection = JSON.parse(raw);
+  } catch(e){}
+
+  if (countEl) countEl.textContent = `Đã câu: ${collection.length} chú cá`;
+
+  if (!collection.length) {
+    grid.innerHTML = `
+      <div class="fish-empty-state">
+        <span style="font-size:48px;display:block;margin-bottom:10px;">🎣</span>
+        <h4 style="margin:0 0 6px;font-size:16px;font-weight:800;color:var(--ink-text);">Chưa có chú cá nào trong giỏ</h4>
+        <p style="margin:0 0 16px;font-size:13px;color:var(--ink-muted);">Mỗi ngày hoàn thành 5 từ vựng để cùng bé mèo câu cá và nhận từ vựng tiếng Đức bất ngờ!</p>
+        <button type="button" class="btn primary" onclick="setPrimaryHub('study'); setStudySubMode('flash');" style="padding:8px 18px;font-size:13px;">
+          🚀 Bắt đầu học 5 từ hôm nay
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = '';
+  collection.forEach(f => {
+    const item = document.createElement('div');
+    item.className = 'fish-collected-card';
+    const svgArt = (typeof window.getVokabelFishSvg === 'function') ? window.getVokabelFishSvg(f) : '<span style="font-size:44px;">🐟</span>';
+    const dateStr = f.caughtAt ? new Date(f.caughtAt).toLocaleDateString('vi-VN') : '';
+    let badgeClass = 'rarity-common';
+    if (f.rarity === 'rare') badgeClass = 'rarity-rare';
+    if (f.rarity === 'legendary') badgeClass = 'rarity-legendary';
+
+    item.innerHTML = `
+      <span class="catch-rarity-pill ${badgeClass}" style="position:static;margin-bottom:8px;font-size:10px;padding:2px 8px;">${esc(f.rarityLabel || f.rarity)}</span>
+      <div class="fish-collected-art">${svgArt}</div>
+      <div class="fish-collected-word"><span class="article-pill ${esc(f.article)}" style="font-size:11px;padding:1px 5px;margin-right:4px;">${esc(f.article)}</span>${esc(f.german)}</div>
+      <div class="fish-collected-meaning">${esc(f.vietnamese)}</div>
+      <div style="font-size:11px;color:var(--ink-muted);margin-bottom:6px;">📏 ${f.length || '30'} cm · ⚖️ ${f.weight || '1.2'} kg · +${f.exp || 25} EXP</div>
+      <div class="fish-collected-date">Câu ngày: ${dateStr}</div>
+    `;
+    grid.appendChild(item);
+  });
+}
+window.renderLibraryFishCollection = renderLibraryFishCollection;
 
 function rand(arr,n){
   const a=[...arr].sort(()=>Math.random()-.5);return a.slice(0,n);
@@ -13597,6 +14642,10 @@ document.addEventListener('keydown',e=>{
     if(lm) lm.classList.add('hidden');
   }
   if(mode==='flash'){
+    if(window.isStudySessionMode && window.VokabelSession && typeof handleSessionKeydown === 'function'){
+      handleSessionKeydown(e);
+      return;
+    }
     if(e.code==='Space'){e.preventDefault();document.getElementById('card').classList.toggle('flipped')}
     if(e.key==='1')rate('unknown');if(e.key==='2')rate('hard');if(e.key==='3')rate('known');if(e.key==='ArrowRight')next();if(e.key==='s'||e.key==='S')speak();
   }
@@ -14294,12 +15343,35 @@ document.getElementById('boomboxClose').onclick = () => {
   boomboxLoadMenu.classList.add('hidden');
 };
 
-updateTapeUI();
-
 refreshDecks();
 applyFilter();
 
-/* --- SOUND HELPERS & SAFE AUDIO --- */
+// Initialize 4-Hub Navigation & Default to Today Hub
+(function initLearningHubs() {
+  const isMuted = localStorage.getItem('vokabelgo_global_mute') === 'true';
+  const audioIcon = document.getElementById('globalAudioIcon');
+  const audioBtn = document.getElementById('globalAudioToggleBtn');
+  if (audioIcon) audioIcon.textContent = isMuted ? '🔇' : '🔊';
+  if (audioBtn) audioBtn.classList.toggle('muted', isMuted);
+
+  const savedHub = (function() {
+    try {
+      const h = localStorage.getItem('vokabelgo_active_hub');
+      if (h === 'study' || h === 'kino' || h === 'library' || h === 'today') return h;
+    } catch(e){}
+    return 'today';
+  })();
+
+  setPrimaryHub(savedHub);
+  updateTodayDashboard();
+
+  window.addEventListener('vokabelgo:daily-progress', () => {
+    updateTodayDashboard();
+  });
+  window.addEventListener('vokabelgo:daily-goal-complete', () => {
+    updateTodayDashboard();
+  });
+})();
 function playBoomboxClick(freq){
   try {
     if(typeof playMechanicalClick === 'function') playMechanicalClick();
@@ -16803,35 +17875,27 @@ function playKinoMixtape(){
 <!-- ============================================================================== -->
 <!-- REWARD EXPERIENCE PROTOTYPE (CAT FISHING PROTOTYPE) -->
 <!-- ============================================================================== -->
-<button type="button" id="floatingDevRewardBtn" class="floating-dev-reward-btn" onclick="openRewardPrototypeModal()" title="Bản thử hiệu ứng nhận thưởng với video mèo câu cá (Dev Only)">
+<button type="button" id="floatingDevRewardBtn" class="floating-dev-reward-btn" onclick="openRewardPrototypeModal()" title="Bản thử hiệu ứng nhận thưởng với video mèo câu cá (Dev Only)" style="display:none;">
   <span>🎣</span>
   <span>Thử nhận thưởng</span>
   <span class="floating-badge">DEV</span>
 </button>
 
-<div id="rewardPrototypeModal" class="reward-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="rewardModalTitle">
-  <div class="reward-modal-card">
-    <!-- Header -->
-    <div class="reward-modal-header">
-      <div class="reward-header-title-wrap">
-        <span class="reward-header-icon">🐟</span>
-        <div>
-          <h3 id="rewardModalTitle" class="reward-modal-title">
-            Bản thử nhận thưởng · Cat Fishing
-          </h3>
-          <p class="reward-modal-subtitle">Prototype trải nghiệm hình ảnh & âm thanh · Không lưu tiến độ</p>
-        </div>
-      </div>
-      <div class="reward-header-actions">
-        <button type="button" id="rewardSoundToggleBtn" class="reward-sound-btn mode-original" onclick="cycleAudioMode()" title="Bấm để đổi chế độ âm thanh (Gốc / Hiệu ứng / Cả hai / Tắt)" aria-label="Đổi chế độ âm thanh">
-          <span id="rewardSoundIcon">🎵</span>
-          <span id="rewardSoundLabel">Âm gốc của chị</span>
-        </button>
-        <button type="button" class="reward-close-btn" onclick="closeRewardPrototypeModal()" title="Đóng bản thử (ESC)" aria-label="Đóng">✕</button>
+<div id="rewardPrototypeModal" class="reward-modal-backdrop hidden" role="dialog" aria-modal="true" aria-label="Nhận thưởng mèo câu cá">
+  <div class="reward-modal-card reward-state-fishing" id="rewardModalCard">
+    <!-- Header cực sạch: CHỈ CÓ sound icon, replay nhỏ và close button -->
+    <div class="reward-modal-header reward-minimal-header">
+      <button type="button" id="rewardSoundToggleBtn" class="reward-sound-btn" onclick="toggleRewardSound()" title="Bật / Tắt âm thanh" aria-label="Bật hoặc tắt âm thanh">
+        <span id="rewardSoundIcon">🔊</span>
+        <span id="rewardSoundLabel" style="display:none;">Âm thanh</span>
+      </button>
+      <div class="reward-header-right-btns">
+        <button type="button" class="reward-replay-mini-btn" onclick="replayRewardPrototype(event)" title="Xem lại hoạt họa (Không tạo thêm cá)" aria-label="Xem lại">↻</button>
+        <button type="button" class="reward-close-btn" onclick="closeRewardPrototypeModal()" title="Đóng (ESC)" aria-label="Đóng">✕</button>
       </div>
     </div>
 
-    <!-- Video Stage Container -->
+    <!-- Video Stage Container (STATE A: Hero Animation) -->
     <div class="reward-stage-wrapper">
       <div class="reward-video-container" id="rewardVideoContainer">
         <!-- Native Video Element (Âm thanh gốc phát trực tiếp) -->
@@ -16845,74 +17909,64 @@ function playKinoMixtape(){
         <!-- Video Fallback Card -->
         <div id="rewardVideoFallback" class="reward-video-fallback hidden">
           <div class="fallback-icon">🐱🎣</div>
-          <div class="fallback-title">Đang chạy mô phỏng tĩnh</div>
-          <div class="fallback-text">Không thể phát trực tiếp video catfishing.mp4. Hiệu ứng và âm thanh vẫn chạy thử nghiệm bình thường.</div>
+          <div class="fallback-title">Đang chạy mô phỏng</div>
+          <div class="fallback-text">Không thể phát trực tiếp video catfishing.mp4.</div>
           <button type="button" class="btn primary" onclick="replayRewardPrototype()">Thử lại</button>
         </div>
 
-        <!-- Visual Effects Overlay -->
+        <!-- Visual Effects Overlay (Glow quanh thùng khi cá vào) -->
         <div id="rewardEffectsOverlay" class="reward-effects-overlay">
-          <!-- Vòng sáng mềm quanh khu vực miệng thùng (x: 61.5%, y: 46.5%) -->
           <div id="rewardBucketGlow" class="reward-bucket-glow"></div>
-
-          <!-- 8-12 ngôi sao nhỏ bung ra quanh thùng -->
           <div id="rewardStarsContainer" class="reward-stars-container"></div>
+        </div>
 
-          <!-- Hiển thị text "+1 🐟" nảy nhẹ và bay lên -->
-          <div id="rewardPlusFish" class="reward-plus-fish">
-            <span>+1</span>
-            <span>🐟</span>
+        <!-- CATCH REVEAL LAYER (STATE B: Reveal & STATE C: Collect) -->
+        <div id="rewardCatchRevealLayer" class="reward-catch-reveal-layer hidden" role="region" aria-label="Loài cá câu được">
+          <!-- Hào quang nền êm dịu, không lấn át con cá -->
+          <div class="reward-sunburst-wrap">
+            <div class="reward-sunburst-rays"></div>
           </div>
 
-          <!-- Thông báo chúc mừng "Câu được cá rồi!" -->
-          <div id="rewardCelebrationBanner" class="reward-celebration-banner">
-            <span>✨</span>
-            <span>Câu được cá rồi!</span>
-            <span>🎉</span>
+          <!-- Thẻ bài loài cá tối giản (Con cá là Hero Object) -->
+          <div class="reward-catch-card reward-catch-card-minimal" id="rewardCatchCard">
+            <!-- Header thẻ: ✨ Bắt được rồi! -->
+            <div class="catch-card-top-bar">
+              <span class="catch-congrats-text">✨ Bắt được rồi!</span>
+            </div>
+
+            <!-- Khung hình minh họa chú cá (HERO OBJECT - TO GẤP 1.8 LẦN) -->
+            <div class="catch-fish-stage" id="catchFishStage">
+              <div class="catch-fish-aura" id="catchFishAura"></div>
+              <div class="catch-fish-art" id="catchFishArt"></div>
+            </div>
+
+            <!-- Khối từ vựng tiếng Đức và tiếng Việt (Xuất hiện sau pause hồi hộp) -->
+            <div class="catch-word-card-minimal" id="catchWordCard">
+              <div class="catch-word-row">
+                <span class="article-pill der" id="catchArticlePill">der</span>
+                <span class="german-word-text" id="catchGermanWord">Lachs</span>
+                <button type="button" class="catch-speech-btn" id="catchSpeechBtn" onclick="speakCurrentFish(event)" title="Nghe phát âm chuẩn" aria-label="Phát âm từ vựng">
+                  <span>🔊</span>
+                </button>
+              </div>
+              <div class="catch-vietnamese-row">
+                <span class="catch-vietnamese-text" id="catchVietnameseText">Cá hồi Bắc Đại Tây Dương</span>
+              </div>
+              <!-- Rarity là thông tin phụ, hiển thị dưới cùng của từ vựng -->
+              <div class="catch-rarity-row">
+                <span class="catch-rarity-badge rarity-rare" id="catchRarityBadge">Hiếm</span>
+              </div>
+            </div>
+
+            <!-- STATE C: Giai đoạn thu vào giỏ & nút Học tiếp -->
+            <div class="catch-collect-zone" id="catchCollectZone">
+              <div class="reward-collect-hint" id="rewardCollectHint">+1 vào Hồ cá</div>
+              <button type="button" class="btn-reward-continue" id="btnCollectFish" onclick="collectFishAndContinue(event)">
+                Học tiếp
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Timeline & Controls Footer -->
-    <div class="reward-modal-footer">
-      <!-- Selector chọn nguồn âm thanh trực quan -->
-      <div class="reward-audio-selector-row">
-        <span class="reward-audio-selector-label">
-          <span>🔊</span>
-          <span>Nguồn âm thanh:</span>
-        </span>
-        <div class="reward-audio-mode-group" role="radiogroup" aria-label="Nguồn âm thanh">
-          <button type="button" class="reward-audio-mode-pill active" id="audioPillOriginal" data-mode="original" onclick="setAudioMode('original')" title="Phát âm thanh gốc có sẵn trong clip của chị">
-            🎵 Âm gốc của chị
-          </button>
-          <button type="button" class="reward-audio-mode-pill" id="audioPillNewFx" data-mode="new_fx" onclick="setAudioMode('new_fx')" title="Phát âm thanh hiệu ứng nhận thưởng 3 nốt nhẹ nhàng">
-            ✨ Hiệu ứng mới
-          </button>
-          <button type="button" class="reward-audio-mode-pill" id="audioPillBoth" data-mode="both" onclick="setAudioMode('both')" title="Phát đồng thời âm thanh gốc và hiệu ứng mới">
-            🎶 Cả hai
-          </button>
-          <button type="button" class="reward-audio-mode-pill" id="audioPillMute" data-mode="mute" onclick="setAudioMode('mute')" title="Tắt toàn bộ âm thanh">
-            🔇 Tắt tiếng
-          </button>
-        </div>
-      </div>
-
-      <div class="reward-timeline-indicator" id="rewardTimelineIndicator">
-        <span class="timeline-step" id="stepPhaseA">1. Kéo cần 🎣</span>
-        <span class="timeline-arrow">→</span>
-        <span class="timeline-step" id="stepPhaseB">2. Cá vào thùng 🪣</span>
-        <span class="timeline-arrow">→</span>
-        <span class="timeline-step" id="stepPhaseC">3. Mèo mừng 🐱✨</span>
-      </div>
-
-      <div class="reward-footer-btns">
-        <button type="button" id="rewardReplayBtn" class="reward-action-btn primary" onclick="replayRewardPrototype()">
-          <span>🔄 Phát lại từ đầu</span>
-        </button>
-        <button type="button" class="reward-action-btn outline" onclick="closeRewardPrototypeModal()">
-          <span>✕ Đóng</span>
-        </button>
       </div>
     </div>
   </div>
