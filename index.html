@@ -7512,7 +7512,7 @@ input.search:focus {
                 </div>
 
                 <div class="session-typing-input-wrap" id="sessionTypingInputWrap">
-                  <input type="text" id="sessionTypingInput" class="session-typing-input" placeholder="Gõ từ hoặc cụm tiếng Đức..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Nhập từ hoặc cụm tiếng Đức tương ứng" onkeydown="handleSessionTypingInputKeydown(event)">
+                  <input type="text" id="sessionTypingInput" class="session-typing-input" placeholder="Gõ từ hoặc cụm tiếng Đức..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Nhập từ hoặc cụm tiếng Đức tương ứng">
                   
                   <div class="session-umlaut-bar" id="sessionUmlautBar" role="toolbar" aria-label="Ký tự đặc biệt tiếng Đức">
                     <button type="button" class="btn-session-umlaut" data-char="ä" title="Chèn ä" onclick="insertSessionUmlaut('ä', event)">ä</button>
@@ -14172,6 +14172,8 @@ function handleSessionTypingInputKeydown(e) {
 }
 window.handleSessionTypingInputKeydown = handleSessionTypingInputKeydown;
 
+var activeSessionTypingTimer = null;
+
 function handleSessionTypingSubmit(e) {
   if (e) e.stopPropagation();
   if (!window.VokabelSession) return;
@@ -14182,18 +14184,42 @@ function handleSessionTypingSubmit(e) {
   const res = window.VokabelSession.handleTypingSubmit(val);
   if (!res) return;
 
+  const submittedSessionId = res.session ? res.session.sessionId : null;
+  const submittedCardId = res.cardId;
+
   if (res.result === 'correct') {
     try { if (typeof playMatchSound === 'function') playMatchSound(); } catch(err) {}
     renderSessionInteraction();
-    setTimeout(() => {
+
+    if (activeSessionTypingTimer) {
+      clearTimeout(activeSessionTypingTimer);
+      activeSessionTypingTimer = null;
+    }
+
+    activeSessionTypingTimer = setTimeout(() => {
+      activeSessionTypingTimer = null;
       const current = window.VokabelSession.getTodaySession();
-      if (current && !current.completed && current.queue[current.queueIndex] && current.queue[current.queueIndex].type === 'typing') {
-        const advRes = window.VokabelSession.handleTypingContinue();
-        renderSessionInteraction();
-        if (advRes && advRes.completed) {
-          if (typeof updateTodayDashboard === 'function') updateTodayDashboard();
-          checkDailyMilestoneAndReward();
-        }
+      if (!current || current.completed) return;
+      if (submittedSessionId && current.sessionId !== submittedSessionId) return;
+
+      const curItem = current.queue[current.queueIndex];
+      // P0: Timer chỉ auto-continue nếu current item cardId trùng submittedCardId
+      if (!curItem || curItem.type !== 'typing' || curItem.cardId !== submittedCardId) {
+        return;
+      }
+
+      const ts = current.targetStates[submittedCardId];
+      if (!ts || ts.typingSubmitted !== true) {
+        return;
+      }
+
+      const advRes = window.VokabelSession.handleTypingContinue();
+      if (!advRes) return;
+
+      renderSessionInteraction();
+      if (advRes.completed) {
+        if (typeof updateTodayDashboard === 'function') updateTodayDashboard();
+        checkDailyMilestoneAndReward();
       }
     }, 450);
   } else {
@@ -14204,9 +14230,14 @@ function handleSessionTypingSubmit(e) {
 
 function handleSessionTypingContinue(e) {
   if (e) e.stopPropagation();
+  if (activeSessionTypingTimer) {
+    clearTimeout(activeSessionTypingTimer);
+    activeSessionTypingTimer = null;
+  }
   if (!window.VokabelSession) return;
   const res = window.VokabelSession.handleTypingContinue();
-  if (res && res.completed) {
+  if (!res) return;
+  if (res.completed) {
     if (typeof updateTodayDashboard === 'function') updateTodayDashboard();
     checkDailyMilestoneAndReward();
   }
@@ -14276,6 +14307,10 @@ function handleSessionClaimReward() {
 }
 
 function exitSessionToFreeStudy() {
+  if (activeSessionTypingTimer) {
+    clearTimeout(activeSessionTypingTimer);
+    activeSessionTypingTimer = null;
+  }
   window.isStudySessionMode = false;
   setStudySessionUiLock(false);
   const sBar = document.getElementById('sessionHeaderBar');
@@ -14303,6 +14338,10 @@ function exitSessionToFreeStudy() {
 }
 
 function handleSessionReturnToday() {
+  if (activeSessionTypingTimer) {
+    clearTimeout(activeSessionTypingTimer);
+    activeSessionTypingTimer = null;
+  }
   window.isStudySessionMode = false;
   setStudySessionUiLock(false);
   const sBar = document.getElementById('sessionHeaderBar');

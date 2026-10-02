@@ -1163,9 +1163,13 @@
 
       const id = currentItem.cardId;
       const targetState = session.targetStates[id];
-      if (targetState) {
-        targetState.typingSubmitted = false;
+      // P0-2 Guard: Chỉ cho phép continue nếu targetState tồn tại và typingSubmitted === true
+      // Chặn double-click Continue, timer cũ, gọi nhầm, và race giữa manual continue và auto-continue.
+      if (!targetState || targetState.typingSubmitted !== true) {
+        return null;
       }
+
+      targetState.typingSubmitted = false;
 
       session.queueIndex = (session.queueIndex || 0) + 1;
 

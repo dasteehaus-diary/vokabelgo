@@ -75,6 +75,9 @@ global.document = {
 global.showRetroToast = () => {};
 global.renderSessionInteraction = () => {};
 mockWindow.renderSessionInteraction = () => {};
+var activeSessionTypingTimer = null;
+global.activeSessionTypingTimer = null;
+mockWindow.activeSessionTypingTimer = null;
 
 // 2. Load vendored ts-fsrs & core scripts
 const FSRS = require('./vendor/ts-fsrs/index.cjs');
@@ -869,20 +872,153 @@ check(TV.isTypingEligible(uAusdruck) === true, 'der Gesichtsausdruck, die Gesich
 check(TV.getCanonicalTypingAnswer(uAusdruck) === 'der Gesichtsausdruck', 'der Gesichtsausdruck, die Gesichtsausdrücke canonical is der Gesichtsausdruck');
 
 // --------------------------------------------------------------------------
-// TEST V — Full regression runner
+// TEST W — Manual continue before timer
 // --------------------------------------------------------------------------
-console.log('\n--- TEST V: Full regression suite verification ---');
-check(fs.existsSync(path.join(__dirname, 'test-all.js')), 'test-all.js unified runner exists');
-check(fs.existsSync(path.join(__dirname, 'test-security-auth-acceptance.js')), 'test-security-auth-acceptance.js exists');
-check(fs.existsSync(path.join(__dirname, 'test-pedagogical-ux-acceptance.js')), 'test-pedagogical-ux-acceptance.js exists');
-check(fs.existsSync(path.join(__dirname, 'test-phase1-acceptance.js')), 'test-phase1-acceptance.js exists');
-check(fs.existsSync(path.join(__dirname, 'test-core-learning-loop-acceptance.js')), 'test-core-learning-loop-acceptance.js exists');
-check(fs.existsSync(path.join(__dirname, 'test-fsrs-srs-acceptance.js')), 'test-fsrs-srs-acceptance.js exists');
+console.log('\n--- TEST W: Manual continue before timer does not skip next card ---');
+localStorage.clear();
+window.VokabelSession.resetTodayForTesting();
+
+localStorage.setItem('vokabelgo_srs_state_v1', JSON.stringify({
+  version: 1,
+  engine: "fsrs6",
+  cards: {
+    'w_A': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 3, lastRating: 3, fsrsCard: {} },
+    'w_B': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 3, lastRating: 3, fsrsCard: {} },
+    'w_3': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    'w_4': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    'w_5': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} }
+  }
+}));
+
+const wCards = [
+  { id: 'w_A', term: 'die Entscheidung', meaning: 'quyết định' },
+  { id: 'w_B', term: 'die Geste', meaning: 'cử chỉ' },
+  { id: 'w_3', term: 'Wort 3', meaning: 'Từ 3' },
+  { id: 'w_4', term: 'Wort 4', meaning: 'Từ 4' },
+  { id: 'w_5', term: 'Wort 5', meaning: 'Từ 5' }
+];
+global.allCards = () => wCards;
+mockWindow.allCards = () => wCards;
+
+const wSession = window.VokabelSession.createTodaySession(wCards);
+check(wSession.queue[0].type === 'typing' && wSession.queue[0].cardId === 'w_A', 'Initial item is Typing A');
+check(wSession.queue[1].type === 'typing' && wSession.queue[1].cardId === 'w_B', 'Second item is Typing B');
+
+// Load index.html handlers for W
+activeSessionTypingTimer = null;
+const indexHtmlContentW = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+eval(indexHtmlContentW.match(/function\s+handleSessionTypingSubmit[\s\S]*?\n\}/)[0]);
+eval(indexHtmlContentW.match(/function\s+handleSessionTypingContinue[\s\S]*?\n\}/)[0]);
+
+// Set mock input returning correct answer for A
+mockWindow.document.getElementById = (id) => {
+  if (id === 'sessionTypingInput') return { value: 'die Entscheidung' };
+  return { classList: { add: () => {}, remove: () => {} }, style: {} };
+};
+
+// 1. Submit A
+handleSessionTypingSubmit();
+check(activeSessionTypingTimer !== null, 'Timer is scheduled after A submitted correct');
+
+// 2. User clicks continue manually immediately (<450ms)
+handleSessionTypingContinue();
+check(activeSessionTypingTimer === null, 'Active timer was cancelled by manual continue');
+
+const wAfterMan = window.VokabelSession.getTodaySession();
+check(wAfterMan.queueIndex === 1, 'Queue advanced to Typing B');
+check(wAfterMan.queue[wAfterMan.queueIndex].cardId === 'w_B', 'Current item is Typing B');
+check(wAfterMan.targetStates['w_B'].typingSubmitted === false, 'Typing B has NOT been submitted');
+
+// --------------------------------------------------------------------------
+// TEST X — Double continue
+// --------------------------------------------------------------------------
+console.log('\n--- TEST X: Double continue guard ---');
+// Currently at w_B. Submit wrong answer
+window.VokabelSession.handleTypingSubmit('sai');
+check(window.VokabelSession.getTodaySession().targetStates['w_B'].typingSubmitted === true, 'w_B submitted wrong');
+
+// Call 1: should advance
+const xAdv1 = window.VokabelSession.handleTypingContinue();
+check(xAdv1 !== null, 'First continue call returns session and advances');
+check(window.VokabelSession.getTodaySession().queueIndex === 2, 'Queue index advanced to 2');
+
+// Call 2: should be rejected (return null) and NOT advance
+const xAdv2 = window.VokabelSession.handleTypingContinue();
+check(xAdv2 === null, 'Second rapid continue returns null');
+check(window.VokabelSession.getTodaySession().queueIndex === 2, 'Queue index did NOT increment on second call');
+
+// --------------------------------------------------------------------------
+// TEST Y — Stale timer
+// --------------------------------------------------------------------------
+console.log('\n--- TEST Y: Stale timer NO-OP ---');
+localStorage.clear();
+window.VokabelSession.resetTodayForTesting();
+
+localStorage.setItem('vokabelgo_srs_state_v1', JSON.stringify({
+  version: 1,
+  engine: "fsrs6",
+  cards: {
+    'y_A': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 3, lastRating: 3, fsrsCard: {} },
+    'y_B': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 3, lastRating: 3, fsrsCard: {} },
+    'y_3': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    'y_4': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} },
+    'y_5': { dueAt: new Date(Date.now() - 86400000).toISOString(), historyCount: 1, lastRating: 3, fsrsCard: {} }
+  }
+}));
+
+const yCards = [
+  { id: 'y_A', term: 'die Entscheidung', meaning: 'quyết định' },
+  { id: 'y_B', term: 'die Geste', meaning: 'cử chỉ' },
+  { id: 'y_3', term: 'Wort 3', meaning: 'Từ 3' },
+  { id: 'y_4', term: 'Wort 4', meaning: 'Từ 4' },
+  { id: 'y_5', term: 'Wort 5', meaning: 'Từ 5' }
+];
+global.allCards = () => yCards;
+mockWindow.allCards = () => yCards;
+
+const ySession = window.VokabelSession.createTodaySession(yCards);
+window.VokabelSession.handleTypingSubmit('die Entscheidung'); // y_A submit correct
+window.VokabelSession.handleTypingContinue(); // manual continue to y_B
+check(window.VokabelSession.getTodaySession().queueIndex === 1, 'Advanced to y_B');
+
+// Simulate stale timer for y_A executing now
+const staleSessionId = ySession.sessionId;
+const staleCardId = 'y_A';
+
+function runStaleTimer() {
+  const current = window.VokabelSession.getTodaySession();
+  if (!current || current.completed) return 'exited_completed';
+  if (staleSessionId && current.sessionId !== staleSessionId) return 'exited_session_mismatch';
+  const curItem = current.queue[current.queueIndex];
+  if (!curItem || curItem.type !== 'typing' || curItem.cardId !== staleCardId) {
+    return 'noop_card_mismatch';
+  }
+  const ts = current.targetStates[staleCardId];
+  if (!ts || ts.typingSubmitted !== true) {
+    return 'noop_not_submitted';
+  }
+  return window.VokabelSession.handleTypingContinue();
+}
+
+const staleResult = runStaleTimer();
+check(staleResult === 'noop_card_mismatch', 'Stale timer for y_A detected card mismatch (y_B) and NO-OPed');
+check(window.VokabelSession.getTodaySession().queueIndex === 1, 'Queue index remained at 1 (y_B not skipped)');
+check(window.VokabelSession.getTodaySession().targetStates['y_B'].typingSubmitted === false, 'y_B was not marked submitted');
+
+// --------------------------------------------------------------------------
+// TEST Z — Single keydown listener in index.html
+// --------------------------------------------------------------------------
+console.log('\n--- TEST Z: Single keydown listener in index.html ---');
+const rawHtmlZ = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+const inlineOnkeydownMatches = rawHtmlZ.match(/id="sessionTypingInput"[^>]*onkeydown=/i);
+check(inlineOnkeydownMatches === null, 'No inline onkeydown on #sessionTypingInput in HTML');
+check(rawHtmlZ.includes("inputEl.addEventListener('keydown', handleSessionTypingInputKeydown);"), 'addEventListener used for #sessionTypingInput');
+check(rawHtmlZ.includes('inputEl._sessionKeydownBound = true;'), '_sessionKeydownBound flag used to prevent multiple listeners');
 
 console.log('\n====================================================');
 console.log(`ACCEPTANCE SUMMARY: ${passedTests} / ${totalTests} PASSED`);
 if (passedTests === totalTests) {
-  console.log('🎉 ALL PHASE 3 TESTS (TEST A -> TEST V) PASSED SUCCESSFULLY!');
+  console.log('🎉 ALL PHASE 3 TESTS (TEST A -> TEST Z) PASSED SUCCESSFULLY!');
 } else {
   console.log('⚠️ SOME TESTS FAILED. PLEASE REVIEW OUTPUT ABOVE.');
 }
@@ -891,4 +1027,5 @@ console.log('====================================================\n');
 if (passedTests !== totalTests) {
   process.exit(1);
 }
+
 
