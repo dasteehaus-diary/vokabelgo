@@ -7442,7 +7442,7 @@ input.search:focus {
           <div id="sessionCompleteBox" class="session-complete-box hidden">
             <div class="session-complete-icon">🎉</div>
             <h3 class="session-complete-title">Hoàn thành 5 mục tiêu hôm nay!</h3>
-            <p class="session-complete-desc" id="sessionCompleteDesc">Bạn đã hoàn thành phiên học với 5 từ vựng xuất sắc. Bé mèo đã sẵn sàng nhận thưởng!</p>
+            <p class="session-complete-desc" id="sessionCompleteDesc">Bạn đã hoàn thành phiên học hôm nay. Bé mèo đã sẵn sàng nhận thưởng!</p>
             <div class="session-complete-actions">
               <button type="button" class="btn-session-reward-cta" id="btnSessionClaimReward" onclick="handleSessionClaimReward()">
                 <span>🎣</span>
@@ -7494,9 +7494,9 @@ input.search:focus {
                 <div class="session-reinforce-details" id="sessionReinforceDetails"></div>
                 <div class="session-reinforce-cta-wrap">
                   <button type="button" class="btn-session-reinforce-continue" onclick="handleSessionReinforceContinue(event)" title="Hoàn thành mục tiêu này trong phiên học">
-                    <span>Đã hiểu, hoàn thành mục tiêu này (Space) →</span>
+                    <span>Đã xem lại · Tiếp tục (Space) →</span>
                   </button>
-                  <div class="session-reinforce-note">Mục tiêu này được tính hoàn thành cho hôm nay. Hệ thống sẽ lên lịch ôn lại cho bạn trong các phiên tới!</div>
+                  <div class="session-reinforce-note">Từ này sẽ được ưu tiên ôn lại ở phiên sau.</div>
                 </div>
               </div>
             </div>
@@ -13438,6 +13438,7 @@ function refreshDecks(){
   sel.value = allD.includes(old) ? old : 'Tất cả bộ';
 }
 function applyFilter(){
+  if (window.isStudySessionMode) return;
   const q=document.getElementById('search').value.trim().toLowerCase();
   const deck=document.getElementById('deckSelect').value;
   cards=allCards();
@@ -13462,6 +13463,7 @@ function esc(s){
 }
 
 function render(){
+  if (window.isStudySessionMode) return;
   const total=filtered.length;
   const _tc=document.getElementById('totalCount');if(_tc)_tc.textContent=total;
   if(!total){
@@ -13520,6 +13522,7 @@ function updateStats(){
   if(typeof updateTodayDashboard === 'function') updateTodayDashboard();
 }
 function next(){
+  if (window.isStudySessionMode) return;
   if(!filtered.length)return;
   index=(index+1)%filtered.length; render();
 }
@@ -13531,10 +13534,7 @@ function rate(v){
   const c=current(); if(!c)return;
   progress[c.id]=v; saveProgress(); updateStats(); next();
   totalCardsReviewedSession++;
-  // TEST 4 Exploit guard: Only successfully remembered cards count toward daily feed/milestone
-  if (v === 'known' || v === 3 || v === '3') {
-    if(window.onCardReviewedForFeed) window.onCardReviewedForFeed(c.id);
-  }
+  // P0-1: Free study strictly NEVER counts toward daily milestone or feed
   if(totalCardsReviewedSession % 10 === 0){
     if(typeof triggerCatMilestone === 'function') triggerCatMilestone('praise');
   }
@@ -13548,18 +13548,6 @@ function rate(v){
     consecutiveHardCards = 0;
   }
   if(typeof updateTodayDashboard === 'function') updateTodayDashboard();
-
-  // Check if daily milestone of 5 cards reached
-  if (window.VokabelDaily && typeof window.VokabelDaily.getTodayState === 'function') {
-    const dState = window.VokabelDaily.getTodayState();
-    if (dState.completed && dState.catchStatus === 'pending') {
-      setTimeout(() => {
-        if (typeof openRewardPrototypeModal === 'function') {
-          openRewardPrototypeModal();
-        }
-      }, 700);
-    }
-  }
 }
 
 function revealFlashcardAnswer(e){
@@ -13583,7 +13571,18 @@ function toggleFlashcardDetails(e){
   }
 }
 
-document.getElementById('card').onclick=()=>document.getElementById('card').classList.toggle('flipped');
+document.getElementById('card').onclick = () => {
+  if (window.isStudySessionMode && window.VokabelSession) {
+    const s = window.VokabelSession.getTodaySession();
+    if (s && !s.completed) {
+      const cur = s.queue[s.queueIndex];
+      if (cur && (cur.type === 'intro' || cur.type === 'reinforce')) {
+        return; // P1-2: Không lật thẻ ở tương tác intro / reinforce
+      }
+    }
+  }
+  document.getElementById('card').classList.toggle('flipped');
+};
 document.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>rate(b.dataset.rate));
 document.getElementById('nextBtn').onclick=next;
 
@@ -13593,12 +13592,28 @@ document.getElementById('shuffleBtn').onclick=()=>{ filtered.sort(()=>Math.rando
 document.getElementById('reverseBtn').onclick=()=>{reverse=!reverse;render()};
 document.getElementById('speakBtn').onclick=speak;
 
+function getCurrentlyDisplayedLearningCard() {
+  if (window.isStudySessionMode && window.VokabelSession) {
+    const list = typeof allCards === 'function' ? allCards() : [];
+    const cardsMap = {};
+    list.forEach(c => { cardsMap[c.id] = c; });
+    const interaction = window.VokabelSession.getCurrentInteraction(cardsMap);
+    if (interaction && interaction.card) {
+      return interaction.card;
+    }
+  }
+  return typeof current === 'function' ? current() : null;
+}
+
 function speak(){
-  const c=current(); if(!c)return;
-  if(!('speechSynthesis' in window))return alert('Trình duyệt này không hỗ trợ đọc giọng nói.');
+  const c = getCurrentlyDisplayedLearningCard();
+  if(!c) return;
+  if(!('speechSynthesis' in window)) return alert('Trình duyệt này không hỗ trợ đọc giọng nói.');
   speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(c.term.replace(/[|]/g,''));
-  u.lang='de-DE';u.rate=.9;speechSynthesis.speak(u);
+  const u = new SpeechSynthesisUtterance((c.term || '').replace(/[|]/g,''));
+  u.lang = 'de-DE';
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
 }
 
 /* =========================================================================
@@ -13646,6 +13661,7 @@ function setPrimaryHub(hub){
 }
 
 function setStudySubMode(m){
+  if (window.isStudySessionMode && m !== 'flash') return;
   currentStudySubMode = m;
   mode = m;
   try { localStorage.setItem('vokabelgo_active_mode', m); } catch(e){}
@@ -13729,12 +13745,47 @@ document.querySelectorAll('.tabs [data-mode]').forEach(b=>b.onclick=()=>setMode(
    ========================================================================== */
 window.isStudySessionMode = false;
 
+function setStudySessionUiLock(locked) {
+  const deckSel = document.getElementById('deckSelect');
+  if (deckSel) {
+    deckSel.disabled = locked;
+    deckSel.classList.toggle('session-disabled', locked);
+  }
+  const searchInp = document.getElementById('search');
+  if (searchInp) {
+    searchInp.disabled = locked;
+    searchInp.classList.toggle('session-disabled', locked);
+  }
+  const shuffleB = document.getElementById('shuffleBtn');
+  if (shuffleB) {
+    shuffleB.disabled = locked;
+    shuffleB.classList.toggle('session-hidden', locked);
+  }
+  const revB = document.getElementById('reverseBtn');
+  if (revB) {
+    revB.disabled = locked;
+    revB.classList.toggle('session-hidden', locked);
+  }
+  const nextB = document.getElementById('nextBtn');
+  if (nextB) {
+    nextB.disabled = locked;
+    nextB.classList.toggle('session-hidden', locked);
+  }
+  document.querySelectorAll('.study-mode-pill').forEach(pill => {
+    if (pill.dataset.studymode !== 'flash') {
+      pill.disabled = locked;
+      pill.classList.toggle('session-hidden', locked);
+    }
+  });
+}
+
 function startOrResumeTodaySession() {
   if (!window.VokabelSession) return;
   const list = typeof allCards === 'function' ? allCards() : [];
   if (!list.length) return;
 
   window.isStudySessionMode = true;
+  setStudySessionUiLock(true);
   setPrimaryHub('study');
   setStudySubMode('flash');
 
@@ -13748,6 +13799,7 @@ function startOrResumeTodaySession() {
 
 function renderSessionInteraction() {
   if (!window.VokabelSession) return;
+  setStudySessionUiLock(true);
   const list = typeof allCards === 'function' ? allCards() : [];
   const cardsMap = {};
   list.forEach(c => { cardsMap[c.id] = c; });
@@ -13938,6 +13990,10 @@ function handleSessionReinforceContinue(e) {
 
 function handleSessionRate(rating) {
   if (!window.VokabelSession) return;
+  const cardEl = document.getElementById('card');
+  if (cardEl && !cardEl.classList.contains('flipped')) {
+    return; // P1-1: Phím rating chỉ có hiệu lực khi thẻ đã được reveal
+  }
   const res = window.VokabelSession.handleRecallAnswer(rating);
   if (!res) return;
 
@@ -13976,6 +14032,7 @@ function handleSessionClaimReward() {
 
 function exitSessionToFreeStudy() {
   window.isStudySessionMode = false;
+  setStudySessionUiLock(false);
   const sBar = document.getElementById('sessionHeaderBar');
   if (sBar) sBar.classList.add('hidden');
   const scBox = document.getElementById('sessionCompleteBox');
@@ -14021,11 +14078,11 @@ function handleSessionKeydown(e) {
       e.preventDefault();
       if (cardEl) cardEl.classList.toggle('flipped');
     } else if (e.key === '1') {
-      handleSessionRate('unknown');
+      if (isFlipped) handleSessionRate('unknown');
     } else if (e.key === '2') {
-      handleSessionRate('hard');
+      if (isFlipped) handleSessionRate('hard');
     } else if (e.key === '3') {
-      handleSessionRate('known');
+      if (isFlipped) handleSessionRate('known');
     } else if (e.key === 's' || e.key === 'S') {
       speak();
     }
@@ -14079,11 +14136,15 @@ function updateTodayDashboard(){
   const ctaText = document.getElementById('todayCtaText');
   const ctaIcon = document.getElementById('todayCtaIcon');
 
-  let count = summary.todayCount || 0;
+  let count = 0;
+  let isCompleted = false;
   if (sessionState) {
-    count = sessionState.completedCount;
+    count = sessionState.completedCount || 0;
+    isCompleted = Boolean(sessionState.isCompleted);
+  } else {
+    count = summary.todayCount || 0;
+    isCompleted = Boolean(summary.completed && count >= 5);
   }
-  const isCompleted = summary.completed || (sessionState && sessionState.isCompleted);
   const percent = Math.min((count / 5) * 100, 100);
 
   if (ratioEl) ratioEl.textContent = `Đã học: ${count} / 5 từ`;
@@ -14136,13 +14197,17 @@ function updateTodayDashboard(){
 
   const resumeState = getLearningResumeState();
   const resumeDeckTag = document.getElementById('todayResumeDeckTag');
-  if (resumeDeckTag && resumeState) {
-    if (resumeState.lastMode === 'diktat') {
-      resumeDeckTag.textContent = `🎬 Rạp phim Kino · Câu ${(resumeState.lastSentence || 0) + 1}`;
-    } else {
-      const deckName = resumeState.lastDeck || 'Tất cả bộ';
-      const cIdx = (resumeState.lastCardIndex || 0) + 1;
-      resumeDeckTag.textContent = `${deckName} · Thẻ ${cIdx}`;
+  if (resumeDeckTag) {
+    if (sessionState && !sessionState.isCompleted) {
+      resumeDeckTag.textContent = `🎯 Đang học · ${sessionState.completedCount}/5 mục tiêu`;
+    } else if (resumeState) {
+      if (resumeState.lastMode === 'diktat') {
+        resumeDeckTag.textContent = `🎬 Rạp phim Kino · Câu ${(resumeState.lastSentence || 0) + 1}`;
+      } else {
+        const deckName = resumeState.lastDeck || 'Tất cả bộ';
+        const cIdx = (resumeState.lastCardIndex || 0) + 1;
+        resumeDeckTag.textContent = `${deckName} · Thẻ ${cIdx}`;
+      }
     }
   }
 }
@@ -14353,6 +14418,7 @@ function getPureMeaning(m){
 }
 
 function newQuestion(){
+  if (window.isStudySessionMode) return;
   if(!filtered.length) return;
   mcqLocked = false;
   const c = current();
@@ -14438,6 +14504,7 @@ document.getElementById('mcqNext').onclick=()=>{next();newQuestion()};
 
 function normalize(s){return (s||'').toLowerCase().trim().replace(/[„“"'.,!?:;()]/g,'').replace(/\s+/g,' ')}
 function newTyping(){
+  if (window.isStudySessionMode) return;
   if(!filtered.length)return;
   const c=current();
   document.getElementById('typingPrompt').textContent=getPureMeaning(c.meaning);
@@ -14725,6 +14792,7 @@ function updateMatchBestDisplay(){
 }
 
 function startMatchGame(){
+  if (window.isStudySessionMode) return;
   clearInterval(matchTimerInterval);
   document.getElementById('matchTimer').textContent = '00:00.0';
   document.getElementById('matchVictory').classList.add('hidden');

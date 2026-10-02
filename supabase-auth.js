@@ -196,6 +196,12 @@
       if (lsess) learningSession = JSON.parse(lsess);
     } catch (e) {}
 
+    let fishCollection = [];
+    try {
+      const fc = localStorage.getItem('vokabelgo_fish_collection_v1');
+      if (fc) fishCollection = JSON.parse(fc);
+    } catch (e) {}
+
     const prof = getLocalUserProfile();
 
     return {
@@ -211,6 +217,7 @@
         learningState: learningState,
         learningSession: learningSession,
         dailyProgress: dailyProgress,
+        fishCollection: fishCollection,
         checkinHistory: checkinHist,
         userCards: userCards,
         matchBest: matchBest,
@@ -318,11 +325,49 @@
       // 8. Active Learning Session (vokabelgo_learning_session_v1)
       if (cloudAppData.learningSession && typeof cloudAppData.learningSession === 'object') {
         try {
-          const localSess = localStorage.getItem('vokabelgo_learning_session_v1');
-          if (!localSess) {
+          const localSessStr = localStorage.getItem('vokabelgo_learning_session_v1');
+          if (!localSessStr) {
             localStorage.setItem('vokabelgo_learning_session_v1', JSON.stringify(cloudAppData.learningSession));
+          } else {
+            const localSess = JSON.parse(localSessStr);
+            const cloudSess = cloudAppData.learningSession;
+            const todayKey = (window.VokabelDaily && typeof window.VokabelDaily.getLocalDateKey === 'function')
+              ? window.VokabelDaily.getLocalDateKey()
+              : new Date().toISOString().split('T')[0];
+
+            const isLocalOld = localSess.date && localSess.date < todayKey;
+            const isCloudToday = cloudSess.date === todayKey;
+
+            let shouldAdoptCloud = false;
+            if (isLocalOld && isCloudToday) {
+              shouldAdoptCloud = true;
+            } else if (cloudSess.date === localSess.date) {
+              const cloudUpdated = new Date(cloudSess.updatedAt || cloudSess.createdAt || 0).getTime();
+              const localUpdated = new Date(localSess.updatedAt || localSess.createdAt || 0).getTime();
+              if (cloudUpdated > localUpdated) {
+                shouldAdoptCloud = true;
+              } else if (cloudUpdated === localUpdated && (cloudSess.completedTargets?.length || 0) > (localSess.completedTargets?.length || 0)) {
+                shouldAdoptCloud = true;
+              }
+            } else if (cloudSess.date > localSess.date) {
+              shouldAdoptCloud = true;
+            }
+
+            if (shouldAdoptCloud) {
+              localStorage.setItem('vokabelgo_learning_session_v1', JSON.stringify(cloudSess));
+            }
           }
         } catch(e) {}
+      }
+
+      // 9. Fish Collection (vokabelgo_fish_collection_v1)
+      if (cloudAppData.fishCollection && Array.isArray(cloudAppData.fishCollection)) {
+        try {
+          const localFc = localStorage.getItem('vokabelgo_fish_collection_v1');
+          if (!localFc || JSON.parse(localFc).length < cloudAppData.fishCollection.length) {
+            localStorage.setItem('vokabelgo_fish_collection_v1', JSON.stringify(cloudAppData.fishCollection));
+          }
+        } catch (e) {}
       }
 
       // Cập nhật giao diện web
@@ -547,6 +592,10 @@
       localStorage.removeItem('dmf_flash_progress_v2');
       localStorage.removeItem('vokabelgo_checkin_history');
       localStorage.removeItem('vokabelgo_user_profile');
+      localStorage.removeItem('vokabelgo_learning_state_v1');
+      localStorage.removeItem('vokabelgo_learning_session_v1');
+      localStorage.removeItem('vokabelgo_daily_progress_v1');
+      localStorage.removeItem('vokabelgo_fish_collection_v1');
 
       if (typeof progress !== 'undefined') progress = {};
       if (typeof currentProfile !== 'undefined') {
@@ -554,6 +603,7 @@
       }
 
       if (typeof updateStats === 'function') updateStats();
+      if (typeof updateTodayDashboard === 'function') updateTodayDashboard();
       if (typeof applyUserProfileUI === 'function') applyUserProfileUI();
       if (typeof renderCalendar === 'function') renderCalendar();
       if (typeof renderGuestbook === 'function') renderGuestbook();

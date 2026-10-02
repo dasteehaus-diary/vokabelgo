@@ -660,6 +660,14 @@
       targetState.method = 'reinforce';
 
       VokabelLearningState.recordReinforce(id);
+      // P1-3: Chắc chắn thẻ không bị đánh dấu là 'known' trong legacy progress
+      try {
+        const rawProg = localStorage.getItem(LS_LEGACY_PROGRESS);
+        const pObj = rawProg ? JSON.parse(rawProg) : {};
+        if (!pObj[id] || pObj[id] === 'known') {
+          this._updateLegacyProgress(id, 'unknown');
+        }
+      } catch (e) {}
 
       let justCompletedTarget = false;
       let justCompletedSession = false;

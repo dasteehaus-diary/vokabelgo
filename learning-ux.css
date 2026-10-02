@@ -1301,3 +1301,15 @@
   justify-content: center;
   gap: 6px;
 }
+
+/* Session locked controls */
+.session-hidden {
+  display: none !important;
+}
+
+.session-disabled {
+  opacity: 0.45 !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}
+
