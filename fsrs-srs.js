@@ -89,6 +89,18 @@
     return null;
   }
 
+  // Helper lấy ngày local YYYY-MM-DD
+  function getLocalDateKey(date) {
+    if (typeof window !== 'undefined' && window.VokabelDaily && typeof window.VokabelDaily.getLocalDateKey === 'function') {
+      return window.VokabelDaily.getLocalDateKey(date);
+    }
+    const d = date ? new Date(date) : new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   const VokabelSRS = {
     ENGINE_NAME: ENGINE_NAME,
     ENGINE_VERSION: ENGINE_VERSION,
@@ -155,14 +167,20 @@
       return state.cards[String(cardId)] || null;
     },
 
-    // Kiểm tra xem thẻ đã đến hạn ôn tập chưa (dueAt <= now)
+    // P0-1: Kiểm tra xem thẻ đã đến hạn cho phiên học trong ngày chưa theo ngày lịch local
+    isDueForDailySession: function(dueAt, nowTime) {
+      if (!dueAt) return false;
+      const dueDateKey = getLocalDateKey(dueAt);
+      const nowDateKey = getLocalDateKey(nowTime);
+      return dueDateKey <= nowDateKey;
+    },
+
+    // Kiểm tra xem thẻ đã đến hạn ôn tập chưa (ngày lịch local của dueAt <= ngày lịch local hiện tại)
     isDue: function(cardId, nowTime) {
       if (!cardId) return false;
       const card = this.getCard(cardId);
       if (!card || !card.dueAt) return false;
-      const dueMs = new Date(card.dueAt).getTime();
-      const nowMs = nowTime ? new Date(nowTime).getTime() : Date.now();
-      return dueMs <= nowMs;
+      return this.isDueForDailySession(card.dueAt, nowTime);
     },
 
     // Độ trễ quá hạn (mili-giây). Số dương lớn = càng quá hạn lâu
@@ -236,9 +254,9 @@
         totalWithSrs++;
         const card = state.cards[id];
         if (card.dueAt) {
-          const dueMs = new Date(card.dueAt).getTime();
-          if (dueMs <= nowMs) {
+          if (this.isDueForDailySession(card.dueAt, nowTime)) {
             dueCount++;
+            const dueMs = new Date(card.dueAt).getTime();
             if (nowMs - dueMs > 86400000) { // Quá hạn hơn 1 ngày
               overdueCount++;
             }

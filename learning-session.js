@@ -27,6 +27,16 @@
     return `${year}-${month}-${day}`;
   }
 
+  // P0-1: Helper kiểm tra ngày đến hạn ôn theo lịch local YYYY-MM-DD
+  function isDueForDailySession(dueAt, nowTime) {
+    const srsModule = (typeof window !== 'undefined' && window.VokabelSRS) || (typeof global !== 'undefined' && global.VokabelSRS);
+    if (srsModule && typeof srsModule.isDueForDailySession === 'function') {
+      return srsModule.isDueForDailySession(dueAt, nowTime);
+    }
+    if (!dueAt) return false;
+    return getLocalDateKey(dueAt) <= getLocalDateKey(nowTime || new Date());
+  }
+
   // ============================================================================
   // 1. LEARNING STATE MANAGER (vokabelgo_learning_state_v1)
   // ============================================================================
@@ -222,12 +232,48 @@
       }
     },
 
+    // P0-3: Thử lại các SRS commit đang bị pending (do FSRS load chậm hoặc lỗi)
+    flushPendingSrsCommits: function(sessionObj) {
+      const session = sessionObj || this.loadSession();
+      if (!session || !session.targetStates) return 0;
+      const srs = (typeof window !== 'undefined' && window.VokabelSRS) || (typeof global !== 'undefined' && global.VokabelSRS);
+      if (!srs || typeof srs.scheduleReview !== 'function') return 0;
+
+      let flushedCount = 0;
+      let stateChanged = false;
+
+      const completed = session.completedTargets || [];
+      for (const id of completed) {
+        const ts = session.targetStates[id];
+        if (ts && ts.srsPending === true && ts.srsCommitted !== true) {
+          try {
+            const rating = ts.finalRating || (ts.recallRatings && ts.recallRatings.includes('unknown') ? 1 : (ts.recallRatings && ts.recallRatings.includes('hard') ? 2 : 3)) || 3;
+            const res = srs.scheduleReview(id, rating);
+            if (res) {
+              ts.srsCommitted = true;
+              ts.srsPending = false;
+              flushedCount++;
+              stateChanged = true;
+            }
+          } catch (e) {
+            console.error('[VokabelSession] Lỗi retry scheduleReview cho thẻ ' + id + ':', e);
+          }
+        }
+      }
+
+      if (stateChanged) {
+        this.saveSession(session);
+      }
+      return flushedCount;
+    },
+
     // Lấy session hôm nay nếu có và hợp lệ
     getTodaySession: function() {
       const session = this.loadSession();
       if (!session) return null;
       const todayKey = getLocalDateKey();
       if (session.date === todayKey) {
+        this.flushPendingSrsCommits(session);
         return session;
       }
       return null;
@@ -261,9 +307,13 @@
     // 3. TARGET SELECTION (FSRS-6 DUE REVIEW + NEW WORDS)
     // --------------------------------------------------------------------------
     selectTargets: function(allCardsList, count) {
-      const totalNeeded = typeof count === 'number' ? count : 5;
-      const targetReviewCount = 3;
-      const targetNewCount = 2;
+      const totalNeeded = (typeof count === 'number' && count >= 0) ? count : 5;
+      if (totalNeeded === 0 || !Array.isArray(allCardsList) || allCardsList.length === 0) {
+        return [];
+      }
+      // P1-2: Tỷ lệ review/new tính linh hoạt dựa trên count
+      const targetReviewCount = Math.min(3, Math.max(0, Math.ceil(totalNeeded * 0.6)));
+      const targetNewCount = Math.max(0, totalNeeded - targetReviewCount);
 
       let legacyProgress = {};
       try {
@@ -286,11 +336,11 @@
       const now = Date.now();
 
       // Phân loại thẻ vào các nhóm ưu tiên:
-      // 1. tier1_dueSrs: thẻ có SRS state và dueAt <= now (đến hạn ôn)
+      // 1. tier1_dueSrs: thẻ có SRS state và dueAt <= now theo ngày lịch local (đến hạn ôn)
       // 2. tier2_legacyUrgent: thẻ legacy unknown/hard chưa có SRS state (bootstrap ưu tiên cao)
       // 3. tier3_legacyKnown: thẻ legacy known chưa có SRS state (bootstrap dần)
       // 4. newPool: thẻ hoàn toàn mới (chưa từng học, không có firstSeenAt, không có legacy/srs)
-      // 5. tier4_futureSrs: thẻ có SRS state nhưng dueAt > now (chưa đến hạn - CHỈ dùng khi cạn kiệt fallback)
+      // 5. tier4_futureSrs: thẻ có SRS state nhưng chưa đến hạn ôn trong ngày (CHỈ dùng khi cạn kiệt fallback)
 
       const tier1_dueSrs = [];
       const tier2_legacyUrgent = [];
@@ -306,7 +356,9 @@
 
         if (srsCard && srsCard.dueAt) {
           const dueMs = new Date(srsCard.dueAt).getTime();
-          if (dueMs <= now) {
+          // P0-1: Xác định due bằng calendar date YYYY-MM-DD
+          const isDue = isDueForDailySession(srsCard.dueAt, now);
+          if (isDue) {
             // Đến hạn hoặc quá hạn
             const overdueMs = now - dueMs;
             const isAgain = (srsCard.lastRating === 1) || (ls && ls.needsReview);
@@ -341,12 +393,13 @@
         }
       });
 
-      // Sắp xếp Tier 1 (SRS Due):
-      // 1. Thẻ overdue nhiều hơn lên trước (dueMs nhỏ hơn tức là quá hạn lâu hơn)
-      // 2. Thẻ có isAgain / needsReview xếp trước nếu overdue tương đương
+      // P1-1: Sắp xếp Tier 1 (SRS Due):
+      // PRIMARY: Thẻ overdue nhiều hơn lên trước (dueMs nhỏ hơn tức là quá hạn lâu hơn)
+      // SECONDARY: Thẻ có isAgain / needsReview xếp trước nếu dueMs bằng nhau
       tier1_dueSrs.sort((a, b) => {
+        if (a.dueMs !== b.dueMs) return a.dueMs - b.dueMs;
         if (a.isAgain !== b.isAgain) return a.isAgain ? -1 : 1;
-        return a.dueMs - b.dueMs;
+        return 0;
       });
 
       // Sắp xếp Tier 2 (Legacy Urgent): unknown trước, rồi đến hard
@@ -368,8 +421,11 @@
 
       function pickFrom(pool, maxNeeded) {
         let picked = 0;
+        const remainingToTotal = totalNeeded - selectedTargets.length;
+        const limit = Math.min(maxNeeded, remainingToTotal);
+        if (limit <= 0) return 0;
         for (let i = 0; i < pool.length; i++) {
-          if (picked >= maxNeeded) break;
+          if (picked >= limit) break;
           const id = pool[i];
           if (!selectedSet.has(id)) {
             selectedSet.add(id);
@@ -380,22 +436,22 @@
         return picked;
       }
 
-      // 1. Chọn tối đa 3 due review
+      // 1. Chọn tối đa targetReviewCount due review
       const pickedReview = pickFrom(reviewPool, targetReviewCount);
 
-      // 2. Chọn tối đa 2 new
+      // 2. Chọn tối đa targetNewCount new
       const pickedNew = pickFrom(newPool, targetNewCount);
 
       // 3. Nếu thiếu review: bù bằng new
       const reviewDeficit = targetReviewCount - pickedReview;
       if (reviewDeficit > 0 && selectedTargets.length < totalNeeded) {
-        pickFrom(newPool, reviewDeficit);
+        pickFrom(newPool, Math.min(reviewDeficit, totalNeeded - selectedTargets.length));
       }
 
       // 4. Nếu thiếu new: bù bằng review
       const newDeficit = targetNewCount - pickedNew;
       if (newDeficit > 0 && selectedTargets.length < totalNeeded) {
-        pickFrom(reviewPool, newDeficit);
+        pickFrom(reviewPool, Math.min(newDeficit, totalNeeded - selectedTargets.length));
       }
 
       // 5. CẠN KIỆT FALLBACK POLICY:
@@ -681,12 +737,23 @@
           }
           targetState.finalRating = fsrsRating;
 
-          // Commit FSRS CHỈ MỘT LẦN DUY NHẤT khi target hoàn thành session
+          // P0-2: Commit FSRS CHỈ MỘT LẦN DUY NHẤT khi target hoàn thành session và kiểm tra kết quả scheduler
           if (!targetState.srsCommitted) {
             const srs = (typeof window !== 'undefined' && window.VokabelSRS) || (typeof global !== 'undefined' && global.VokabelSRS);
+            let srsRecord = null;
             if (srs && typeof srs.scheduleReview === 'function') {
-              srs.scheduleReview(id, fsrsRating);
+              try {
+                srsRecord = srs.scheduleReview(id, fsrsRating);
+              } catch (e) {
+                console.error('[VokabelSession] Lỗi scheduleReview:', e);
+              }
+            }
+            if (srsRecord) {
               targetState.srsCommitted = true;
+              targetState.srsPending = false;
+            } else {
+              targetState.srsCommitted = false;
+              targetState.srsPending = true;
             }
           }
 
@@ -786,12 +853,23 @@
         session.completedTargets.push(id);
         justCompletedTarget = true;
 
-        // Guided Reinforcement: commit FSRS rating = Again (1)
+        // P0-2: Guided Reinforcement: commit FSRS rating = Again (1) và kiểm tra kết quả scheduler
         if (!targetState.srsCommitted) {
           const srs = (typeof window !== 'undefined' && window.VokabelSRS) || (typeof global !== 'undefined' && global.VokabelSRS);
+          let srsRecord = null;
           if (srs && typeof srs.scheduleReview === 'function') {
-            srs.scheduleReview(id, 1);
+            try {
+              srsRecord = srs.scheduleReview(id, 1);
+            } catch (e) {
+              console.error('[VokabelSession] Lỗi scheduleReview reinforcement:', e);
+            }
+          }
+          if (srsRecord) {
             targetState.srsCommitted = true;
+            targetState.srsPending = false;
+          } else {
+            targetState.srsCommitted = false;
+            targetState.srsPending = true;
           }
         }
 

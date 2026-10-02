@@ -1,6 +1,6 @@
 // ==============================================================================
 // VokabelGo - Phase 2 FSRS-6 Acceptance Test Suite
-// Verifies all required Acceptance Tests A through O:
+// Verifies all required Acceptance Tests A through U:
 //   A: New card + Good -> SRS state created, future dueAt
 //   B: Again scheduled earlier than Hard and Good in same conditions
 //   C: Target re-queued multiple times in session -> EXACTLY 1 SRS commit
@@ -16,6 +16,12 @@
 //   M: Phase 1 core loop tests compatibility verified
 //   N: Cloud sync serializes & merges srsState in app_data without schema migration
 //   O: F5 / logout / account switching preserves isolation and integrity
+//   P: Due calendar day (scheduled 22:30 yesterday -> due 08:00 today)
+//   Q: Future day (scheduled tomorrow -> not due today)
+//   R: Failed scheduler (fail-safe target complete, srsPending=true, srsCommitted=false)
+//   S: Pending retry (flushPendingSrsCommits succeeds, idempotent)
+//   T: Overdue priority (due 10 days ago Good comes before due 1 day ago Again)
+//   U: Count contract (returns exact requested counts 4, 3, 5)
 // ==============================================================================
 
 const fs = require('fs');
@@ -537,10 +543,229 @@ localStorage.removeItem('vokabelgo_srs_state_v1');
 const afterLogoutSrs = window.VokabelSRS.load();
 check(Object.keys(afterLogoutSrs.cards).length === 0, 'Logout clears SRS state to clean guest state');
 
+// --------------------------------------------------------------------------
+// TEST P: Due calendar day (reviewed late yesterday, resumed early today)
+// --------------------------------------------------------------------------
+console.log('\n--- TEST P: Due calendar day check ---');
+localStorage.clear();
+
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+yesterday.setHours(22, 30, 0, 0);
+
+const todayEarly = new Date();
+todayEarly.setHours(8, 0, 0, 0);
+
+check(window.VokabelSRS.isDueForDailySession(yesterday.toISOString(), todayEarly) === true,
+  'isDueForDailySession returns true when dueAt was yesterday 22:30 and now is today 08:00');
+
+// Verify it gets picked into tier1_dueSrs
+localStorage.setItem('vokabelgo_srs_state_v1', JSON.stringify({
+  version: 1,
+  engine: "fsrs6",
+  cards: {
+    'p_card_1': {
+      dueAt: yesterday.toISOString(),
+      lastRating: 3,
+      fsrsCard: {}
+    }
+  }
+}));
+
+const pCards = [
+  { id: 'p_card_1', de: 'Gestern', vi: 'Hôm qua' },
+  { id: 'p_card_2', de: 'Neu 1', vi: 'Mới 1' },
+  { id: 'p_card_3', de: 'Neu 2', vi: 'Mới 2' },
+  { id: 'p_card_4', de: 'Neu 3', vi: 'Mới 3' },
+  { id: 'p_card_5', de: 'Neu 4', vi: 'Mới 4' }
+];
+
+const pSelected = window.VokabelSession.selectTargets(pCards, 5);
+check(pSelected.includes('p_card_1'), 'Card scheduled late yesterday is selected for today session');
+check(pSelected[0] === 'p_card_1', 'Due review card is prioritized at head of selected targets');
+
+// --------------------------------------------------------------------------
+// TEST Q: Future day (scheduled tomorrow is not due today)
+// --------------------------------------------------------------------------
+console.log('\n--- TEST Q: Future day check ---');
+localStorage.clear();
+
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+tomorrow.setHours(8, 0, 0, 0);
+
+check(window.VokabelSRS.isDueForDailySession(tomorrow.toISOString(), todayEarly) === false,
+  'isDueForDailySession returns false when dueAt is tomorrow');
+
+localStorage.setItem('vokabelgo_srs_state_v1', JSON.stringify({
+  version: 1,
+  engine: "fsrs6",
+  cards: {
+    'q_card_future': {
+      dueAt: tomorrow.toISOString(),
+      lastRating: 3,
+      fsrsCard: {}
+    }
+  }
+}));
+
+const qCards = [
+  { id: 'q_card_future', de: 'Morgen', vi: 'Ngày mai' },
+  { id: 'q_card_1', de: 'Neu 1', vi: 'Mới 1' },
+  { id: 'q_card_2', de: 'Neu 2', vi: 'Mới 2' },
+  { id: 'q_card_3', de: 'Neu 3', vi: 'Mới 3' },
+  { id: 'q_card_4', de: 'Neu 4', vi: 'Mới 4' },
+  { id: 'q_card_5', de: 'Neu 5', vi: 'Mới 5' }
+];
+
+const qSelected = window.VokabelSession.selectTargets(qCards, 5);
+check(!qSelected.includes('q_card_future'), 'Future card scheduled for tomorrow is NOT selected when enough new cards exist');
+
+// --------------------------------------------------------------------------
+// TEST R: Failed scheduler (fail-safe handling)
+// --------------------------------------------------------------------------
+console.log('\n--- TEST R: Failed scheduler handling ---');
+localStorage.clear();
+
+const rCards = [
+  { id: 'r1', de: 'R1', vi: 'V1' },
+  { id: 'r2', de: 'R2', vi: 'V2' },
+  { id: 'r3', de: 'R3', vi: 'V3' },
+  { id: 'r4', de: 'R4', vi: 'V4' },
+  { id: 'r5', de: 'R5', vi: 'V5' }
+];
+
+window.VokabelSession.resetTodayForTesting();
+const rSession = window.VokabelSession.createTodaySession(rCards);
+
+// Mock scheduleReview returning null to simulate offline/failure
+const origScheduleReview = window.VokabelSRS.scheduleReview;
+window.VokabelSRS.scheduleReview = function() {
+  return null;
+};
+
+// Advance through intro until reaching recall
+let currentSession = window.VokabelSession.getTodaySession();
+while (currentSession && currentSession.queueIndex < currentSession.queue.length && currentSession.queue[currentSession.queueIndex].type === 'intro') {
+  currentSession = window.VokabelSession.handleIntroContinue();
+}
+
+const recallItem = currentSession.queue[currentSession.queueIndex];
+check(recallItem && recallItem.type === 'recall', 'Reached recall step');
+const recallCardId = recallItem.cardId;
+
+const recallResult = window.VokabelSession.handleRecallAnswer('known');
+const updatedTarget = recallResult.session.targetStates[recallCardId];
+
+check(updatedTarget.completed === true, 'Target is completed in session despite scheduler failure');
+check(updatedTarget.srsCommitted === false, 'srsCommitted is false when scheduler returned null');
+check(updatedTarget.srsPending === true, 'srsPending is true signaling commit retry needed');
+
+// --------------------------------------------------------------------------
+// TEST S: Pending retry (flushPendingSrsCommits)
+// --------------------------------------------------------------------------
+console.log('\n--- TEST S: Pending retry & idempotency ---');
+
+// Restore real scheduler with spy
+let schedulerCallCount = 0;
+window.VokabelSRS.scheduleReview = function(id, rating, reviewTime) {
+  schedulerCallCount++;
+  return origScheduleReview.call(window.VokabelSRS, id, rating, reviewTime);
+};
+
+const flushedCount = window.VokabelSession.flushPendingSrsCommits(recallResult.session);
+check(flushedCount === 1, 'flushPendingSrsCommits retried exactly 1 pending target');
+check(updatedTarget.srsCommitted === true, 'targetState.srsCommitted is true after successful flush');
+check(updatedTarget.srsPending === false, 'targetState.srsPending is false after successful flush');
+
+const savedAfterFlush = window.VokabelSession.loadSession();
+check(savedAfterFlush.targetStates[recallCardId].srsCommitted === true, 'Session in localStorage updated with srsCommitted=true');
+
+// Idempotent test: calling flush again must NOT call scheduler again
+const schedulerBeforeSecondFlush = schedulerCallCount;
+const secondFlushCount = window.VokabelSession.flushPendingSrsCommits(recallResult.session);
+check(secondFlushCount === 0, 'Second flush returned 0 items flushed');
+check(schedulerCallCount === schedulerBeforeSecondFlush, 'Scheduler was NOT called on second flush (idempotent)');
+
+// Restore original scheduleReview
+window.VokabelSRS.scheduleReview = origScheduleReview;
+
+// --------------------------------------------------------------------------
+// TEST T: Overdue priority (oldest overdue first)
+// --------------------------------------------------------------------------
+console.log('\n--- TEST T: Overdue priority sort order ---');
+localStorage.clear();
+
+const nowMs = Date.now();
+const due10DaysAgo = new Date(nowMs - 10 * 86400000).toISOString();
+const due1DayAgo = new Date(nowMs - 1 * 86400000).toISOString();
+
+// Card A: lastRating = Good (3), due 10 days ago (more overdue)
+// Card B: lastRating = Again (1), due 1 day ago (less overdue)
+localStorage.setItem('vokabelgo_srs_state_v1', JSON.stringify({
+  version: 1,
+  engine: "fsrs6",
+  cards: {
+    'card_overdue_10d_good': {
+      dueAt: due10DaysAgo,
+      lastRating: 3,
+      fsrsCard: {}
+    },
+    'card_overdue_1d_again': {
+      dueAt: due1DayAgo,
+      lastRating: 1,
+      fsrsCard: {}
+    }
+  }
+}));
+
+const tCards = [
+  { id: 'card_overdue_1d_again', de: 'B', vi: 'B' },
+  { id: 'card_overdue_10d_good', de: 'A', vi: 'A' },
+  { id: 't_new_1', de: 'N1', vi: 'N1' },
+  { id: 't_new_2', de: 'N2', vi: 'N2' },
+  { id: 't_new_3', de: 'N3', vi: 'N3' }
+];
+
+const tSelected = window.VokabelSession.selectTargets(tCards, 5);
+const idxA = tSelected.indexOf('card_overdue_10d_good');
+const idxB = tSelected.indexOf('card_overdue_1d_again');
+
+check(idxA !== -1 && idxB !== -1, 'Both overdue cards are selected in review pool');
+check(idxA < idxB, 'Oldest overdue card (10 days ago, Good) appears BEFORE less overdue card (1 day ago, Again)');
+
+// --------------------------------------------------------------------------
+// TEST U: Count contract (selectTargets respects count parameter)
+// --------------------------------------------------------------------------
+console.log('\n--- TEST U: selectTargets count contract ---');
+localStorage.clear();
+
+const uCards = [
+  { id: 'u1', de: 'U1', vi: 'U1' },
+  { id: 'u2', de: 'U2', vi: 'U2' },
+  { id: 'u3', de: 'U3', vi: 'U3' },
+  { id: 'u4', de: 'U4', vi: 'U4' },
+  { id: 'u5', de: 'U5', vi: 'U5' },
+  { id: 'u6', de: 'U6', vi: 'U6' },
+  { id: 'u7', de: 'U7', vi: 'U7' }
+];
+
+const uTargets4 = window.VokabelSession.selectTargets(uCards, 4);
+check(uTargets4.length === 4, `selectTargets(uCards, 4) returned exactly 4 targets (got ${uTargets4.length})`);
+
+const uTargets3 = window.VokabelSession.selectTargets(uCards, 3);
+check(uTargets3.length === 3, `selectTargets(uCards, 3) returned exactly 3 targets (got ${uTargets3.length})`);
+
+const uTargets5 = window.VokabelSession.selectTargets(uCards, 5);
+check(uTargets5.length === 5, `selectTargets(uCards, 5) returned exactly 5 targets (got ${uTargets5.length})`);
+
+const uTargets0 = window.VokabelSession.selectTargets(uCards, 0);
+check(uTargets0.length === 0, `selectTargets(uCards, 0) returned 0 targets`);
+
 console.log('\n====================================================');
 console.log(`ACCEPTANCE SUMMARY: ${passedTests} / ${totalTests} PASSED`);
 if (passedTests === totalTests) {
-  console.log('🎉 ALL PHASE 2 TESTS (TEST A -> TEST O) PASSED SUCCESSFULLY!');
+  console.log('🎉 ALL PHASE 2 TESTS (TEST A -> TEST U) PASSED SUCCESSFULLY!');
 } else {
   console.log('⚠️ SOME TESTS FAILED. PLEASE REVIEW OUTPUT ABOVE.');
 }
