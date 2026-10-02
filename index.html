@@ -7499,6 +7499,46 @@ input.search:focus {
                   <div class="session-reinforce-note">Từ này sẽ được ưu tiên ôn lại ở phiên sau.</div>
                 </div>
               </div>
+
+              <!-- 4. Session TYPING Action Box (Phase 3 Objective Verification) -->
+              <div class="session-typing-box hidden" id="sessionTypingBox">
+                <div class="session-typing-header">
+                  <span class="session-typing-icon">✍️</span>
+                  <span class="session-typing-title">TỰ NHỚ TIẾNG ĐỨC</span>
+                </div>
+                <div class="session-typing-prompt-wrap">
+                  <div class="session-typing-prompt-label">NGHĨA TIẾNG VIỆT</div>
+                  <div class="session-typing-prompt" id="sessionTypingPrompt"></div>
+                </div>
+
+                <div class="session-typing-input-wrap" id="sessionTypingInputWrap">
+                  <input type="text" id="sessionTypingInput" class="session-typing-input" placeholder="Gõ từ hoặc cụm tiếng Đức..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Nhập từ hoặc cụm tiếng Đức tương ứng">
+                  
+                  <div class="session-umlaut-bar" id="sessionUmlautBar" role="toolbar" aria-label="Ký tự đặc biệt tiếng Đức">
+                    <button type="button" class="btn-session-umlaut" data-char="ä" title="Chèn ä" onclick="insertSessionUmlaut('ä', event)">ä</button>
+                    <button type="button" class="btn-session-umlaut" data-char="ö" title="Chèn ö" onclick="insertSessionUmlaut('ö', event)">ö</button>
+                    <button type="button" class="btn-session-umlaut" data-char="ü" title="Chèn ü" onclick="insertSessionUmlaut('ü', event)">ü</button>
+                    <button type="button" class="btn-session-umlaut" data-char="ß" title="Chèn ß" onclick="insertSessionUmlaut('ß', event)">ß</button>
+                  </div>
+
+                  <div class="session-typing-actions">
+                    <button type="button" class="btn-session-typing-submit" id="btnSessionTypingSubmit" onclick="handleSessionTypingSubmit(event)">
+                      <span>Kiểm tra ↵</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="session-typing-feedback hidden" id="sessionTypingFeedback" aria-live="polite">
+                  <div class="session-typing-feedback-badge" id="sessionTypingFeedbackBadge"></div>
+                  <div class="session-typing-feedback-msg" id="sessionTypingFeedbackMsg"></div>
+                  <div class="session-typing-canonical" id="sessionTypingCanonical"></div>
+                  <div class="session-typing-feedback-cta">
+                    <button type="button" class="btn-session-typing-continue" id="btnSessionTypingContinue" onclick="handleSessionTypingContinue(event)">
+                      <span>Tiếp tục (Enter) →</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- BACK FACE: REVEAL + RATINGS + PROGRESSIVE DISCLOSURE -->
@@ -8731,6 +8771,7 @@ input.search:focus {
 <!-- FSRS-6 Spaced Repetition Engine (ts-fsrs@5.4.2 vendored UMD) -->
 <script src="vendor/ts-fsrs/index.umd.js"></script>
 <script src="fsrs-srs.js"></script>
+<script src="typing-verification.js"></script>
 <script src="learning-session.js"></script>
 
 <script>
@@ -13584,7 +13625,10 @@ document.getElementById('card').onclick = () => {
     if (s && !s.completed) {
       const cur = s.queue[s.queueIndex];
       if (cur && (cur.type === 'intro' || cur.type === 'reinforce')) {
-        return; // P1-2: Không lật thẻ ở tương tác intro / reinforce
+        return;
+      }
+      if (cur && cur.type === 'typing') {
+        return;
       }
     }
   }
@@ -13615,6 +13659,19 @@ function getCurrentlyDisplayedLearningCard() {
 function speak(){
   const c = getCurrentlyDisplayedLearningCard();
   if(!c) return;
+  if (window.isStudySessionMode && window.VokabelSession) {
+    const s = window.VokabelSession.getTodaySession();
+    if (s && !s.completed) {
+      const cur = s.queue[s.queueIndex];
+      if (cur && cur.type === 'typing') {
+        const ts = s.targetStates[cur.cardId];
+        // Phase 3 TEST L: Trước submit: German audio không phát (tránh lộ đáp án). Sau submit: có thể phát.
+        if (!ts || !ts.typingSubmitted) {
+          return;
+        }
+      }
+    }
+  }
   if(!('speechSynthesis' in window)) return alert('Trình duyệt này không hỗ trợ đọc giọng nói.');
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance((c.term || '').replace(/[|]/g,''));
@@ -13932,58 +13989,135 @@ function renderSessionInteraction() {
   const recallAction = document.getElementById('activeRecallFrontAction');
   const introBox = document.getElementById('sessionIntroBox');
   const reinfBox = document.getElementById('sessionReinforceBox');
+  const typingBox = document.getElementById('sessionTypingBox');
 
-  if (interaction.type === 'intro') {
+  if (interaction.type === 'typing') {
     if (badge) {
-      badge.textContent = '✨ TỪ MỚI';
-      badge.className = 'session-badge intro';
+      badge.textContent = '✍️ TỰ NHỚ TIẾNG ĐỨC';
+      badge.className = 'session-badge typing';
     }
+    // HIDE German term and metadata on front to avoid revealing answer!
+    if (frontTerm) frontTerm.style.display = 'none';
+    if (frontMeta) frontMeta.style.display = 'none';
     if (recallAction) recallAction.classList.add('hidden');
+    if (introBox) introBox.classList.add('hidden');
     if (reinfBox) reinfBox.classList.add('hidden');
-    if (introBox) {
-      introBox.classList.remove('hidden');
-      const mEl = document.getElementById('sessionIntroMeaning');
-      if (mEl) mEl.textContent = c.meaning || '';
-      const exEl = document.getElementById('sessionIntroExample');
-      if (exEl) {
-        if (c.example) {
-          exEl.textContent = `Ví dụ: ${c.example}`;
-          exEl.style.display = 'block';
+
+    if (typingBox) {
+      typingBox.classList.remove('hidden');
+      const promptEl = document.getElementById('sessionTypingPrompt');
+      if (promptEl) promptEl.textContent = c.meaning || '';
+
+      const inputWrap = document.getElementById('sessionTypingInputWrap');
+      const inputEl = document.getElementById('sessionTypingInput');
+      const fbBox = document.getElementById('sessionTypingFeedback');
+      const fbBadge = document.getElementById('sessionTypingFeedbackBadge');
+      const fbMsg = document.getElementById('sessionTypingFeedbackMsg');
+      const fbCanonical = document.getElementById('sessionTypingCanonical');
+
+      const ts = interaction.targetState || {};
+
+      if (ts.typingSubmitted) {
+        if (inputWrap) inputWrap.classList.add('hidden');
+        if (fbBox) fbBox.classList.remove('hidden');
+
+        const res = ts.lastObjectiveResult;
+        if (res === 'correct') {
+          if (fbBadge) {
+            fbBadge.textContent = '✓ CHÍNH XÁC';
+            fbBadge.className = 'session-typing-feedback-badge correct';
+          }
+          if (fbMsg) fbMsg.textContent = 'Xuất sắc! Bạn đã tự nhớ đúng từ tiếng Đức.';
+        } else if (res === 'almost') {
+          if (fbBadge) {
+            fbBadge.textContent = '⚠️ GẦN ĐÚNG';
+            fbBadge.className = 'session-typing-feedback-badge almost';
+          }
+          if (fbMsg) fbMsg.textContent = ts.typingFeedback || 'Gần đúng, hãy chú ý mạo từ hoặc chính tả.';
         } else {
-          exEl.style.display = 'none';
+          if (fbBadge) {
+            fbBadge.textContent = '✕ CHƯA CHÍNH XÁC';
+            fbBadge.className = 'session-typing-feedback-badge wrong';
+          }
+          if (fbMsg) fbMsg.textContent = 'Chưa chính xác. Hãy ghi nhớ đáp án chuẩn bên dưới:';
+        }
+
+        if (fbCanonical) {
+          fbCanonical.innerHTML = `<span class="canonical-label">Đáp án đúng:</span> <strong>${esc(ts.canonicalAnswer || c.term || '')}</strong>`;
+        }
+
+        const btnCont = document.getElementById('btnSessionTypingContinue');
+        if (btnCont) {
+          setTimeout(() => btnCont.focus(), 50);
+        }
+      } else {
+        if (inputWrap) inputWrap.classList.remove('hidden');
+        if (fbBox) fbBox.classList.add('hidden');
+        if (inputEl) {
+          inputEl.value = '';
+          inputEl.disabled = false;
+          setTimeout(() => inputEl.focus(), 50);
         }
       }
     }
-  } else if (interaction.type === 'reinforce') {
-    if (badge) {
-      badge.textContent = '💡 CỦNG CỐ KIẾN THỨC';
-      badge.className = 'session-badge reinforce';
-    }
-    if (recallAction) recallAction.classList.add('hidden');
-    if (introBox) introBox.classList.add('hidden');
-    if (reinfBox) {
-      reinfBox.classList.remove('hidden');
-      const mEl = document.getElementById('sessionReinforceMeaning');
-      if (mEl) mEl.textContent = c.meaning || '';
-      const dEl = document.getElementById('sessionReinforceDetails');
-      if (dEl) {
-        let details = [];
-        if (c.grammar) details.push(`Ngữ pháp: ${c.grammar}`);
-        if (c.example) details.push(`Ví dụ: ${c.example}`);
-        if (c.note) details.push(`Lưu ý: ${c.note}`);
-        dEl.textContent = details.join(' · ');
-        dEl.style.display = details.length ? 'block' : 'none';
-      }
-    }
   } else {
-    // 'recall'
-    if (badge) {
-      badge.textContent = '🧠 ACTIVE RECALL';
-      badge.className = 'session-badge recall';
+    // Normal / Intro / Reinforce: restore frontTerm & frontMeta
+    if (frontTerm) frontTerm.style.display = '';
+    if (frontMeta) frontMeta.style.display = '';
+    if (typingBox) typingBox.classList.add('hidden');
+
+    if (interaction.type === 'intro') {
+      if (badge) {
+        badge.textContent = '✨ TỪ MỚI';
+        badge.className = 'session-badge intro';
+      }
+      if (recallAction) recallAction.classList.add('hidden');
+      if (reinfBox) reinfBox.classList.add('hidden');
+      if (introBox) {
+        introBox.classList.remove('hidden');
+        const mEl = document.getElementById('sessionIntroMeaning');
+        if (mEl) mEl.textContent = c.meaning || '';
+        const exEl = document.getElementById('sessionIntroExample');
+        if (exEl) {
+          if (c.example) {
+            exEl.textContent = `Ví dụ: ${c.example}`;
+            exEl.style.display = 'block';
+          } else {
+            exEl.style.display = 'none';
+          }
+        }
+      }
+    } else if (interaction.type === 'reinforce') {
+      if (badge) {
+        badge.textContent = '💡 CỦNG CỐ KIẾN THỨC';
+        badge.className = 'session-badge reinforce';
+      }
+      if (recallAction) recallAction.classList.add('hidden');
+      if (introBox) introBox.classList.add('hidden');
+      if (reinfBox) {
+        reinfBox.classList.remove('hidden');
+        const mEl = document.getElementById('sessionReinforceMeaning');
+        if (mEl) mEl.textContent = c.meaning || '';
+        const dEl = document.getElementById('sessionReinforceDetails');
+        if (dEl) {
+          let details = [];
+          if (c.grammar) details.push(`Ngữ pháp: ${c.grammar}`);
+          if (c.example) details.push(`Ví dụ: ${c.example}`);
+          if (c.note) details.push(`Lưu ý: ${c.note}`);
+          dEl.textContent = details.join(' · ');
+          dEl.style.display = details.length ? 'block' : 'none';
+        }
+      }
+    } else {
+      // 'recall'
+      if (badge) {
+        badge.textContent = '🧠 ACTIVE RECALL';
+        badge.className = 'session-badge recall';
+      }
+      if (introBox) introBox.classList.add('hidden');
+      if (reinfBox) reinfBox.classList.add('hidden');
+      if (recallAction) recallAction.classList.remove('hidden');
     }
-    if (introBox) introBox.classList.add('hidden');
-    if (reinfBox) reinfBox.classList.add('hidden');
-    if (recallAction) recallAction.classList.remove('hidden');
   }
 
   saveLearningResumeState({
@@ -14009,6 +14143,67 @@ function handleSessionReinforceContinue(e) {
     checkDailyMilestoneAndReward();
   }
   renderSessionInteraction();
+}
+
+function handleSessionTypingSubmit(e) {
+  if (e) e.stopPropagation();
+  if (!window.VokabelSession) return;
+
+  const inputEl = document.getElementById('sessionTypingInput');
+  const val = inputEl ? inputEl.value : '';
+
+  const res = window.VokabelSession.handleTypingSubmit(val);
+  if (!res) return;
+
+  if (res.result === 'correct') {
+    try { if (typeof playMatchSound === 'function') playMatchSound(); } catch(err) {}
+    renderSessionInteraction();
+    setTimeout(() => {
+      const current = window.VokabelSession.getTodaySession();
+      if (current && !current.completed && current.queue[current.queueIndex] && current.queue[current.queueIndex].type === 'typing') {
+        const advRes = window.VokabelSession.handleTypingContinue();
+        renderSessionInteraction();
+        if (advRes && advRes.completed) {
+          if (typeof updateTodayDashboard === 'function') updateTodayDashboard();
+          checkDailyMilestoneAndReward();
+        }
+      }
+    }, 450);
+  } else {
+    try { if (typeof playMatchWrong === 'function') playMatchWrong(); } catch(err) {}
+    renderSessionInteraction();
+  }
+}
+
+function handleSessionTypingContinue(e) {
+  if (e) e.stopPropagation();
+  if (!window.VokabelSession) return;
+  const res = window.VokabelSession.handleTypingContinue();
+  if (res && res.completed) {
+    if (typeof updateTodayDashboard === 'function') updateTodayDashboard();
+    checkDailyMilestoneAndReward();
+  }
+  renderSessionInteraction();
+}
+
+function insertSessionUmlaut(char, e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const inputEl = document.getElementById('sessionTypingInput');
+  if (!inputEl) return;
+
+  const start = inputEl.selectionStart || inputEl.value.length;
+  const end = inputEl.selectionEnd || inputEl.value.length;
+  const text = inputEl.value;
+
+  inputEl.value = text.slice(0, start) + char + text.slice(end);
+  const newPos = start + char.length;
+  inputEl.setSelectionRange(newPos, newPos);
+  inputEl.focus();
+
+  try { if (typeof playMechanicalClick === 'function') playMechanicalClick(); } catch(err) {}
 }
 
 function handleSessionRate(rating) {
@@ -14069,6 +14264,12 @@ function exitSessionToFreeStudy() {
   if (introBox) introBox.classList.add('hidden');
   const reinfBox = document.getElementById('sessionReinforceBox');
   if (reinfBox) reinfBox.classList.add('hidden');
+  const typingBox = document.getElementById('sessionTypingBox');
+  if (typingBox) typingBox.classList.add('hidden');
+  const frontTerm = document.getElementById('frontTerm');
+  if (frontTerm) frontTerm.style.display = '';
+  const frontMeta = document.getElementById('frontMeta');
+  if (frontMeta) frontMeta.style.display = '';
   const actAction = document.getElementById('activeRecallFrontAction');
   if (actAction) actAction.classList.remove('hidden');
   render();
@@ -14085,6 +14286,12 @@ function handleSessionReturnToday() {
   if (introBox) introBox.classList.add('hidden');
   const reinfBox = document.getElementById('sessionReinforceBox');
   if (reinfBox) reinfBox.classList.add('hidden');
+  const typingBox = document.getElementById('sessionTypingBox');
+  if (typingBox) typingBox.classList.add('hidden');
+  const frontTerm = document.getElementById('frontTerm');
+  if (frontTerm) frontTerm.style.display = '';
+  const frontMeta = document.getElementById('frontMeta');
+  if (frontMeta) frontMeta.style.display = '';
   const cardEl = document.getElementById('card');
   if (cardEl) {
     cardEl.classList.remove('hidden');
@@ -14100,6 +14307,25 @@ function handleSessionKeydown(e) {
   if (!s || s.completed) return;
   const currentItem = s.queue[s.queueIndex];
   if (!currentItem) return;
+
+  if (currentItem.type === 'typing') {
+    const ts = s.targetStates[currentItem.cardId] || {};
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (ts.typingSubmitted) {
+        handleSessionTypingContinue(e);
+      } else {
+        handleSessionTypingSubmit(e);
+      }
+    } else if (e.key === 's' || e.key === 'S') {
+      // Phase 3 TEST L: Audio leak prevention: only allow audio AFTER submit
+      if (ts.typingSubmitted) {
+        speak();
+      }
+    }
+    // Block ratings 1, 2, 3 and space flip during typing
+    return;
+  }
 
   if (currentItem.type === 'intro') {
     if (e.code === 'Space' || e.key === 'Enter' || e.key === 'ArrowRight') {

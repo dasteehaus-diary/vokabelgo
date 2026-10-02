@@ -477,9 +477,9 @@
     },
 
     // --------------------------------------------------------------------------
-    // 4. QUEUE BUILDER (Xen kẽ Intro & Active Recall)
+    // 4. QUEUE BUILDER (Xen kẽ Intro & Active Recall + Phase 3 Typing Verification)
     // --------------------------------------------------------------------------
-    buildInitialQueue: function(targetIds) {
+    buildInitialQueue: function(targetIds, cardsMap) {
       let legacyProgress = {};
       try {
         const raw = localStorage.getItem(LS_LEGACY_PROGRESS);
@@ -497,6 +497,15 @@
           const rawSrs = localStorage.getItem('vokabelgo_srs_state_v1');
           if (rawSrs) srsState = JSON.parse(rawSrs) || { cards: {} };
         } catch (e) {}
+      }
+
+      // Đảm bảo cardsMap luôn sẵn sàng
+      if (!cardsMap || typeof cardsMap !== 'object' || Object.keys(cardsMap).length === 0) {
+        cardsMap = {};
+        let list = [];
+        if (typeof window !== 'undefined' && typeof window.allCards === 'function') list = window.allCards();
+        else if (typeof global !== 'undefined' && typeof global.allCards === 'function') list = global.allCards();
+        (list || []).forEach(c => { if (c && c.id) cardsMap[c.id] = c; });
       }
 
       const introTargets = [];
@@ -522,10 +531,7 @@
         reviewTargets.forEach(id => {
           queue.push({ type: 'recall', cardId: id });
         });
-        return queue;
-      }
-
-      if (reviewTargets.length === 0) {
+      } else if (reviewTargets.length === 0) {
         // Cả 5 đều là từ mới: xen kẽ thông minh để luôn có ít nhất 2 items giữa Intro và Recall
         // [Intro 0, Intro 1, Intro 2, Recall 0, Intro 3, Recall 1, Intro 4, Recall 2, Recall 3, Recall 4]
         introTargets.forEach((id, idx) => {
@@ -550,27 +556,81 @@
           interleaved.push(recalls[2]);
           if (recalls.length > 3) interleaved.push(recalls[3]);
           if (recalls.length > 4) interleaved.push(recalls[4]);
-          return interleaved;
+          queue.length = 0;
+          queue.push(...interleaved);
+        } else {
+          queue.length = 0;
+          queue.push(...intros, ...recalls);
         }
-        return [...intros, ...recalls];
+      } else {
+        // Hỗn hợp Review + New (ví dụ: 3 Review + 2 New)
+        // Intro N0, Recall R0, Intro N1, Recall N0 (cách 2 bước), Recall R1, Recall N1 (cách 2 bước), Recall R2
+        let revIdx = 0;
+        let newIdx = 0;
+
+        while (newIdx < introTargets.length || revIdx < reviewTargets.length) {
+          if (newIdx < introTargets.length) {
+            queue.push({ type: 'intro', cardId: introTargets[newIdx] });
+          }
+          if (revIdx < reviewTargets.length) {
+            queue.push({ type: 'recall', cardId: reviewTargets[revIdx] });
+            revIdx++;
+          }
+          if (newIdx < introTargets.length) {
+            queue.push({ type: 'recall', cardId: introTargets[newIdx] });
+            newIdx++;
+          }
+        }
       }
 
-      // Hỗn hợp Review + New (ví dụ: 3 Review + 2 New)
-      // Intro N0, Recall R0, Intro N1, Recall N0 (cách 2 bước), Recall R1, Recall N1 (cách 2 bước), Recall R2
-      let revIdx = 0;
-      let newIdx = 0;
+      // Phase 3: Chọn review targets trưởng thành đủ điều kiện để thực hiện Objective Typing Verification
+      const tvModule = (typeof window !== 'undefined' && window.VokabelTypingVerification) ||
+                       (typeof global !== 'undefined' && global.VokabelTypingVerification) ||
+                       (typeof require === 'function' ? (function() { try { return require('./typing-verification.js'); } catch(e){ return null; } })() : null);
 
-      while (newIdx < introTargets.length || revIdx < reviewTargets.length) {
-        if (newIdx < introTargets.length) {
-          queue.push({ type: 'intro', cardId: introTargets[newIdx] });
-        }
-        if (revIdx < reviewTargets.length) {
-          queue.push({ type: 'recall', cardId: reviewTargets[revIdx] });
-          revIdx++;
-        }
-        if (newIdx < introTargets.length) {
-          queue.push({ type: 'recall', cardId: introTargets[newIdx] });
-          newIdx++;
+      if (tvModule && typeof tvModule.isTypingEligible === 'function' && reviewTargets.length > 0) {
+        const typingCandidates = [];
+        reviewTargets.forEach(id => {
+          const card = cardsMap[id];
+          if (!card || !tvModule.isTypingEligible(card)) return;
+
+          const srsCard = (srsState.cards && srsState.cards[id]) ? srsState.cards[id] : null;
+          const historyCount = (srsCard && typeof srsCard.historyCount === 'number') ? srsCard.historyCount : 0;
+          // Chỉ chọn review target đã có lịch sử học FSRS >= 2
+          if (!srsCard || historyCount < 2) return;
+
+          const lastRating = srsCard.lastRating || 3;
+          const ratingWeight = (lastRating === 3 ? 2 : (lastRating === 2 ? 1 : 0));
+          typingCandidates.push({
+            id: id,
+            historyCount: historyCount,
+            ratingWeight: ratingWeight,
+            dueMs: srsCard.dueAt ? new Date(srsCard.dueAt).getTime() : 0
+          });
+        });
+
+        if (typingCandidates.length > 0) {
+          // Sắp xếp deterministic: ưu tiên nhiều lịch sử hơn, rating Good/Hard, quá hạn hơn, stable ID
+          typingCandidates.sort((a, b) => {
+            if (b.historyCount !== a.historyCount) return b.historyCount - a.historyCount;
+            if (b.ratingWeight !== a.ratingWeight) return b.ratingWeight - a.ratingWeight;
+            if (a.dueMs !== b.dueMs) return a.dueMs - b.dueMs;
+            return a.id.localeCompare(b.id);
+          });
+
+          // Mặc định chọn 1; tối đa 2 CHỈ khi candidate thứ 2 rất mature (historyCount >= 3)
+          const chosenTypingIds = [typingCandidates[0].id];
+          if (typingCandidates.length >= 2 && typingCandidates[1].historyCount >= 3) {
+            chosenTypingIds.push(typingCandidates[1].id);
+          }
+
+          // Gán vào queue: thay thế lượt recall đầu tiên của cardId bằng typing
+          chosenTypingIds.forEach(tId => {
+            const firstRecallIdx = queue.findIndex(it => it.cardId === tId && it.type === 'recall');
+            if (firstRecallIdx !== -1) {
+              queue[firstRecallIdx].type = 'typing';
+            }
+          });
         }
       }
 
@@ -589,10 +649,16 @@
 
       const deck = deckName || 'Tất cả bộ';
       const targetIds = this.selectTargets(allCardsList, 5);
-      const queue = this.buildInitialQueue(targetIds);
+
+      const cardsMap = {};
+      (allCardsList || []).forEach(c => { if (c && c.id) cardsMap[c.id] = c; });
+      this._lastCardsMap = cardsMap;
+
+      const queue = this.buildInitialQueue(targetIds, cardsMap);
 
       const targetStates = {};
       targetIds.forEach(id => {
+        const isTyping = queue.some(it => it.cardId === id && it.type === 'typing');
         targetStates[id] = {
           introduced: false,
           completed: false,
@@ -600,7 +666,10 @@
           failures: 0,
           consecutiveSuccess: 0,
           needsReview: false,
-          method: null
+          method: null,
+          verificationMode: isTyping ? 'typing' : 'recall',
+          typingSubmitted: false,
+          lastObjectiveResult: null
         };
       });
 
@@ -905,6 +974,203 @@
         justCompletedSession: justCompletedSession,
         targetState: targetState
       };
+    },
+
+    // --------------------------------------------------------------------------
+    // Phase 3: OBJECTIVE RECALL / TYPING VERIFICATION HANDLERS
+    // --------------------------------------------------------------------------
+    handleTypingSubmit: function(userInput) {
+      const session = this.getTodaySession();
+      if (!session || session.completed) return null;
+
+      const currentItem = session.queue[session.queueIndex];
+      if (!currentItem || currentItem.type !== 'typing') return null;
+
+      const id = currentItem.cardId;
+      const targetState = session.targetStates[id] || { attempts: 0, failures: 0, completed: false, recallRatings: [] };
+
+      // Idempotency: Nếu đã submit trong bước này và đang chờ Continue
+      if (targetState.typingSubmitted) {
+        return {
+          session: session,
+          cardId: id,
+          result: targetState.lastObjectiveResult,
+          feedback: targetState.typingFeedback,
+          canonical: targetState.canonicalAnswer,
+          targetState: targetState,
+          alreadySubmitted: true
+        };
+      }
+
+      // Tìm kiếm thông tin card
+      let card = null;
+      if (typeof window !== 'undefined' && typeof window.allCards === 'function') {
+        const list = window.allCards();
+        card = (list || []).find(c => c.id === id);
+      } else if (typeof global !== 'undefined' && typeof global.allCards === 'function') {
+        const list = global.allCards();
+        card = (list || []).find(c => c.id === id);
+      }
+      if (!card && this._lastCardsMap && this._lastCardsMap[id]) {
+        card = this._lastCardsMap[id];
+      }
+      if (!card) {
+        card = { id: id, term: id, meaning: '' };
+      }
+
+      const tvModule = (typeof window !== 'undefined' && window.VokabelTypingVerification) ||
+                       (typeof global !== 'undefined' && global.VokabelTypingVerification) ||
+                       (typeof require === 'function' ? (function() { try { return require('./typing-verification.js'); } catch(e){ return null; } })() : null);
+
+      let canonical = card.term || card.de || '';
+      let graded = {
+        result: 'wrong',
+        mappedRating: 'unknown',
+        canonical: canonical,
+        feedback: `Chưa chính xác — đáp án: ${canonical}`
+      };
+
+      if (tvModule && typeof tvModule.gradeTypingAnswer === 'function') {
+        canonical = tvModule.getCanonicalTypingAnswer(card);
+        graded = tvModule.gradeTypingAnswer(userInput, canonical, card);
+      } else {
+        const normIn = String(userInput || '').trim().toLowerCase();
+        const normCan = String(canonical || '').trim().toLowerCase();
+        if (normIn === normCan) {
+          graded = { result: 'correct', mappedRating: 'known', canonical: canonical, feedback: 'Chính xác! Rất tốt.' };
+        } else {
+          graded = { result: 'wrong', mappedRating: 'unknown', canonical: canonical, feedback: `Chưa chính xác — đáp án: ${canonical}` };
+        }
+      }
+
+      targetState.attempts = (targetState.attempts || 0) + 1;
+      targetState.recallRatings = targetState.recallRatings || [];
+      targetState.recallRatings.push(graded.mappedRating);
+      targetState.lastObjectiveResult = graded.result;
+      targetState.lastTypingAnswer = userInput;
+      targetState.canonicalAnswer = canonical;
+      targetState.typingFeedback = graded.feedback;
+      targetState.typingSubmitted = true;
+
+      let justCompletedTarget = false;
+      let justCompletedSession = false;
+
+      if (graded.result === 'correct') {
+        // CORRECT: Hoàn thành target ngay lập tức nếu đúng
+        targetState.completed = true;
+        targetState.needsReview = false;
+        targetState.method = 'typing';
+        targetState.consecutiveSuccess = (targetState.consecutiveSuccess || 0) + 1;
+
+        VokabelLearningState.recordRecallSuccess(id);
+        this._updateLegacyProgress(id, 'known');
+
+        if (!session.completedTargets.includes(id)) {
+          session.completedTargets.push(id);
+          justCompletedTarget = true;
+
+          // Xác định FSRS rating cho toàn bộ session của target này
+          let fsrsRating = 3; // Good
+          if (targetState.recallRatings.includes('unknown')) {
+            fsrsRating = 1; // Again
+          } else if (targetState.recallRatings.includes('hard')) {
+            fsrsRating = 2; // Hard
+          }
+          targetState.finalRating = fsrsRating;
+
+          // P0-2: Commit FSRS CHỈ MỘT LẦN DUY NHẤT và kiểm tra kết quả scheduler
+          if (!targetState.srsCommitted) {
+            const srs = (typeof window !== 'undefined' && window.VokabelSRS) || (typeof global !== 'undefined' && global.VokabelSRS);
+            let srsRecord = null;
+            if (srs && typeof srs.scheduleReview === 'function') {
+              try {
+                srsRecord = srs.scheduleReview(id, fsrsRating);
+              } catch (e) {
+                console.error('[VokabelSession] Lỗi scheduleReview typing:', e);
+              }
+            }
+            if (srsRecord) {
+              targetState.srsCommitted = true;
+              targetState.srsPending = false;
+            } else {
+              targetState.srsCommitted = false;
+              targetState.srsPending = true;
+            }
+          }
+
+          if (typeof window !== 'undefined' && typeof window.onCardReviewedForFeed === 'function') {
+            try { window.onCardReviewedForFeed(id); } catch (e) {}
+          } else if (typeof window !== 'undefined' && window.VokabelDaily && typeof window.VokabelDaily.reviewCard === 'function') {
+            window.VokabelDaily.reviewCard(id);
+          }
+        }
+
+        // Xóa mọi item thừa của thẻ này trong tương lai
+        for (let k = session.queue.length - 1; k > session.queueIndex; k--) {
+          if (session.queue[k].cardId === id) {
+            session.queue.splice(k, 1);
+          }
+        }
+      } else {
+        // ALMOST hoặc WRONG: Chưa hoàn thành, ghi nhận thất bại và requeue
+        targetState.failures = (targetState.failures || 0) + 1;
+        targetState.consecutiveSuccess = 0;
+        targetState.needsReview = true;
+
+        VokabelLearningState.recordRecallFailure(id, graded.mappedRating);
+        this._updateLegacyProgress(id, graded.mappedRating);
+
+        // FAIL-SAFE: Nếu sai 3 lần trong session -> Guided Reinforcement
+        if (targetState.failures >= 3) {
+          const insertPos = Math.min(session.queueIndex + 3, session.queue.length);
+          session.queue.splice(insertPos, 0, { type: 'reinforce', cardId: id });
+        } else {
+          // Re-queue thành bước recall sau 2-3 items
+          const insertPos = Math.min(session.queueIndex + 3, session.queue.length);
+          session.queue.splice(insertPos, 0, { type: 'recall', cardId: id });
+        }
+      }
+
+      session.targetStates[id] = targetState;
+
+      if (session.completedTargets.length >= session.targetIds.length) {
+        session.completed = true;
+        session.completedAt = new Date().toISOString();
+        justCompletedSession = true;
+      }
+
+      this.saveSession(session);
+
+      return {
+        session: session,
+        cardId: id,
+        result: graded.result,
+        mappedRating: graded.mappedRating,
+        feedback: graded.feedback,
+        canonical: canonical,
+        justCompletedTarget: justCompletedTarget,
+        justCompletedSession: justCompletedSession,
+        targetState: targetState
+      };
+    },
+
+    // Tiếp tục sau bước Typing Verification
+    handleTypingContinue: function() {
+      const session = this.getTodaySession();
+      if (!session) return null;
+
+      const currentItem = session.queue[session.queueIndex];
+      if (!currentItem || currentItem.type !== 'typing') return null;
+
+      const id = currentItem.cardId;
+      const targetState = session.targetStates[id];
+      if (targetState) {
+        targetState.typingSubmitted = false;
+      }
+
+      session.queueIndex = (session.queueIndex || 0) + 1;
+      this.saveSession(session);
+      return session;
     },
 
     // Helper cập nhật legacy dmf_flash_progress_v2
