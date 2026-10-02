@@ -7452,7 +7452,7 @@ input.search:focus {
                 <span>📚</span>
                 <span>Ôn tự do các thẻ khác</span>
               </button>
-              <button type="button" class="btn-session-secondary-cta" onclick="setPrimaryHub('today')">
+              <button type="button" class="btn-session-secondary-cta" id="btnSessionReturnToday" onclick="handleSessionReturnToday()">
                 <span>🏠</span>
                 <span>Về trang Hôm nay</span>
               </button>
@@ -13464,6 +13464,10 @@ function esc(s){
 
 function render(){
   if (window.isStudySessionMode) return;
+  const scBox = document.getElementById('sessionCompleteBox');
+  if (scBox) scBox.classList.add('hidden');
+  const cardEl = document.getElementById('card');
+  if (cardEl) cardEl.classList.remove('hidden');
   const total=filtered.length;
   const _tc=document.getElementById('totalCount');if(_tc)_tc.textContent=total;
   if(!total){
@@ -13784,12 +13788,24 @@ function startOrResumeTodaySession() {
   const list = typeof allCards === 'function' ? allCards() : [];
   if (!list.length) return;
 
+  let session = window.VokabelSession.getTodaySession();
+  if (session && session.completed) {
+    if (typeof exitSessionToFreeStudy === 'function') {
+      exitSessionToFreeStudy();
+    } else {
+      window.isStudySessionMode = false;
+      if (typeof setStudySessionUiLock === 'function') setStudySessionUiLock(false);
+    }
+    if (typeof setPrimaryHub === 'function') setPrimaryHub('study');
+    if (typeof setStudySubMode === 'function') setStudySubMode('flash');
+    return;
+  }
+
   window.isStudySessionMode = true;
   setStudySessionUiLock(true);
   setPrimaryHub('study');
   setStudySubMode('flash');
 
-  let session = window.VokabelSession.getTodaySession();
   if (!session) {
     session = window.VokabelSession.createTodaySession(list);
   }
@@ -13799,7 +13815,6 @@ function startOrResumeTodaySession() {
 
 function renderSessionInteraction() {
   if (!window.VokabelSession) return;
-  setStudySessionUiLock(true);
   const list = typeof allCards === 'function' ? allCards() : [];
   const cardsMap = {};
   list.forEach(c => { cardsMap[c.id] = c; });
@@ -13814,6 +13829,8 @@ function renderSessionInteraction() {
   const completeBox = document.getElementById('sessionCompleteBox');
 
   if (interaction.completed) {
+    window.isStudySessionMode = false;
+    setStudySessionUiLock(false);
     if (cardEl) cardEl.classList.add('hidden');
     if (completeBox) completeBox.classList.remove('hidden');
     const badge = document.getElementById('sessionStepBadge');
@@ -13834,6 +13851,9 @@ function renderSessionInteraction() {
     }
     return;
   }
+
+  window.isStudySessionMode = true;
+  setStudySessionUiLock(true);
 
   if (completeBox) completeBox.classList.add('hidden');
   if (cardEl) {
@@ -14051,6 +14071,27 @@ function exitSessionToFreeStudy() {
   render();
 }
 
+function handleSessionReturnToday() {
+  window.isStudySessionMode = false;
+  setStudySessionUiLock(false);
+  const sBar = document.getElementById('sessionHeaderBar');
+  if (sBar) sBar.classList.add('hidden');
+  const scBox = document.getElementById('sessionCompleteBox');
+  if (scBox) scBox.classList.add('hidden');
+  const introBox = document.getElementById('sessionIntroBox');
+  if (introBox) introBox.classList.add('hidden');
+  const reinfBox = document.getElementById('sessionReinforceBox');
+  if (reinfBox) reinfBox.classList.add('hidden');
+  const cardEl = document.getElementById('card');
+  if (cardEl) {
+    cardEl.classList.remove('hidden');
+    cardEl.classList.remove('flipped');
+  }
+  const actAction = document.getElementById('activeRecallFrontAction');
+  if (actAction) actAction.classList.remove('hidden');
+  setPrimaryHub('today');
+}
+
 function handleSessionKeydown(e) {
   const s = window.VokabelSession ? window.VokabelSession.getTodaySession() : null;
   if (!s || s.completed) return;
@@ -14164,7 +14205,7 @@ function updateTodayDashboard(){
     } else {
       if (titleEl) titleEl.textContent = 'Đã hoàn thành phiên hôm nay! 🎉';
       if (descEl) descEl.textContent = 'Bé mèo đã no bụng. Bạn có thể tiếp tục ôn luyện thêm hoặc chiêm ngưỡng Hồ cá!';
-      if (ctaText) ctaText.textContent = 'Tiếp tục ôn luyện từ vựng';
+      if (ctaText) ctaText.textContent = 'Ôn thêm từ vựng';
       if (ctaIcon) ctaIcon.textContent = '📖';
       if (ctaBtn) ctaBtn.className = 'today-primary-cta completed';
     }
@@ -14218,13 +14259,35 @@ function handleTodayPrimaryAction(){
     summary = window.VokabelDaily.getSummary();
   }
 
-  if (summary.completed && summary.catchStatus === 'pending') {
+  let sessionState = null;
+  if (window.VokabelSession && typeof window.VokabelSession.getTodaySessionState === 'function') {
+    sessionState = window.VokabelSession.getTodaySessionState();
+  }
+
+  const isCompleted = sessionState ? Boolean(sessionState.isCompleted) : Boolean(summary.completed);
+
+  // Case B: Session đã xong (5/5) VÀ thưởng còn pending
+  if (isCompleted && summary.catchStatus === 'pending') {
     if (typeof openRewardPrototypeModal === 'function') {
       openRewardPrototypeModal();
     }
     return;
   }
 
+  // Case C: Session đã xong (5/5) VÀ thưởng ĐÃ nhận xong (hoặc không còn pending)
+  if (isCompleted) {
+    if (typeof exitSessionToFreeStudy === 'function') {
+      exitSessionToFreeStudy();
+    } else {
+      window.isStudySessionMode = false;
+      if (typeof setStudySessionUiLock === 'function') setStudySessionUiLock(false);
+    }
+    if (typeof setPrimaryHub === 'function') setPrimaryHub('study');
+    if (typeof setStudySubMode === 'function') setStudySubMode('flash');
+    return;
+  }
+
+  // Case A: Session chưa xong (< 5/5)
   if (window.VokabelSession) {
     startOrResumeTodaySession();
     return;

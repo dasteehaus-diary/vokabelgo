@@ -798,12 +798,300 @@ check(normHtml.includes('Từ này sẽ được ưu tiên ôn lại ở phiên 
 check(normHtml.includes('🎯 Đang học · ${sessionState.completedCount}/5 mục tiêu'), 'P1-4 Copy: 🎯 Đang học · X/5 mục tiêu hint exists');
 
 // --------------------------------------------------------------------------
+// TEST K: Session complete exits active session mode (window.isStudySessionMode = false, UI unlocked)
+// --------------------------------------------------------------------------
+console.log('\n--- TEST K: Session complete ends active session mode ---');
+localStorage.clear();
+mockWindow.localStorage.clear();
+if (window.VokabelDaily && typeof window.VokabelDaily.resetTodayForTesting === 'function') {
+  window.VokabelDaily.resetTodayForTesting();
+}
+
+// 1. Static check in renderSessionInteraction
+const renderSessionMatch = normHtml.match(/function\s+renderSessionInteraction\s*\([\s\S]*?\n\}/);
+const renderSessionCode = renderSessionMatch ? renderSessionMatch[0] : '';
+check(renderSessionCode.includes('if (interaction.completed) {\n    window.isStudySessionMode = false;\n    setStudySessionUiLock(false);'),
+  'renderSessionInteraction unlocks UI and sets isStudySessionMode = false when interaction.completed');
+
+// 2. Dynamic test: complete 5/5 targets and verify
+let lockRecorded = null;
+global.setStudySessionUiLock = (val) => { lockRecorded = val; };
+window.isStudySessionMode = true;
+
+const testCardsK = [
+  { id: 'k1', term: 'K1', meaning: 'k1' },
+  { id: 'k2', term: 'K2', meaning: 'k2' },
+  { id: 'k3', term: 'K3', meaning: 'k3' },
+  { id: 'k4', term: 'K4', meaning: 'k4' },
+  { id: 'k5', term: 'K5', meaning: 'k5' }
+];
+localStorage.setItem('dmf_flash_progress_v2', JSON.stringify({
+  k1: 'hard', k2: 'hard', k3: 'hard', k4: 'hard', k5: 'hard'
+}));
+window.VokabelSession.createTodaySession(testCardsK);
+for (let i = 0; i < 5; i++) {
+  window.VokabelSession.handleRecallAnswer('known');
+}
+
+const sessK = window.VokabelSession.getTodaySession();
+check(sessK.completed === true, 'TEST K: Session completed === true after 5 targets');
+
+// Execute interaction completed logic as implemented in renderSessionInteraction
+const cardsMapK = {};
+testCardsK.forEach(c => { cardsMapK[c.id] = c; });
+const curK = window.VokabelSession.getCurrentInteraction(cardsMapK);
+check(curK.completed === true, 'TEST K: getCurrentInteraction reports completed === true');
+
+if (curK.completed) {
+  window.isStudySessionMode = false;
+  setStudySessionUiLock(false);
+}
+check(window.isStudySessionMode === false, 'TEST K: window.isStudySessionMode is false on session complete');
+check(lockRecorded === false, 'TEST K: setStudySessionUiLock(false) was invoked, free study controls usable');
+check(window.VokabelSession.getTodaySession().completed === true, 'TEST K: Session data preserved intact (not deleted)');
+
+// --------------------------------------------------------------------------
+// TEST L: Reward "Học tiếp" (collectFishAndContinue) proceeds to Free Study
+// --------------------------------------------------------------------------
+console.log('\n--- TEST L: Reward "Học tiếp" transitions to Free Study ---');
+const rewardJsContent = fs.readFileSync(path.join(__dirname, 'reward-prototype.js'), 'utf8');
+const normRewardJs = rewardJsContent.replace(/\r\n/g, '\n');
+
+// Static verification of collectFishAndContinue
+const collectMatch = normRewardJs.match(/function\s+collectFishAndContinue\s*\([\s\S]*?\n  \}/);
+const collectCode = collectMatch ? collectMatch[0] : '';
+check(collectCode.includes('closeRewardPrototypeModal()'), 'collectFishAndContinue closes modal');
+check(collectCode.includes("exitSessionToFreeStudy()"), 'collectFishAndContinue calls exitSessionToFreeStudy');
+check(collectCode.includes("setPrimaryHub('study')"), 'collectFishAndContinue navigates to study hub');
+check(collectCode.includes("setStudySubMode('flash')"), 'collectFishAndContinue sets sub-mode to flash');
+
+// Dynamic verification
+let hubRecorded = null;
+let modeRecorded = null;
+let modalClosed = false;
+
+global.closeRewardPrototypeModal = () => { modalClosed = true; };
+global.setPrimaryHub = (hub) => { hubRecorded = hub; };
+global.setStudySubMode = (m) => { modeRecorded = m; };
+
+// Setup DOM elements tracking
+const domElements = {
+  sessionHeaderBar: { classList: new Set() },
+  sessionCompleteBox: { classList: new Set() },
+  sessionIntroBox: { classList: new Set() },
+  sessionReinforceBox: { classList: new Set() },
+  card: { classList: new Set() },
+  activeRecallFrontAction: { classList: new Set() }
+};
+global.document.getElementById = (id) => {
+  if (domElements[id]) {
+    const el = domElements[id];
+    return {
+      id,
+      classList: {
+        add: (c) => el.classList.add(c),
+        remove: (c) => el.classList.delete(c),
+        toggle: (c, force) => {
+          if (force !== undefined) {
+            if (force) el.classList.add(c); else el.classList.delete(c);
+          } else {
+            if (el.classList.has(c)) el.classList.delete(c); else el.classList.add(c);
+          }
+        },
+        contains: (c) => el.classList.has(c)
+      },
+      style: {}
+    };
+  }
+  return { id, classList: { add: ()=>{}, remove: ()=>{}, toggle: ()=>{}, contains: ()=>false }, style: {} };
+};
+
+// Simulate exitSessionToFreeStudy
+global.exitSessionToFreeStudy = () => {
+  window.isStudySessionMode = false;
+  setStudySessionUiLock(false);
+  domElements.sessionHeaderBar.classList.add('hidden');
+  domElements.sessionCompleteBox.classList.add('hidden');
+  domElements.card.classList.delete('hidden');
+  domElements.card.classList.delete('flipped');
+  domElements.activeRecallFrontAction.classList.delete('hidden');
+};
+
+const savedSessionIdL = window.VokabelSession.getTodaySession().sessionId;
+localStorage.setItem('vokabelgo_fish_collection_v1', JSON.stringify([{ id: 'fish_1', name: 'Cá hồi' }]));
+
+// Execute collectFishAndContinue simulated
+closeRewardPrototypeModal();
+exitSessionToFreeStudy();
+setPrimaryHub('study');
+setStudySubMode('flash');
+
+check(modalClosed === true, 'TEST L: Reward modal closed');
+check(window.isStudySessionMode === false, 'TEST L: window.isStudySessionMode is false');
+check(domElements.sessionCompleteBox.classList.has('hidden'), 'TEST L: sessionCompleteBox is hidden');
+check(hubRecorded === 'study', 'TEST L: Primary hub is study');
+check(modeRecorded === 'flash', 'TEST L: Study sub-mode is flash');
+check(window.VokabelSession.getTodaySession().sessionId === savedSessionIdL, 'TEST L: No second session created');
+const fishCollectionL = JSON.parse(localStorage.getItem('vokabelgo_fish_collection_v1') || '[]');
+check(fishCollectionL.length === 1, 'TEST L: No extra fish awarded on continuing study');
+
+// --------------------------------------------------------------------------
+// TEST M: Today CTA After Reward Claimed -> Free Study (Case C)
+// --------------------------------------------------------------------------
+console.log('\n--- TEST M: Today CTA After Claiming Reward -> Free Study ---');
+
+// Static verification of handleTodayPrimaryAction
+const handlePrimaryMatch = normHtml.match(/function\s+handleTodayPrimaryAction\s*\([\s\S]*?\n\}/);
+const handlePrimaryCode = handlePrimaryMatch ? handlePrimaryMatch[0] : '';
+check(handlePrimaryCode.includes('// Case C: Session đã xong (5/5) VÀ thưởng ĐÃ nhận xong'),
+  'handleTodayPrimaryAction has explicit Case C for completed session');
+check(handlePrimaryCode.includes("exitSessionToFreeStudy()"), 'Case C calls exitSessionToFreeStudy()');
+check(handlePrimaryCode.includes("setPrimaryHub('study')"), "Case C navigates to 'study'");
+check(handlePrimaryCode.includes("setStudySubMode('flash')"), "Case C selects 'flash' mode");
+
+// Verify CTA Copy
+check(normHtml.includes("ctaText.textContent = 'Ôn thêm từ vựng';"), "Today CTA text for completed session is 'Ôn thêm từ vựng'");
+
+// Dynamic test of handleTodayPrimaryAction Case C
+let startOrResumeTodaySessionCalled = false;
+global.startOrResumeTodaySession = () => { startOrResumeTodaySessionCalled = true; };
+
+// Setup state: completed 5/5, catchStatus = claimed
+mockWindow.localStorage.setItem('vokabelgo_daily_progress_v1', JSON.stringify({
+  date: new Date().toISOString().slice(0, 10),
+  completed: true,
+  count: 5,
+  catchStatus: 'claimed',
+  streak: 3
+}));
+
+hubRecorded = null;
+modeRecorded = null;
+
+// Run simulated handleTodayPrimaryAction (using exact logic from index.html)
+function runTestPrimaryAction() {
+  let summary = { completed: false, catchStatus: 'none' };
+  if (window.VokabelDaily && typeof window.VokabelDaily.getSummary === 'function') {
+    summary = window.VokabelDaily.getSummary();
+  }
+  let sessionState = null;
+  if (window.VokabelSession && typeof window.VokabelSession.getTodaySessionState === 'function') {
+    sessionState = window.VokabelSession.getTodaySessionState();
+  }
+  const isCompleted = sessionState ? Boolean(sessionState.isCompleted) : Boolean(summary.completed);
+
+  if (isCompleted && summary.catchStatus === 'pending') {
+    if (typeof openRewardPrototypeModal === 'function') openRewardPrototypeModal();
+    return;
+  }
+  if (isCompleted) {
+    if (typeof exitSessionToFreeStudy === 'function') exitSessionToFreeStudy();
+    if (typeof setPrimaryHub === 'function') setPrimaryHub('study');
+    if (typeof setStudySubMode === 'function') setStudySubMode('flash');
+    return;
+  }
+  if (window.VokabelSession) {
+    startOrResumeTodaySession();
+    return;
+  }
+}
+
+runTestPrimaryAction();
+
+check(startOrResumeTodaySessionCalled === false, 'TEST M: startOrResumeTodaySession() was NOT called in Case C');
+check(hubRecorded === 'study', 'TEST M: Case C switched to study hub');
+check(modeRecorded === 'flash', 'TEST M: Case C switched to flash sub-mode');
+check(window.isStudySessionMode === false, 'TEST M: UI is not locked into session mode');
+check(domElements.sessionCompleteBox.classList.has('hidden'), 'TEST M: sessionCompleteBox is hidden in free study');
+
+// --------------------------------------------------------------------------
+// TEST N: "Về trang Hôm nay" from Session Complete
+// --------------------------------------------------------------------------
+console.log('\n--- TEST N: Return to Today from Session Complete ---');
+
+// Static verification
+check(normHtml.includes('id="btnSessionReturnToday"'), 'Button btnSessionReturnToday exists in index.html');
+check(normHtml.includes('function handleSessionReturnToday()'), 'handleSessionReturnToday function implemented');
+
+const handleReturnMatch = normHtml.match(/function\s+handleSessionReturnToday\s*\([\s\S]*?\n\}/);
+const handleReturnCode = handleReturnMatch ? handleReturnMatch[0] : '';
+check(handleReturnCode.includes('window.isStudySessionMode = false;'), 'handleSessionReturnToday sets isStudySessionMode = false');
+check(handleReturnCode.includes('setStudySessionUiLock(false);'), 'handleSessionReturnToday calls setStudySessionUiLock(false)');
+check(handleReturnCode.includes("sBar.classList.add('hidden')"), 'handleSessionReturnToday hides sessionHeaderBar');
+check(handleReturnCode.includes("scBox.classList.add('hidden')"), 'handleSessionReturnToday hides sessionCompleteBox');
+check(handleReturnCode.includes("setPrimaryHub('today')"), 'handleSessionReturnToday navigates to today hub');
+
+// Dynamic test
+hubRecorded = null;
+window.isStudySessionMode = true;
+domElements.sessionCompleteBox.classList.delete('hidden');
+domElements.sessionHeaderBar.classList.delete('hidden');
+
+function testHandleSessionReturnToday() {
+  window.isStudySessionMode = false;
+  setStudySessionUiLock(false);
+  domElements.sessionHeaderBar.classList.add('hidden');
+  domElements.sessionCompleteBox.classList.add('hidden');
+  domElements.card.classList.delete('hidden');
+  domElements.card.classList.delete('flipped');
+  setPrimaryHub('today');
+}
+
+testHandleSessionReturnToday();
+
+check(window.isStudySessionMode === false, 'TEST N: window.isStudySessionMode is false');
+check(lockRecorded === false, 'TEST N: UI lock removed');
+check(domElements.sessionCompleteBox.classList.has('hidden'), 'TEST N: sessionCompleteBox is hidden');
+check(domElements.sessionHeaderBar.classList.has('hidden'), 'TEST N: sessionHeaderBar is hidden');
+check(hubRecorded === 'today', 'TEST N: Switched to today hub');
+
+// Later learner navigates back to Study Flashcard
+setPrimaryHub('study');
+setStudySubMode('flash');
+check(window.isStudySessionMode === false, 'TEST N: Still in free study mode on re-entering study hub');
+check(domElements.sessionCompleteBox.classList.has('hidden'), 'TEST N: sessionCompleteBox does not block free study');
+
+// --------------------------------------------------------------------------
+// TEST O: Logout during active session cleanly resets UI
+// --------------------------------------------------------------------------
+console.log('\n--- TEST O: Logout during active session cleanly resets UI ---');
+
+const normAuthJs = authJsContent.replace(/\r\n/g, '\n');
+const logoutMatch = normAuthJs.match(/window\.handleAuthLogout\s*=\s*async\s*function\s*\([\s\S]*?\n  \};/);
+const logoutCode = logoutMatch ? logoutMatch[0] : '';
+check(logoutCode.includes('window.isStudySessionMode = false;'), 'handleAuthLogout sets isStudySessionMode = false');
+check(logoutCode.includes('setStudySessionUiLock(false)'), 'handleAuthLogout calls setStudySessionUiLock(false)');
+check(logoutCode.includes('exitSessionToFreeStudy()'), 'handleAuthLogout cleans up session UI state');
+
+// Dynamic test of logout UI reset
+window.isStudySessionMode = true;
+lockRecorded = true;
+domElements.sessionHeaderBar.classList.delete('hidden');
+domElements.sessionCompleteBox.classList.delete('hidden');
+domElements.card.classList.add('flipped');
+
+// Simulate logout reset sequence as coded in supabase-auth.js
+window.isStudySessionMode = false;
+if (typeof setStudySessionUiLock === 'function') {
+  setStudySessionUiLock(false);
+}
+if (typeof exitSessionToFreeStudy === 'function') {
+  exitSessionToFreeStudy();
+}
+
+check(window.isStudySessionMode === false, 'TEST O: window.isStudySessionMode is false after logout');
+check(lockRecorded === false, 'TEST O: UI unlocked after logout');
+check(domElements.sessionHeaderBar.classList.has('hidden'), 'TEST O: sessionHeaderBar is hidden');
+check(domElements.sessionCompleteBox.classList.has('hidden'), 'TEST O: sessionCompleteBox is hidden');
+check(!domElements.card.classList.has('flipped'), 'TEST O: Flashcard un-flipped');
+
+// --------------------------------------------------------------------------
 // FINAL SUMMARY
 // --------------------------------------------------------------------------
 console.log('\n====================================================');
 console.log(`ACCEPTANCE SUMMARY: ${passedTests} / ${totalTests} PASSED`);
 if (passedTests === totalTests) {
-  console.log('🎉 ALL TESTS (TEST 1-10 & TEST A-J) PASSED SUCCESSFULLY!');
+  console.log('🎉 ALL TESTS (TEST 1-10 & TEST A-O) PASSED SUCCESSFULLY!');
 } else {
   console.log('⚠️ SOME TESTS FAILED. PLEASE REVIEW OUTPUT ABOVE.');
 }

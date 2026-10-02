@@ -919,6 +919,14 @@
   function collectFishAndContinue(event) {
     if (event) event.stopPropagation();
     closeRewardPrototypeModal();
+    if (typeof exitSessionToFreeStudy === 'function') {
+      exitSessionToFreeStudy();
+    } else {
+      window.isStudySessionMode = false;
+      if (typeof setStudySessionUiLock === 'function') setStudySessionUiLock(false);
+    }
+    if (typeof setPrimaryHub === 'function') setPrimaryHub('study');
+    if (typeof setStudySubMode === 'function') setStudySubMode('flash');
   }
 
   function collectFishToBucket(event) {

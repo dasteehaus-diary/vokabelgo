@@ -602,6 +602,31 @@
         currentProfile = { nickname: 'Bạn học', avatarType: 'v2', catId: 12 };
       }
 
+      // Reset session UI state completely
+      window.isStudySessionMode = false;
+      if (typeof setStudySessionUiLock === 'function') {
+        setStudySessionUiLock(false);
+      }
+      if (typeof exitSessionToFreeStudy === 'function') {
+        exitSessionToFreeStudy();
+      } else {
+        const sBar = document.getElementById('sessionHeaderBar');
+        if (sBar) sBar.classList.add('hidden');
+        const scBox = document.getElementById('sessionCompleteBox');
+        if (scBox) scBox.classList.add('hidden');
+        const introBox = document.getElementById('sessionIntroBox');
+        if (introBox) introBox.classList.add('hidden');
+        const reinfBox = document.getElementById('sessionReinforceBox');
+        if (reinfBox) reinfBox.classList.add('hidden');
+        const cardEl = document.getElementById('card');
+        if (cardEl) {
+          cardEl.classList.remove('hidden');
+          cardEl.classList.remove('flipped');
+        }
+        const actAction = document.getElementById('activeRecallFrontAction');
+        if (actAction) actAction.classList.remove('hidden');
+      }
+
       if (typeof updateStats === 'function') updateStats();
       if (typeof updateTodayDashboard === 'function') updateTodayDashboard();
       if (typeof applyUserProfileUI === 'function') applyUserProfileUI();
