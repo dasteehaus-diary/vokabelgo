@@ -3,6 +3,22 @@ const { seedStorage, getStorageJson } = require('./helpers/storage');
 const { createDeterministicDailySessionFixture } = require('./helpers/session');
 
 test.describe('E2E Test 2: Full Real Daily Session Lifecycle', () => {
+  test.beforeEach(async ({ page }) => {
+    // Stub browser SpeechSynthesis before page loads for headless CI compatibility
+    await page.addInitScript(() => {
+      window.__e2eSpokenTexts = [];
+      if (window.speechSynthesis) {
+        window.speechSynthesis.speak = function(u) {
+          const txt = typeof u === 'string' ? u : (u && u.text ? u.text : String(u));
+          window.__e2eSpokenTexts.push(txt);
+          if (u && typeof u.onend === 'function') {
+            setTimeout(u.onend, 10);
+          }
+        };
+      }
+    });
+  });
+
   test('Complete learner flow: Intro, Wrong Typing, F5 Reload, Requeue, Correct Typing, 5 Targets, Cat Reward, and Completed Home', async ({ page }) => {
     // 1. Capture page errors
     const pageErrors = [];

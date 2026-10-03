@@ -243,4 +243,154 @@ test.describe('E2E Phase 5: Listening Recall & Audio Dictation', () => {
     await expect(page.locator('#activeRecallFrontAction .btn-reveal-answer')).toBeVisible();
   });
 
+  test('E2E 1: Speech Failure Fallback: Speak throws synchronously -> transitions cleanly to Recall without penalties', async ({ page }) => {
+    // Stub speech failure before page loads
+    await page.addInitScript(() => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.speak = function() {
+          throw new Error('TTS hardware failure in browser');
+        };
+      }
+    });
+
+    const fixture = createDeterministicDailySessionFixture();
+    await seedStorage(page, fixture);
+
+    await page.goto('/');
+    await page.locator('#todayPrimaryCta').click();
+
+    // Advance to b_3 listening
+    await page.locator('#sessionIntroBox .btn-session-continue').click(); // Intro b_0
+    await page.locator('#sessionTypingInput').fill('die Geste');
+    await page.locator('#btnSessionTypingSubmit').click(); // Typing b_1
+    await expect(page.locator('#sessionTypingBox')).toBeHidden({ timeout: 4000 });
+    await page.locator('#activeRecallFrontAction .btn-reveal-answer').click();
+    await page.locator('button[data-rate="known"]').click(); // Recall b_0
+    await page.locator('#sessionIntroBox .btn-session-continue').click(); // Intro b_2
+
+    // Now in Listening b_3
+    await expect(page.locator('#sessionListeningBox')).toBeVisible();
+
+    // Click "Nghe từ"
+    await page.locator('#btnSessionListeningPlay').click();
+
+    // Assert: Listening box disappears, current card becomes normal recall
+    await expect(page.locator('#sessionListeningBox')).toBeHidden();
+    await expect(page.locator('#frontTerm')).toBeVisible();
+    await expect(page.locator('#frontTerm')).toContainText('der Gesichtsausdruck');
+    await expect(page.locator('#activeRecallFrontAction .btn-reveal-answer')).toBeVisible();
+
+    // Assert: No attempt/failure/SRS/Daily mutation
+    const session = await getStorageJson(page, 'vokabelgo_learning_session_v1');
+    expect(session.targetStates['b_3'].attempts).toBe(0);
+    expect(session.targetStates['b_3'].failures).toBe(0);
+    expect(session.targetStates['b_3'].srsCommitted).toBeFalsy();
+  });
+
+  test('E2E 2: Audio Does Not Leak: Cancelled on submit and remain inactive across auto-continue', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.__speechState = { active: false, cancelCount: 0 };
+      if (window.speechSynthesis) {
+        window.speechSynthesis.speak = function(u) {
+          window.__speechState.active = true;
+        };
+        window.speechSynthesis.cancel = function() {
+          window.__speechState.cancelCount++;
+          window.__speechState.active = false;
+        };
+      }
+    });
+
+    const fixture = createDeterministicDailySessionFixture();
+    await seedStorage(page, fixture);
+
+    await page.goto('/');
+    await page.locator('#todayPrimaryCta').click();
+
+    // Advance to b_3 listening
+    await page.locator('#sessionIntroBox .btn-session-continue').click(); // Intro b_0
+    await page.locator('#sessionTypingInput').fill('die Geste');
+    await page.locator('#btnSessionTypingSubmit').click(); // Typing b_1
+    await expect(page.locator('#sessionTypingBox')).toBeHidden({ timeout: 4000 });
+    await page.locator('#activeRecallFrontAction .btn-reveal-answer').click();
+    await page.locator('button[data-rate="known"]').click(); // Recall b_0
+    await page.locator('#sessionIntroBox .btn-session-continue').click(); // Intro b_2
+
+    // Now in Listening b_3
+    await expect(page.locator('#sessionListeningBox')).toBeVisible();
+
+    // Click Listen -> active = true
+    await page.locator('#btnSessionListeningPlay').click();
+    const stateDuringAudio = await page.evaluate(() => window.__speechState);
+    expect(stateDuringAudio.active).toBe(true);
+
+    // Submit correct answer
+    await page.locator('#sessionListeningInput').fill('der Gesichtsausdruck');
+    await page.locator('#btnSessionListeningSubmit').click();
+
+    // Assert: cancel called on submit and audio is no longer active
+    const stateAfterSubmit = await page.evaluate(() => window.__speechState);
+    expect(stateAfterSubmit.cancelCount).toBeGreaterThan(0);
+    expect(stateAfterSubmit.active).toBe(false);
+
+    // Wait for auto-continue (450ms) -> next card appears
+    await expect(page.locator('#frontTerm')).toContainText('die Mimik', { timeout: 7000 });
+
+    // Assert: speech remains inactive
+    const stateAfterAdvance = await page.evaluate(() => window.__speechState);
+    expect(stateAfterAdvance.active).toBe(false);
+  });
+
+  test('E2E 3a: Wrong Feedback Replay Visibility: Replay button visible on Wrong', async ({ page }) => {
+    const fixture = createDeterministicDailySessionFixture();
+    await seedStorage(page, fixture);
+
+    await page.goto('/');
+    await page.locator('#todayPrimaryCta').click();
+
+    // Advance to b_3 listening
+    await page.locator('#sessionIntroBox .btn-session-continue').click(); // Intro b_0
+    await page.locator('#sessionTypingInput').fill('die Geste');
+    await page.locator('#btnSessionTypingSubmit').click(); // Typing b_1
+    await expect(page.locator('#sessionTypingBox')).toBeHidden({ timeout: 4000 });
+    await page.locator('#activeRecallFrontAction .btn-reveal-answer').click();
+    await page.locator('button[data-rate="known"]').click(); // Recall b_0
+    await page.locator('#sessionIntroBox .btn-session-continue').click(); // Intro b_2
+
+    // Submit WRONG answer
+    await expect(page.locator('#sessionListeningBox')).toBeVisible();
+    await page.locator('#sessionListeningInput').fill('das Haus');
+    await page.locator('#btnSessionListeningSubmit').click();
+
+    // Assert: feedback appears and Replay button IS VISIBLE
+    await expect(page.locator('#sessionListeningFeedbackBadge')).toContainText('CHƯA CHÍNH XÁC');
+    const replayBtn = page.locator('#btnSessionListeningFeedbackReplay');
+    await expect(replayBtn).toBeVisible();
+  });
+
+  test('E2E 3b: Correct Feedback Replay Policy: Replay button hidden on Correct', async ({ page }) => {
+    const fixture = createDeterministicDailySessionFixture();
+    await seedStorage(page, fixture);
+
+    await page.goto('/');
+    await page.locator('#todayPrimaryCta').click();
+
+    await page.locator('#sessionIntroBox .btn-session-continue').click(); // Intro b_0
+    await page.locator('#sessionTypingInput').fill('die Geste');
+    await page.locator('#btnSessionTypingSubmit').click(); // Typing b_1
+    await expect(page.locator('#sessionTypingBox')).toBeHidden({ timeout: 4000 });
+    await page.locator('#activeRecallFrontAction .btn-reveal-answer').click();
+    await page.locator('button[data-rate="known"]').click(); // Recall b_0
+    await page.locator('#sessionIntroBox .btn-session-continue').click(); // Intro b_2
+
+    // Submit CORRECT answer
+    await expect(page.locator('#sessionListeningBox')).toBeVisible();
+    await page.locator('#sessionListeningInput').fill('der Gesichtsausdruck');
+    await page.locator('#btnSessionListeningSubmit').click();
+
+    // Assert: feedback appears and Replay button MUST BE HIDDEN per Policy A
+    await expect(page.locator('#sessionListeningFeedbackBadge')).toContainText('CHÍNH XÁC');
+    await expect(page.locator('#btnSessionListeningFeedbackReplay')).toBeHidden();
+  });
+
 });

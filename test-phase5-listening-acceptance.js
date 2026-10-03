@@ -90,7 +90,8 @@ global.document = {
   getElementById: (id) => ({
     id,
     classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => false },
-    style: {}
+    style: {},
+    focus: () => {}
   }),
   querySelectorAll: () => [],
   addEventListener: () => {}
@@ -579,6 +580,202 @@ const reloadedSessionT = sessionMgr.loadSession();
 const reloadedSnapshotT = reloadedSessionT.queue.map(it => ({ type: it.type, cardId: it.cardId }));
 
 check(JSON.stringify(queueSnapshotT) === JSON.stringify(reloadedSnapshotT), 'Queue structure survives reload identical');
+
+// --------------------------------------------------------------------------
+// TEST AA: Partial API mocks => canUseSpeech false
+// --------------------------------------------------------------------------
+console.log('--- TEST AA: Partial API mocks => canUseSpeech false ---');
+const origSS = mockWindow.speechSynthesis;
+const origSSU = mockWindow.SpeechSynthesisUtterance;
+
+// 1. Mock: speechSynthesis = {}, SpeechSynthesisUtterance exists
+mockWindow.speechSynthesis = {};
+mockWindow.SpeechSynthesisUtterance = function() {};
+check(lv.canUseSpeech() === false, 'Mock speechSynthesis = {} => canUseSpeech false');
+
+// 2. Mock missing cancel
+mockWindow.speechSynthesis = { speak: () => {} };
+check(lv.canUseSpeech() === false, 'Mock missing cancel => canUseSpeech false');
+
+// 3. Mock missing speak
+mockWindow.speechSynthesis = { cancel: () => {} };
+check(lv.canUseSpeech() === false, 'Mock missing speak => canUseSpeech false');
+
+// 4. Mock missing SpeechSynthesisUtterance
+mockWindow.speechSynthesis = { speak: () => {}, cancel: () => {} };
+delete mockWindow.SpeechSynthesisUtterance;
+check(lv.canUseSpeech() === false, 'Mock missing SpeechSynthesisUtterance => canUseSpeech false');
+
+// Restore
+mockWindow.speechSynthesis = origSS;
+mockWindow.SpeechSynthesisUtterance = origSSU;
+check(lv.canUseSpeech() === true, 'Restored complete API => canUseSpeech true');
+
+// --------------------------------------------------------------------------
+// TEST AB: Synchronous speak failure triggers fallback
+// --------------------------------------------------------------------------
+console.log('--- TEST AB: Synchronous speak failure triggers fallback ---');
+let speakThrew = false;
+mockWindow.speechSynthesis.speak = () => {
+  speakThrew = true;
+  throw new Error('TTS hardware error');
+};
+
+localStorage.clear();
+srsMgr.scheduleReview('ab_1', 3);
+srsMgr.scheduleReview('ab_1', 3);
+srsMgr.scheduleReview('ab_2', 3);
+srsMgr.scheduleReview('ab_2', 3);
+
+const testCardsAB = [
+  { id: 'ab_1', term: 'die Entscheidung', meaning: 'quyết định' },
+  { id: 'ab_2', term: 'das Treffen', meaning: 'cuộc họp' },
+  { id: 'ab_3', term: 'der Vertrag', meaning: 'hợp đồng', isNew: true },
+  { id: 'ab_4', term: 'die Frage', meaning: 'câu hỏi', isNew: true },
+  { id: 'ab_5', term: 'die Antwort', meaning: 'câu trả lời', isNew: true }
+];
+
+const sessionAB = sessionMgr.createTodaySession(testCardsAB);
+const lIdxAB = sessionAB.queue.findIndex(it => it.type === 'listening');
+sessionAB.queueIndex = lIdxAB;
+sessionMgr.saveSession(sessionAB);
+const listeningCardIdAB = sessionAB.queue[lIdxAB].cardId;
+
+// Call speakPrompt directly
+const speakRes = lv.speakPrompt(testCardsAB.find(c => c.id === listeningCardIdAB));
+check(speakRes === false, 'speakPrompt returned false when speak threw');
+
+// Simulate handleSessionListeningPlay fallback behavior
+if (speakRes !== true) {
+  sessionMgr.handleListeningFallback();
+}
+
+const curAfterFallbackAB = sessionMgr.getTodaySession().queue[lIdxAB];
+const tsAB = sessionMgr.getTodaySession().targetStates[listeningCardIdAB];
+check(curAfterFallbackAB.type === 'recall', 'Listening converted to recall upon synchronous failure');
+check(tsAB.attempts === 0, 'Fallback has attempts 0');
+check(tsAB.failures === 0, 'Fallback has failures 0');
+check(tsAB.srsCommitted !== true, 'Fallback has no SRS commit');
+
+// Restore speak
+mockWindow.speechSynthesis.speak = (u) => { spokenUtterances.push(u); };
+
+// --------------------------------------------------------------------------
+// TEST AC: Cancel on submit
+// --------------------------------------------------------------------------
+console.log('--- TEST AC: Cancel on submit ---');
+let cancelCallCount = 0;
+mockWindow.speechSynthesis.cancel = () => { cancelCallCount++; };
+
+global.activeSessionListeningTimer = null;
+global.activeSessionTypingTimer = null;
+global.setStudySessionUiLock = () => {};
+global.render = () => {};
+global.setPrimaryHub = () => {};
+
+// Re-eval index.html functions in test environment
+const indexHtmlContent = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+eval(indexHtmlContent.match(/function stopListeningSpeech\(\)[\s\S]*?window\.stopListeningSpeech\s*=\s*stopListeningSpeech;/)[0]);
+eval(indexHtmlContent.match(/function handleSessionListeningSubmit\([\s\S]*?\n\}/)[0]);
+
+// Setup active listening card
+localStorage.clear();
+srsMgr.scheduleReview('ac_1', 3);
+srsMgr.scheduleReview('ac_1', 3);
+srsMgr.scheduleReview('ac_2', 3);
+srsMgr.scheduleReview('ac_2', 3);
+
+const sessionAC = sessionMgr.createTodaySession(testCardsT);
+const lIdxAC = sessionAC.queue.findIndex(it => it.type === 'listening');
+sessionAC.queueIndex = lIdxAC;
+sessionMgr.saveSession(sessionAC);
+mockWindow.isStudySessionMode = true;
+mockWindow.VokabelSession = sessionMgr;
+
+const cancelBeforeSubmit = cancelCallCount;
+handleSessionListeningSubmit();
+check(cancelCallCount > cancelBeforeSubmit, 'speechSynthesis.cancel called upon handleSessionListeningSubmit');
+
+// --------------------------------------------------------------------------
+// TEST AD: Cancel on continue
+// --------------------------------------------------------------------------
+console.log('--- TEST AD: Cancel on continue ---');
+eval(indexHtmlContent.match(/function handleSessionListeningContinue\([\s\S]*?\n\}/)[0]);
+
+const cancelBeforeContinue = cancelCallCount;
+handleSessionListeningContinue();
+check(cancelCallCount > cancelBeforeContinue, 'speechSynthesis.cancel called upon handleSessionListeningContinue');
+
+// --------------------------------------------------------------------------
+// TEST AE: Cancel on exit
+// --------------------------------------------------------------------------
+console.log('--- TEST AE: Cancel on exit ---');
+eval(indexHtmlContent.match(/function exitSessionToFreeStudy\(\)[\s\S]*?\n\}/)[0]);
+eval(indexHtmlContent.match(/function handleSessionReturnToday\(\)[\s\S]*?\n\}/)[0]);
+
+const cancelBeforeExit = cancelCallCount;
+exitSessionToFreeStudy();
+check(cancelCallCount > cancelBeforeExit, 'speechSynthesis.cancel called upon exitSessionToFreeStudy');
+
+const cancelBeforeReturn = cancelCallCount;
+handleSessionReturnToday();
+check(cancelCallCount > cancelBeforeReturn, 'speechSynthesis.cancel called upon handleSessionReturnToday');
+
+// --------------------------------------------------------------------------
+// TEST AF: Stale async error guard
+// --------------------------------------------------------------------------
+console.log('--- TEST AF: Stale async error guard ---');
+// Setup session on listening item
+localStorage.clear();
+mockWindow.isStudySessionMode = true;
+srsMgr.scheduleReview('af_1', 3);
+srsMgr.scheduleReview('af_1', 3);
+srsMgr.scheduleReview('af_2', 3);
+srsMgr.scheduleReview('af_2', 3);
+
+const testCardsAF = [
+  { id: 'af_1', term: 'die Entscheidung', meaning: 'quyết định' },
+  { id: 'af_2', term: 'das Treffen', meaning: 'cuộc họp' },
+  { id: 'af_3', term: 'der Vertrag', meaning: 'hợp đồng', isNew: true },
+  { id: 'af_4', term: 'die Frage', meaning: 'câu hỏi', isNew: true },
+  { id: 'af_5', term: 'die Antwort', meaning: 'câu trả lời', isNew: true }
+];
+
+const sessionAF = sessionMgr.createTodaySession(testCardsAF);
+const lIdxAF = sessionAF.queue.findIndex(it => it.type === 'listening');
+sessionAF.queueIndex = lIdxAF;
+sessionMgr.saveSession(sessionAF);
+const cardIdAF = sessionAF.queue[lIdxAF].cardId;
+
+let capturedOnError = null;
+mockWindow.speechSynthesis.speak = (u) => {
+  if (u && u.onerror) capturedOnError = u.onerror;
+};
+
+// Evaluate handleSessionListeningPlay and doSessionListeningFallback
+eval(indexHtmlContent.match(/function doSessionListeningFallback\(\)[\s\S]*?window\.doSessionListeningFallback\s*=\s*doSessionListeningFallback;/)[0]);
+eval(indexHtmlContent.match(/function handleSessionListeningPlay\([\s\S]*?\n\}/)[0]);
+
+mockWindow.allCards = () => testCardsAF;
+global.allCards = () => testCardsAF;
+
+handleSessionListeningPlay();
+check(typeof capturedOnError === 'function', 'Captured onErrorCallback from speakPrompt');
+
+// Now learner moves to next interaction (advance queueIndex)
+sessionAF.queueIndex = lIdxAF + 1;
+sessionMgr.saveSession(sessionAF);
+const targetStateBefore = JSON.parse(JSON.stringify(sessionMgr.getTodaySession().targetStates[cardIdAF]));
+const queueBefore = JSON.parse(JSON.stringify(sessionMgr.getTodaySession().queue));
+
+// Old utterance error fires NOW
+capturedOnError(new Error('Delayed async speech synthesis error'));
+
+// Verify NO-OP
+const sessionAfterStaleError = sessionMgr.getTodaySession();
+check(sessionAfterStaleError.queueIndex === lIdxAF + 1, 'Queue index was NOT reset or altered by stale error');
+check(JSON.stringify(sessionAfterStaleError.queue) === JSON.stringify(queueBefore), 'Queue structure NOT mutated by stale error');
+check(JSON.stringify(sessionAfterStaleError.targetStates[cardIdAF]) === JSON.stringify(targetStateBefore), 'Target state NOT mutated by stale error');
 
 console.log('\n====================================================');
 console.log(`ACCEPTANCE SUMMARY: ${passedTests} / ${totalTests} PASSED`);

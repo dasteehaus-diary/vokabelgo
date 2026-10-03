@@ -37,11 +37,34 @@
   const VokabelListeningVerification = {
     /**
      * Kiểm tra tính khả dụng của SpeechSynthesis API trong runtime hiện tại
+     * Yêu cầu tối thiểu:
+     * - window.speechSynthesis tồn tại
+     * - typeof window.speechSynthesis.speak === 'function'
+     * - typeof window.speechSynthesis.cancel === 'function'
+     * - typeof window.SpeechSynthesisUtterance === 'function'
      */
     canUseSpeech: function() {
-      return typeof window !== 'undefined' &&
-        typeof window.speechSynthesis !== 'undefined' &&
-        typeof window.SpeechSynthesisUtterance !== 'undefined';
+      if (typeof window === 'undefined') return false;
+      if (!window.speechSynthesis) return false;
+      if (typeof window.speechSynthesis.speak !== 'function') return false;
+      if (typeof window.speechSynthesis.cancel !== 'function') return false;
+      if (typeof window.SpeechSynthesisUtterance !== 'function') return false;
+      return true;
+    },
+
+    /**
+     * Dừng phát âm listening hiện tại một cách an toàn
+     */
+    stopListeningSpeech: function() {
+      try {
+        if (
+          typeof window !== 'undefined' &&
+          window.speechSynthesis &&
+          typeof window.speechSynthesis.cancel === 'function'
+        ) {
+          window.speechSynthesis.cancel();
+        }
+      } catch (e) {}
     },
 
     /**
@@ -140,14 +163,19 @@
     /**
      * Phát âm từ tiếng Đức bằng Browser SpeechSynthesis
      * Rate: 0.9, Lang: de-DE, ưu tiên giọng Đức nếu có
+     *
+     * @param {Object} card Thẻ từ vựng
+     * @param {Function} [onEndCallback] Callback khi phát xong
+     * @param {Function} [onErrorCallback] Callback riêng khi gặp utterance.onerror
+     * @returns {boolean} true nếu speak thành công, false nếu lỗi synchronous hoặc không thể phát
      */
-    speakPrompt: function(card, onEndCallback) {
+    speakPrompt: function(card, onEndCallback, onErrorCallback) {
       if (!this.canUseSpeech()) return false;
       const text = this.getListeningText(card);
       if (!text) return false;
 
       try {
-        window.speechSynthesis.cancel();
+        this.stopListeningSpeech();
         const utterance = new window.SpeechSynthesisUtterance(text);
         utterance.lang = 'de-DE';
         utterance.rate = 0.9;
@@ -164,6 +192,11 @@
 
         if (typeof onEndCallback === 'function') {
           utterance.onend = onEndCallback;
+        }
+
+        if (typeof onErrorCallback === 'function') {
+          utterance.onerror = onErrorCallback;
+        } else if (typeof onEndCallback === 'function') {
           utterance.onerror = onEndCallback;
         }
 
