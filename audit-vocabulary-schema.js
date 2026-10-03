@@ -1,6 +1,7 @@
 // ==============================================================================
-// VokabelGo - Vocabulary Data Model Audit Script (Phase 4A)
+// VokabelGo - Vocabulary Data Model Audit Script (Phase 4A & 4A.1)
 // Audits BASE and VIDEO_FLASHCARDS against VokabelCardSchema normalization
+// and validates permanent card identity integrity.
 // ==============================================================================
 
 const fs = require('fs');
@@ -12,8 +13,8 @@ function loadCards() {
   const htmlPath = path.join(__dirname, 'index.html');
   const htmlContent = fs.readFileSync(htmlPath, 'utf8');
 
-  const baseMatch = htmlContent.match(/const BASE = (\[[\s\S]*?\n\]);/);
-  const videoMatch = htmlContent.match(/const VIDEO_FLASHCARDS = (\[[\s\S]*?\n\]);/);
+  const baseMatch = htmlContent.match(/const BASE = (\[[\s\S]*?\r?\n\]);/);
+  const videoMatch = htmlContent.match(/const VIDEO_FLASHCARDS = (\[[\s\S]*?\r?\n\]);/);
 
   if (!baseMatch || !videoMatch) {
     throw new Error('Unable to extract BASE or VIDEO_FLASHCARDS from index.html');
@@ -23,25 +24,52 @@ function loadCards() {
   const base = eval(baseMatch[1]);
   const video = eval(videoMatch[1]);
 
+  let missingIdCount = 0;
   base.forEach((c, i) => {
-    c.id = c.id || ('b_' + i);
+    if (!c.id) {
+      missingIdCount++;
+    }
     c.source = 'base';
   });
 
   video.forEach((c, i) => {
-    c.id = c.id || ('vk_' + i);
+    if (!c.id) {
+      missingIdCount++;
+    }
     c.source = 'video';
   });
 
-  return { base, video, all: [...base, ...video] };
+  const all = [...base, ...video];
+  const seenIds = new Set();
+  let duplicateIdCount = 0;
+  const duplicateIds = [];
+
+  all.forEach(c => {
+    if (c.id) {
+      if (seenIds.has(c.id)) {
+        duplicateIdCount++;
+        duplicateIds.push(c.id);
+      }
+      seenIds.add(c.id);
+    }
+  });
+
+  return { base, video, all, missingIdCount, duplicateIdCount, duplicateIds };
 }
 
 function runAudit() {
   console.log('====================================================');
-  console.log('VOKABELGO VOCABULARY DATA MODEL AUDIT (PHASE 4A)');
+  console.log('VOKABELGO VOCABULARY DATA MODEL AUDIT (PHASE 4A.1)');
   console.log('====================================================\n');
 
-  const { base, video, all } = loadCards();
+  const { base, video, all, missingIdCount, duplicateIdCount, duplicateIds } = loadCards();
+
+  if (missingIdCount > 0) {
+    throw new Error(`Data integrity violation: ${missingIdCount} built-in cards are missing explicit id!`);
+  }
+  if (duplicateIdCount > 0) {
+    throw new Error(`Data integrity violation: ${duplicateIdCount} duplicate IDs detected: ${duplicateIds.join(', ')}`);
+  }
 
   const report = {
     generatedAt: new Date().toISOString(),
@@ -50,6 +78,8 @@ function runAudit() {
       baseCards: base.length,
       videoCards: video.length
     },
+    missingIdCount,
+    duplicateIdCount,
     byCardType: {
       noun: 0,
       verb: 0,
@@ -107,10 +137,12 @@ function runAudit() {
   });
 
   // Display formatted console report
-  console.log('--- 1. DATASET TOTALS ---');
+  console.log('--- 1. DATASET TOTALS & IDENTITY INTEGRITY ---');
   console.log(`  Total Cards:                    ${report.totalCards}`);
   console.log(`    - BASE:                       ${report.sources.baseCards}`);
-  console.log(`    - VIDEO_FLASHCARDS:           ${report.sources.videoCards}\n`);
+  console.log(`    - VIDEO_FLASHCARDS:           ${report.sources.videoCards}`);
+  console.log(`  Missing ID Count:               ${report.missingIdCount}`);
+  console.log(`  Duplicate ID Count:             ${report.duplicateIdCount}\n`);
 
   console.log('--- 2. DISTRIBUTION BY CARD TYPE ---');
   console.log(`  • Noun:                         ${report.byCardType.noun}`);

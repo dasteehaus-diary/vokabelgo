@@ -1,10 +1,12 @@
 {
-  "generatedAt": "2026-10-03T05:50:22.726Z",
+  "generatedAt": "2026-10-03T06:04:57.297Z",
   "totalCards": 294,
   "sources": {
     "baseCards": 234,
     "videoCards": 60
   },
+  "missingIdCount": 0,
+  "duplicateIdCount": 0,
   "byCardType": {
     "noun": 51,
     "verb": 37,

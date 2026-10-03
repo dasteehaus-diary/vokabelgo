@@ -20,6 +20,44 @@
   // In-memory cache for high-frequency runtime normalization (no localStorage writes)
   const profileCache = new Map();
 
+  /**
+   * Deterministic cache fingerprint capturing all fields influencing normalization:
+   * id, term/de, meaning/vi, grammar, deck, tags
+   */
+  function computeCacheFingerprint(card) {
+    if (!card || typeof card !== 'object') return null;
+    const id = card.id || '';
+    const term = (card.term || card.de || '').trim();
+    const meaning = (card.meaning || card.vi || '').trim();
+    const grammar = (card.grammar || '').trim();
+    const deck = String(card.deck || '').trim();
+    const tags = Array.isArray(card.tags)
+      ? card.tags.map(t => String(t).trim().toLowerCase()).sort().join('|')
+      : '';
+    if (!id && !term) return null;
+    return `${id}\x1f${term}\x1f${meaning}\x1f${grammar}\x1f${deck}\x1f${tags}`;
+  }
+
+  /**
+   * Deep clone of profile to ensure caller cannot mutate cached objects
+   */
+  function cloneProfile(p) {
+    if (!p) return null;
+    return {
+      displayTerm: p.displayTerm,
+      canonicalAnswer: p.canonicalAnswer,
+      headword: p.headword,
+      article: p.article,
+      plural: p.plural,
+      pluralNotation: p.pluralNotation,
+      grammarMeta: p.grammarMeta,
+      cardType: p.cardType,
+      objectiveTypingEligible: p.objectiveTypingEligible,
+      needsManualReview: p.needsManualReview,
+      ambiguityReasons: Array.isArray(p.ambiguityReasons) ? p.ambiguityReasons.slice() : []
+    };
+  }
+
   const VokabelCardSchema = {
     /**
      * Clear profile cache (useful for testing or hot-reload)
@@ -27,6 +65,11 @@
     clearCache: function() {
       profileCache.clear();
     },
+
+    /**
+     * Expose cache fingerprint generator for validation / testing
+     */
+    computeCacheFingerprint: computeCacheFingerprint,
 
     /**
      * Normalize a card into its derived lexical profile
@@ -52,14 +95,13 @@
         };
       }
 
-      // Check cache key (card.id + '::' + card.term)
-      const rawTerm = (card.term || card.de || '').trim();
-      const cardId = card.id || '';
-      const cacheKey = cardId ? `${cardId}::${rawTerm}` : null;
+      // Check cache key using composite deterministic fingerprint
+      const cacheKey = computeCacheFingerprint(card);
       if (cacheKey && profileCache.has(cacheKey)) {
-        return Object.assign({}, profileCache.get(cacheKey));
+        return cloneProfile(profileCache.get(cacheKey));
       }
 
+      const rawTerm = (card.term || card.de || '').trim();
       const displayTerm = rawTerm;
       const rawMeaning = (card.meaning || card.vi || '').trim();
       const rawGrammar = (card.grammar || '').trim();
@@ -253,10 +295,10 @@
       };
 
       if (cacheKey) {
-        profileCache.set(cacheKey, Object.assign({}, profile));
+        profileCache.set(cacheKey, cloneProfile(profile));
       }
 
-      return profile;
+      return cloneProfile(profile);
     }
   };
 
