@@ -151,18 +151,20 @@ test.describe('E2E Test 2: Full Real Daily Session Lifecycle', () => {
     await expect(page.locator('#sessionTargetsIndicator')).toContainText('2/5 mục tiêu');
 
     // --------------------------------------------------------------------------
-    // STEP 7: Second Typing b_3 (der Gesichtsausdruck) -> CORRECT + AUTO-CONTINUE
+    // STEP 7: Second Objective Target b_3 (der Gesichtsausdruck) -> LISTENING RECALL (Phase 5)
     // --------------------------------------------------------------------------
-    await expect(page.locator('#sessionTypingBox')).toBeVisible();
-    await typingInput.fill('der Gesichtsausdruck');
-    await btnTypingSubmit.click();
+    const listeningBox = page.locator('#sessionListeningBox');
+    await expect(listeningBox).toBeVisible();
+    await page.locator('#btnSessionListeningPlay').click();
+    await page.locator('#sessionListeningInput').fill('der Gesichtsausdruck');
+    await page.locator('#btnSessionListeningSubmit').click();
 
     // Feedback Correct appears
-    await expect(page.locator('#sessionTypingFeedbackBadge')).toContainText('CHÍNH XÁC');
+    await expect(page.locator('#sessionListeningFeedbackBadge')).toContainText('CHÍNH XÁC');
     await expect(page.locator('#sessionTargetsIndicator')).toContainText('3/5 mục tiêu');
 
-    // Wait for auto-continue to advance past b_3 typing
-    await expect(page.locator('#sessionTypingBox')).toBeHidden({ timeout: 4000 });
+    // Wait for auto-continue to advance past b_3 listening
+    await expect(listeningBox).toBeHidden({ timeout: 4000 });
 
     // --------------------------------------------------------------------------
     // STEP 8: Recall b_2 (die Mimik) -> 4/5 Targets

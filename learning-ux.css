@@ -1296,6 +1296,12 @@
   color: #6d28d9;
 }
 
+/* Phase 5: Session Listening Box (German Audio Dictation) */
+.session-badge.listening {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
 .session-typing-box {
   margin-top: 10px;
   padding: 18px 16px;
@@ -1510,6 +1516,171 @@
 .btn-session-typing-continue:active {
   transform: translateY(2px);
   box-shadow: 0 1px 0 var(--ink-border);
+}
+
+/* Phase 5: Session Listening Box Styles */
+.session-listening-box {
+  margin-top: 10px;
+  padding: 18px 16px;
+  background: #f0f9ff;
+  border: 1.5px solid #bae6fd;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.session-listening-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.session-listening-icon {
+  font-size: 16px;
+}
+
+.session-listening-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #0284c7;
+  text-transform: uppercase;
+}
+
+.session-listening-audio-row {
+  margin-bottom: 12px;
+}
+
+.btn-session-listening-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #0284c7;
+  color: #ffffff;
+  border: 2px solid var(--ink-border);
+  box-shadow: 0 3px 0 var(--ink-border);
+  padding: 11px 26px;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 44px;
+}
+
+.btn-session-listening-play:hover {
+  background: #0369a1;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 var(--ink-border);
+}
+
+.btn-session-listening-play:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--ink-border);
+}
+
+.session-listening-prompt {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0369a1;
+  margin-bottom: 12px;
+}
+
+.session-listening-input-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.session-listening-input {
+  border-color: #7dd3fc;
+}
+
+.session-listening-input:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+}
+
+.btn-session-listening-submit {
+  background: #0284c7;
+}
+
+.btn-session-listening-submit:hover {
+  background: #0369a1;
+}
+
+.session-listening-feedback {
+  margin-top: 6px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+}
+
+.session-listening-canonical {
+  font-size: 16px;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.session-listening-canonical strong {
+  color: #0f172a;
+  font-size: 17px;
+}
+
+.session-listening-meaning {
+  font-size: 14px;
+  color: #475569;
+  margin-bottom: 12px;
+}
+
+.meaning-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-right: 4px;
+}
+
+.session-listening-feedback-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-session-listening-replay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 2px 0 #cbd5e1;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  min-height: 40px;
+}
+
+.btn-session-listening-replay:hover {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 #94a3b8;
+}
+
+.btn-session-listening-replay:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #94a3b8;
+}
+
+.btn-session-listening-continue {
+  min-height: 40px;
 }
 
 /* Session Complete Box */

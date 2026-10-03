@@ -110,4 +110,48 @@ test.describe('E2E Test 4: Mobile Responsive Usability & Touch Flow', () => {
     // Verify zero page errors
     expect(pageErrors).toHaveLength(0);
   });
+
+  test('Mobile viewport (390x844): Listening Recall box responsiveness, touch controls, zero horizontal scroll', async ({ page }) => {
+    const fixture = createDeterministicDailySessionFixture();
+    await seedStorage(page, fixture);
+
+    await page.goto('/');
+    await page.locator('#todayPrimaryCta').click();
+
+    // Advance past b_0 intro, b_1 typing, b_0 recall, b_2 intro to reach b_3 listening
+    await page.locator('#sessionIntroBox .btn-session-continue').click();
+    await page.locator('#sessionTypingInput').fill('die Geste');
+    await page.locator('#btnSessionTypingSubmit').click();
+    await expect(page.locator('#sessionTypingBox')).toBeHidden({ timeout: 4000 });
+    await page.locator('#activeRecallFrontAction .btn-reveal-answer').click();
+    await page.locator('button[data-rate="known"]').click();
+    await page.locator('#sessionIntroBox .btn-session-continue').click();
+
+    // Now in Listening Recall interaction
+    const listeningBox = page.locator('#sessionListeningBox');
+    await expect(listeningBox).toBeVisible();
+
+    // Verify Listen button is reachable and visible
+    const btnPlay = page.locator('#btnSessionListeningPlay');
+    await expect(btnPlay).toBeVisible();
+    await expect(btnPlay).toBeEnabled();
+
+    // Verify input is reachable
+    const listeningInput = page.locator('#sessionListeningInput');
+    await expect(listeningInput).toBeVisible();
+
+    // Verify umlaut toolbar is reachable
+    const umlautBar = page.locator('#sessionListeningUmlautBar');
+    await expect(umlautBar).toBeVisible();
+
+    // Test mobile tap on umlaut button
+    const btnUmlautA = page.locator('#sessionListeningUmlautBar button[data-char="ä"]');
+    await expect(btnUmlautA).toBeVisible();
+    await btnUmlautA.click();
+    expect(await listeningInput.inputValue()).toBe('ä');
+
+    // Verify zero horizontal scroll overflow on mobile viewport
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    expect(overflow).toBe(false);
+  });
 });

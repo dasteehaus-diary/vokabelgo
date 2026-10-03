@@ -7558,6 +7558,55 @@ input.search:focus {
                   </div>
                 </div>
               </div>
+
+              <!-- 5. Session LISTENING Action Box (Phase 5 Objective Verification) -->
+              <div class="session-listening-box hidden" id="sessionListeningBox">
+                <div class="session-listening-header">
+                  <span class="session-listening-icon">🎧</span>
+                  <span class="session-listening-title">NGHE VÀ VIẾT LẠI</span>
+                </div>
+
+                <div class="session-listening-audio-row">
+                  <button type="button" class="btn-session-listening-play" id="btnSessionListeningPlay" onclick="handleSessionListeningPlay(event)" aria-label="Nghe từ tiếng Đức">
+                    <span class="listen-icon">🔊</span>
+                    <span class="listen-text">Nghe từ</span>
+                  </button>
+                </div>
+
+                <div class="session-listening-prompt" id="sessionListeningPrompt">Bạn nghe được từ gì?</div>
+
+                <div class="session-listening-input-wrap" id="sessionListeningInputWrap">
+                  <input type="text" id="sessionListeningInput" class="session-typing-input session-listening-input" placeholder="Gõ lại từ bạn vừa nghe..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Gõ lại từ tiếng Đức bạn vừa nghe">
+
+                  <div class="session-umlaut-bar" id="sessionListeningUmlautBar" role="toolbar" aria-label="Ký tự đặc biệt tiếng Đức">
+                    <button type="button" class="btn-session-umlaut" data-char="ä" title="Chèn ä" onclick="insertSessionListeningUmlaut('ä', event)">ä</button>
+                    <button type="button" class="btn-session-umlaut" data-char="ö" title="Chèn ö" onclick="insertSessionListeningUmlaut('ö', event)">ö</button>
+                    <button type="button" class="btn-session-umlaut" data-char="ü" title="Chèn ü" onclick="insertSessionListeningUmlaut('ü', event)">ü</button>
+                    <button type="button" class="btn-session-umlaut" data-char="ß" title="Chèn ß" onclick="insertSessionListeningUmlaut('ß', event)">ß</button>
+                  </div>
+
+                  <div class="session-listening-actions">
+                    <button type="button" class="btn-session-typing-submit btn-session-listening-submit" id="btnSessionListeningSubmit" onclick="handleSessionListeningSubmit(event)">
+                      <span>Kiểm tra ↵</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="session-listening-feedback hidden" id="sessionListeningFeedback" aria-live="polite">
+                  <div class="session-typing-feedback-badge" id="sessionListeningFeedbackBadge"></div>
+                  <div class="session-typing-feedback-msg" id="sessionListeningFeedbackMsg"></div>
+                  <div class="session-listening-canonical" id="sessionListeningCanonical"></div>
+                  <div class="session-listening-meaning" id="sessionListeningMeaning"></div>
+                  <div class="session-listening-feedback-cta">
+                    <button type="button" class="btn-session-listening-replay" id="btnSessionListeningFeedbackReplay" onclick="handleSessionListeningPlay(event)" aria-label="Nghe lại âm thanh">
+                      <span>🔊 Nghe lại (S)</span>
+                    </button>
+                    <button type="button" class="btn-session-typing-continue btn-session-listening-continue" id="btnSessionListeningContinue" onclick="handleSessionListeningContinue(event)">
+                      <span>Tiếp tục (Enter) →</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- BACK FACE: REVEAL + RATINGS + PROGRESSIVE DISCLOSURE -->
@@ -8792,6 +8841,7 @@ input.search:focus {
 <script src="fsrs-srs.js"></script>
 <script src="vocabulary-schema.js"></script>
 <script src="typing-verification.js"></script>
+<script src="listening-verification.js"></script>
 <script src="learning-session.js"></script>
 <script src="learning-progress.js"></script>
 
@@ -13760,6 +13810,7 @@ VIDEO_FLASHCARDS.forEach((c, i) => {
 userCards.forEach(c=>{ c.source='user'; if(!c.id)c.id=uid(); });
 
 function allCards(){ return [...BASE, ...VIDEO_FLASHCARDS, ...userCards]; }
+window.allCards = allCards;
 function decks(){
   const s = new Set(allCards().map(c=>c.deck||'Khác'));
   return ['Tất cả bộ', ...Array.from(s).sort((a,b)=>a.localeCompare(b,'vi'))];
@@ -14322,6 +14373,7 @@ function renderSessionInteraction() {
   const introBox = document.getElementById('sessionIntroBox');
   const reinfBox = document.getElementById('sessionReinforceBox');
   const typingBox = document.getElementById('sessionTypingBox');
+  const listeningBox = document.getElementById('sessionListeningBox');
 
   if (interaction.type === 'typing') {
     if (badge) {
@@ -14334,6 +14386,7 @@ function renderSessionInteraction() {
     if (recallAction) recallAction.classList.add('hidden');
     if (introBox) introBox.classList.add('hidden');
     if (reinfBox) reinfBox.classList.add('hidden');
+    if (listeningBox) listeningBox.classList.add('hidden');
 
     if (typingBox) {
       typingBox.classList.remove('hidden');
@@ -14396,11 +14449,90 @@ function renderSessionInteraction() {
         }
       }
     }
+  } else if (interaction.type === 'listening') {
+    if (badge) {
+      badge.textContent = '🎧 NGHE VÀ VIẾT LẠI';
+      badge.className = 'session-badge listening';
+    }
+    // HIDE German term, metadata, meaning, and translation on front to avoid revealing answer!
+    if (frontTerm) frontTerm.style.display = 'none';
+    if (frontMeta) frontMeta.style.display = 'none';
+    if (recallAction) recallAction.classList.add('hidden');
+    if (introBox) introBox.classList.add('hidden');
+    if (reinfBox) reinfBox.classList.add('hidden');
+    if (typingBox) typingBox.classList.add('hidden');
+
+    if (listeningBox) {
+      listeningBox.classList.remove('hidden');
+      const inputWrap = document.getElementById('sessionListeningInputWrap');
+      const inputEl = document.getElementById('sessionListeningInput');
+      const fbBox = document.getElementById('sessionListeningFeedback');
+      const fbBadge = document.getElementById('sessionListeningFeedbackBadge');
+      const fbMsg = document.getElementById('sessionListeningFeedbackMsg');
+      const fbCanonical = document.getElementById('sessionListeningCanonical');
+      const fbMeaning = document.getElementById('sessionListeningMeaning');
+
+      const ts = interaction.targetState || {};
+
+      if (ts.listeningSubmitted) {
+        if (inputWrap) inputWrap.classList.add('hidden');
+        if (fbBox) fbBox.classList.remove('hidden');
+
+        const res = ts.lastObjectiveResult;
+        if (res === 'correct') {
+          if (fbBadge) {
+            fbBadge.textContent = '✓ CHÍNH XÁC';
+            fbBadge.className = 'session-typing-feedback-badge correct';
+          }
+          if (fbMsg) fbMsg.textContent = 'Xuất sắc! Bạn đã nghe và viết đúng từ tiếng Đức.';
+        } else if (res === 'almost') {
+          if (fbBadge) {
+            fbBadge.textContent = '⚠️ GẦN ĐÚNG';
+            fbBadge.className = 'session-typing-feedback-badge almost';
+          }
+          if (fbMsg) fbMsg.textContent = ts.listeningFeedback || 'Gần đúng, hãy chú ý mạo từ hoặc chính tả.';
+        } else {
+          if (fbBadge) {
+            fbBadge.textContent = '✕ CHƯA CHÍNH XÁC';
+            fbBadge.className = 'session-typing-feedback-badge wrong';
+          }
+          if (fbMsg) fbMsg.textContent = 'Chưa chính xác. Hãy nghe lại và ghi nhớ đáp án chuẩn bên dưới:';
+        }
+
+        if (fbCanonical) {
+          fbCanonical.innerHTML = `<span class="canonical-label">Đáp án:</span> <strong>${esc(ts.canonicalAnswer || c.term || '')}</strong>`;
+        }
+        if (fbMeaning) {
+          fbMeaning.innerHTML = `<span class="meaning-label">Nghĩa:</span> <span>${esc(c.meaning || c.vi || '')}</span>`;
+        }
+
+        const btnCont = document.getElementById('btnSessionListeningContinue');
+        if (btnCont) {
+          setTimeout(() => btnCont.focus(), 50);
+        }
+      } else {
+        if (inputWrap) inputWrap.classList.remove('hidden');
+        if (fbBox) fbBox.classList.add('hidden');
+        if (inputEl) {
+          if (!inputEl._sessionListeningKeydownBound) {
+            inputEl.addEventListener('keydown', handleSessionListeningInputKeydown);
+            inputEl._sessionListeningKeydownBound = true;
+          }
+          inputEl.value = '';
+          inputEl.disabled = false;
+        }
+        const btnPlay = document.getElementById('btnSessionListeningPlay');
+        if (btnPlay) {
+          setTimeout(() => btnPlay.focus(), 50);
+        }
+      }
+    }
   } else {
     // Normal / Intro / Reinforce: restore frontTerm & frontMeta
     if (frontTerm) frontTerm.style.display = '';
     if (frontMeta) frontMeta.style.display = '';
     if (typingBox) typingBox.classList.add('hidden');
+    if (listeningBox) listeningBox.classList.add('hidden');
 
     if (interaction.type === 'intro') {
       if (badge) {
@@ -14576,14 +14708,156 @@ function handleSessionTypingContinue(e) {
   renderSessionInteraction();
 }
 
-function insertSessionUmlaut(char, e) {
+function handleSessionListeningInputKeydown(e) {
+  if (e.key === 'Enter') {
+    if (e.isComposing) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!window.isStudySessionMode || !window.VokabelSession) return;
+    const session = window.VokabelSession.getTodaySession();
+    if (!session || session.completed) return;
+
+    const cur = session.queue[session.queueIndex];
+    if (!cur || cur.type !== 'listening') return;
+
+    const ts = session.targetStates[cur.cardId] || {};
+    // Enter khi listeningSubmitted === false -> handleSessionListeningSubmit()
+    // Enter khi feedback đang hiện / listeningSubmitted === true -> không double-submit
+    if (!ts.listeningSubmitted) {
+      handleSessionListeningSubmit(e);
+    }
+  }
+}
+window.handleSessionListeningInputKeydown = handleSessionListeningInputKeydown;
+
+var activeSessionListeningTimer = null;
+
+function handleSessionListeningSubmit(e) {
+  if (e) e.stopPropagation();
+  if (!window.VokabelSession) return;
+
+  const inputEl = document.getElementById('sessionListeningInput');
+  const val = inputEl ? inputEl.value : '';
+
+  const res = window.VokabelSession.handleListeningSubmit(val);
+  if (!res) return;
+
+  const submittedSessionId = res.session ? res.session.sessionId : null;
+  const submittedCardId = res.cardId;
+
+  if (res.result === 'correct') {
+    try { if (typeof playMatchSound === 'function') playMatchSound(); } catch(err) {}
+    renderSessionInteraction();
+
+    if (activeSessionListeningTimer) {
+      clearTimeout(activeSessionListeningTimer);
+      activeSessionListeningTimer = null;
+    }
+
+    activeSessionListeningTimer = setTimeout(() => {
+      activeSessionListeningTimer = null;
+      const current = window.VokabelSession.getTodaySession();
+      if (!current || current.completed) return;
+      if (submittedSessionId && current.sessionId !== submittedSessionId) return;
+
+      const curItem = current.queue[current.queueIndex];
+      // P0: Timer chỉ auto-continue nếu current item cardId trùng submittedCardId
+      if (!curItem || curItem.type !== 'listening' || curItem.cardId !== submittedCardId) {
+        return;
+      }
+
+      const ts = current.targetStates[submittedCardId];
+      if (!ts || ts.listeningSubmitted !== true) {
+        return;
+      }
+
+      const advRes = window.VokabelSession.handleListeningContinue();
+      if (!advRes) return;
+
+      renderSessionInteraction();
+      if (advRes.completed) {
+        if (typeof updateTodayDashboard === 'function') updateTodayDashboard();
+        checkDailyMilestoneAndReward();
+      }
+    }, 450);
+  } else {
+    try { if (typeof playMatchWrong === 'function') playMatchWrong(); } catch(err) {}
+    renderSessionInteraction();
+  }
+}
+
+function handleSessionListeningContinue(e) {
+  if (e) e.stopPropagation();
+  if (activeSessionListeningTimer) {
+    clearTimeout(activeSessionListeningTimer);
+    activeSessionListeningTimer = null;
+  }
+  if (!window.VokabelSession) return;
+  const res = window.VokabelSession.handleListeningContinue();
+  if (!res) return;
+  if (res.completed) {
+    if (typeof updateTodayDashboard === 'function') updateTodayDashboard();
+    checkDailyMilestoneAndReward();
+  }
+  renderSessionInteraction();
+}
+
+function handleSessionListeningPlay(e) {
   if (e) {
     e.preventDefault();
     e.stopPropagation();
   }
-  const inputEl = document.getElementById('sessionTypingInput');
-  if (!inputEl) return;
+  if (!window.isStudySessionMode || !window.VokabelSession) return;
+  const session = window.VokabelSession.getTodaySession();
+  if (!session || session.completed) return;
 
+  const cur = session.queue[session.queueIndex];
+  if (!cur || cur.type !== 'listening') return;
+
+  let card = null;
+  if (typeof allCards === 'function') {
+    card = allCards().find(c => c.id === cur.cardId);
+  } else if (typeof window.allCards === 'function') {
+    card = window.allCards().find(c => c.id === cur.cardId);
+  }
+  if (!card && window.VokabelSession && window.VokabelSession._lastCardsMap) {
+    card = window.VokabelSession._lastCardsMap[cur.cardId];
+  }
+  if (!card) return;
+
+  // Ghi nhận số lần nghe lại không bị phạt
+  window.VokabelSession.recordListeningReplay(cur.cardId);
+
+  const lv = window.VokabelListeningVerification;
+  if (lv && typeof lv.speakPrompt === 'function') {
+    const ok = lv.speakPrompt(card);
+    if (!ok && lv.canUseSpeech && !lv.canUseSpeech()) {
+      window.VokabelSession.handleListeningFallback();
+      if (typeof showRetroToast === 'function') {
+        showRetroToast('Thiết bị chưa hỗ trợ phát âm. Chuyển sang thẻ nhớ.', 'ℹ️');
+      }
+      renderSessionInteraction();
+      return;
+    }
+  } else if (window.speechSynthesis && window.SpeechSynthesisUtterance) {
+    const canonical = (window.VokabelCardSchema ? window.VokabelCardSchema.normalizeCard(card).canonicalAnswer : null) || card.term;
+    window.speechSynthesis.cancel();
+    const u = new window.SpeechSynthesisUtterance(canonical);
+    u.lang = 'de-DE';
+    u.rate = 0.9;
+    window.speechSynthesis.speak(u);
+  }
+
+  const inputEl = document.getElementById('sessionListeningInput');
+  const ts = session.targetStates[cur.cardId] || {};
+  if (inputEl && !ts.listeningSubmitted) {
+    inputEl.focus();
+  }
+}
+
+function insertCharIntoInput(inputEl, char) {
+  if (!inputEl) return;
   const start = inputEl.selectionStart || inputEl.value.length;
   const end = inputEl.selectionEnd || inputEl.value.length;
   const text = inputEl.value;
@@ -14594,6 +14868,24 @@ function insertSessionUmlaut(char, e) {
   inputEl.focus();
 
   try { if (typeof playMechanicalClick === 'function') playMechanicalClick(); } catch(err) {}
+}
+
+function insertSessionUmlaut(char, e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const inputEl = document.getElementById('sessionTypingInput');
+  insertCharIntoInput(inputEl, char);
+}
+
+function insertSessionListeningUmlaut(char, e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const inputEl = document.getElementById('sessionListeningInput');
+  insertCharIntoInput(inputEl, char);
 }
 
 function handleSessionRate(rating) {
@@ -14643,6 +14935,10 @@ function exitSessionToFreeStudy() {
     clearTimeout(activeSessionTypingTimer);
     activeSessionTypingTimer = null;
   }
+  if (activeSessionListeningTimer) {
+    clearTimeout(activeSessionListeningTimer);
+    activeSessionListeningTimer = null;
+  }
   window.isStudySessionMode = false;
   setStudySessionUiLock(false);
   const sBar = document.getElementById('sessionHeaderBar');
@@ -14660,6 +14956,8 @@ function exitSessionToFreeStudy() {
   if (reinfBox) reinfBox.classList.add('hidden');
   const typingBox = document.getElementById('sessionTypingBox');
   if (typingBox) typingBox.classList.add('hidden');
+  const listeningBox = document.getElementById('sessionListeningBox');
+  if (listeningBox) listeningBox.classList.add('hidden');
   const frontTerm = document.getElementById('frontTerm');
   if (frontTerm) frontTerm.style.display = '';
   const frontMeta = document.getElementById('frontMeta');
@@ -14674,6 +14972,10 @@ function handleSessionReturnToday() {
     clearTimeout(activeSessionTypingTimer);
     activeSessionTypingTimer = null;
   }
+  if (activeSessionListeningTimer) {
+    clearTimeout(activeSessionListeningTimer);
+    activeSessionListeningTimer = null;
+  }
   window.isStudySessionMode = false;
   setStudySessionUiLock(false);
   const sBar = document.getElementById('sessionHeaderBar');
@@ -14686,6 +14988,8 @@ function handleSessionReturnToday() {
   if (reinfBox) reinfBox.classList.add('hidden');
   const typingBox = document.getElementById('sessionTypingBox');
   if (typingBox) typingBox.classList.add('hidden');
+  const listeningBox = document.getElementById('sessionListeningBox');
+  if (listeningBox) listeningBox.classList.add('hidden');
   const frontTerm = document.getElementById('frontTerm');
   if (frontTerm) frontTerm.style.display = '';
   const frontMeta = document.getElementById('frontMeta');
@@ -14722,6 +15026,23 @@ function handleSessionKeydown(e) {
       }
     }
     // Block ratings 1, 2, 3 and space flip during typing
+    return;
+  }
+
+  if (currentItem.type === 'listening') {
+    const ts = s.targetStates[currentItem.cardId] || {};
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (ts.listeningSubmitted) {
+        handleSessionListeningContinue(e);
+      } else {
+        handleSessionListeningSubmit(e);
+      }
+    } else if (e.key === 's' || e.key === 'S') {
+      e.preventDefault();
+      handleSessionListeningPlay(e);
+    }
+    // Block ratings 1, 2, 3 and space flip during listening
     return;
   }
 
