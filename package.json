@@ -1,0 +1,14 @@
+{
+  "name": "vokabelgo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VokabelGo - Ung dung hoc tieng Duc qua Flashcard va Video",
+  "scripts": {
+    "test:unit": "node test-all.js",
+    "test:e2e": "playwright test",
+    "test:ci": "npm run test:unit && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

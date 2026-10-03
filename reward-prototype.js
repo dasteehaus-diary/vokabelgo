@@ -1034,6 +1034,16 @@
     if (video) {
       video.pause();
     }
+    if (!catchRevealHandled) {
+      triggerCatchReveal();
+    }
+    triggerCollectState();
+  }
+
+  function skipToCatchReveal(event) {
+    if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+    triggerCatchReveal();
+    triggerCollectState();
   }
 
   // --- 6. PHÁT LẠI / DỪNG TRẢI NGHIỆM ---
@@ -1271,6 +1281,7 @@
   function openRewardPrototypeModal() {
     const modal = document.getElementById('rewardPrototypeModal');
     if (!modal) return;
+    if (!modal.classList.contains('hidden')) return;
 
     const fallbackEl = document.getElementById('rewardVideoFallback');
     if (fallbackEl) fallbackEl.classList.add('hidden');
@@ -1356,6 +1367,7 @@
 
     const video = document.getElementById('rewardCatVideo');
     if (video) {
+      video.addEventListener('ended', onVideoEnded);
       video.addEventListener('error', function(e) {
         console.warn('[RewardPrototype] Video error:', e);
         const fallback = document.getElementById('rewardVideoFallback');

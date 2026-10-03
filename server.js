@@ -75,8 +75,11 @@ server.listen(PORT, () => {
   console.log(`  >> http://localhost:${PORT}`);
   console.log(`======================================================\n`);
   
-  // Tự động mở trình duyệt
-  const url = `http://localhost:${PORT}`;
-  const startCmd = process.platform === 'win32' ? `start ${url}` : `open ${url}`;
-  exec(startCmd);
+  // Tự động mở trình duyệt nếu không ở chế độ CI hoặc NO_OPEN
+  const SHOULD_OPEN_BROWSER = !process.env.CI && process.env.VOKABELGO_NO_OPEN !== '1';
+  if (SHOULD_OPEN_BROWSER) {
+    const url = `http://localhost:${PORT}`;
+    const startCmd = process.platform === 'win32' ? `start ${url}` : `open ${url}`;
+    exec(startCmd);
+  }
 });

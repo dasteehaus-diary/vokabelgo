@@ -40,6 +40,10 @@
 
 * { box-sizing: border-box; }
 
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
@@ -1084,6 +1088,8 @@ input.search:focus {
   cursor: pointer;
 }
 .card.flipped { transform: rotateY(180deg); }
+.card:not(.flipped) .back { pointer-events: none; }
+.card.flipped .front { pointer-events: none; }
 .face {
   position: absolute;
   inset: 0;
@@ -13955,8 +13961,8 @@ document.getElementById('card').onclick = () => {
   }
   document.getElementById('card').classList.toggle('flipped');
 };
-document.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>rate(b.dataset.rate));
-document.getElementById('nextBtn').onclick=next;
+document.querySelectorAll('[data-rate]').forEach(b=>b.onclick=(e)=>{ if(e) e.stopPropagation(); rate(b.dataset.rate); });
+document.getElementById('nextBtn').onclick=(e)=>{ if(e) e.stopPropagation(); next(); };
 
 document.getElementById('search').oninput=applyFilter;
 document.getElementById('deckSelect').onchange=applyFilter;
@@ -14022,12 +14028,17 @@ function setPrimaryHub(hub){
   const librarySec = document.getElementById('libraryMode');
 
   if (todaySec) todaySec.classList.toggle('hidden', hub !== 'today');
-  if (studySec) studySec.classList.toggle('hidden', hub !== 'study');
+  if (studySec) studySec.classList.toggle('hidden', hub !== 'study' && hub !== 'kino');
   if (kinoSec) {
     kinoSec.classList.toggle('hidden', hub !== 'kino');
     kinoSec.style.display = (hub === 'kino') ? 'block' : 'none';
   }
   if (librarySec) librarySec.classList.toggle('hidden', hub !== 'library');
+
+  const studySubnav = document.querySelector('.study-subnav-bar');
+  const toplineEl = document.querySelector('.topline');
+  if (studySubnav) studySubnav.style.display = (hub === 'kino') ? 'none' : '';
+  if (toplineEl && hub === 'kino') toplineEl.style.display = 'none';
 
   if (hub === 'today') {
     updateTodayDashboard();
@@ -14831,13 +14842,14 @@ function updateTodayDashboard(){
       if (ctaBtn) ctaBtn.className = 'today-primary-cta completed';
     }
   } else {
+    const isSessionInProgress = Boolean(sessionState && !sessionState.isCompleted);
     if (statusEl) {
-      statusEl.textContent = count > 0 ? `Còn ${5 - count} từ nữa` : 'Chưa hoàn thành';
+      statusEl.textContent = (isSessionInProgress || count > 0) ? `Còn ${5 - count} từ nữa` : 'Chưa hoàn thành';
       statusEl.style.color = 'var(--primary)';
     }
-    if (titleEl) titleEl.textContent = count > 0 ? 'Tiếp tục bài học hôm nay 🐾' : 'Bắt đầu phiên học hôm nay 🚀';
+    if (titleEl) titleEl.textContent = (isSessionInProgress || count > 0) ? 'Tiếp tục bài học hôm nay 🐾' : 'Bắt đầu phiên học hôm nay 🚀';
     if (descEl) {
-      if (count > 0) {
+      if (isSessionInProgress || count > 0) {
         descEl.textContent = `Đang học · ${count}/5 mục tiêu. Hoàn thành để mở khóa câu cá hôm nay.`;
       } else if (progressTruth.needsReview > 0) {
         descEl.textContent = `Có ${progressTruth.needsReview} từ đang đến lượt ôn. VokabelGo sẽ ưu tiên những từ đến lượt ôn và thêm từ mới vừa đủ cho phiên 5 mục tiêu.`;
@@ -14845,7 +14857,7 @@ function updateTodayDashboard(){
         descEl.textContent = 'VokabelGo sẽ ưu tiên những từ đến lượt ôn và thêm từ mới vừa đủ cho phiên 5 mục tiêu.';
       }
     }
-    if (ctaText) ctaText.textContent = count > 0 ? `Tiếp tục học (${count}/5 từ)` : 'Bắt đầu học ngay (0/5 từ)';
+    if (ctaText) ctaText.textContent = (isSessionInProgress || count > 0) ? `Tiếp tục học (${count}/5 từ)` : 'Bắt đầu học ngay (0/5 từ)';
     if (ctaIcon) ctaIcon.textContent = '🚀';
     if (ctaBtn) ctaBtn.className = 'today-primary-cta';
   }

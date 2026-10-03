@@ -4,6 +4,11 @@ Thumbs.db
 *.tmp
 *.log
 
+# Dependencies & Playwright Test Artifacts
+node_modules/
+playwright-report/
+test-results/
+
 # Thư mục lưu trữ & Tạm thời dung lượng lớn
 video_archive/
 _backup_video_full_phase1/
