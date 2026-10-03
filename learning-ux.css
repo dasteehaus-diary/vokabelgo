@@ -465,8 +465,47 @@
 /* Quick Metrics Strip */
 .today-metrics-strip {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
+}
+
+.metric-card-modern.metric-needs-review .metric-card-val {
+  color: #D97706; /* warm amber, supportive attention, not alarming red */
+}
+.metric-card-modern.metric-learning .metric-card-val {
+  color: #2563EB; /* focused primary blue */
+}
+.metric-card-modern.metric-stable .metric-card-val {
+  color: #059669; /* gentle emerald */
+}
+
+/* Secondary Gamification & Consistency Meta Row */
+.today-secondary-meta {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #64748B;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(241, 245, 249, 0.7);
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.secondary-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.secondary-meta-dot {
+  color: #CBD5E1;
+  font-weight: 800;
 }
 
 .metric-card-modern {
@@ -1021,7 +1060,20 @@
   }
   
   .today-metrics-strip {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  
+  .today-metrics-strip .metric-card-modern {
+    padding: 10px 4px;
+  }
+  
+  .today-metrics-strip .metric-card-val {
+    font-size: 16px;
+  }
+  
+  .today-metrics-strip .metric-card-label {
+    font-size: 11px;
   }
   
   .today-pathways-grid {

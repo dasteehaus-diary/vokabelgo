@@ -10,7 +10,8 @@ const suites = [
   'test-core-learning-loop-acceptance.js',
   'test-fsrs-srs-acceptance.js',
   'test-phase3-typing-acceptance.js',
-  'test-phase4a-schema-acceptance.js'
+  'test-phase4a-schema-acceptance.js',
+  'test-phase4b-progress-acceptance.js'
 ];
 
 let failedSuites = [];

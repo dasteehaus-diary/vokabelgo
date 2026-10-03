@@ -7309,28 +7309,41 @@ input.search:focus {
       </div>
     </div>
 
-    <!-- Quick Metrics Strip (No dark patterns, warm & supportive) -->
+    <!-- Quick Metrics Strip: Pure Learning Truth (Cần ôn · Đang học · Nhớ ổn) -->
     <div class="today-metrics-strip">
-      <div class="metric-card-modern">
-        <span class="metric-card-icon">🎯</span>
-        <span class="metric-card-val" id="todayMetricGoal">5 từ</span>
-        <span class="metric-card-label">Mục tiêu ngày</span>
+      <div class="metric-card-modern metric-needs-review">
+        <span class="metric-card-icon">🕒</span>
+        <span class="metric-card-val" id="todayMetricNeedsReview">0 từ</span>
+        <span class="metric-card-label">Cần ôn</span>
       </div>
-      <div class="metric-card-modern">
+      <div class="metric-card-modern metric-learning">
+        <span class="metric-card-icon">📖</span>
+        <span class="metric-card-val" id="todayMetricLearning">0 từ</span>
+        <span class="metric-card-label">Đang học</span>
+      </div>
+      <div class="metric-card-modern metric-stable">
         <span class="metric-card-icon">🧠</span>
-        <span class="metric-card-val" id="todayMetricKnown">0</span>
-        <span class="metric-card-label">Từ đã nhớ</span>
+        <span class="metric-card-val" id="todayMetricStable">0 từ</span>
+        <span class="metric-card-label">Nhớ ổn</span>
       </div>
-      <div class="metric-card-modern">
-        <span class="metric-card-icon">🔥</span>
-        <span class="metric-card-val" id="todayMetricStreak">0 ngày</span>
-        <span class="metric-card-label">Chuỗi ngày học</span>
-      </div>
-      <div class="metric-card-modern" onclick="setPrimaryHub('library'); setLibraryTab('fish');" style="cursor:pointer;" title="Bấm để xem Hồ cá">
-        <span class="metric-card-icon">🐟</span>
-        <span class="metric-card-val" id="todayMetricFish">0 chú</span>
-        <span class="metric-card-label">Giỏ cá đã câu</span>
-      </div>
+    </div>
+
+    <!-- Secondary Consistency & Gamification Row (Low-pressure, supportive) -->
+    <div class="today-secondary-meta" id="todaySecondaryMeta">
+      <span class="secondary-meta-item" onclick="setPrimaryHub('library'); setLibraryTab('fish');" style="cursor:pointer;" title="Bấm để xem Hồ cá">
+        <span class="secondary-meta-icon">🐟</span>
+        <span id="todayMetaFishText">0 chú trong Hồ cá</span>
+        <span id="todayMetricFish" style="display:none;">0 chú</span>
+      </span>
+      <span class="secondary-meta-dot">·</span>
+      <span class="secondary-meta-item">
+        <span class="secondary-meta-icon">🔥</span>
+        <span id="todayMetaStreakText">Hôm nay là một ngày học mới.</span>
+        <span id="todayMetricStreak" style="display:none;">0 ngày</span>
+      </span>
+      <!-- Hidden legacy metric elements for full backward compatibility -->
+      <span id="todayMetricGoal" style="display:none;">5 từ</span>
+      <span id="todayMetricKnown" style="display:none;">0</span>
     </div>
 
     <!-- Secondary Pathways Grid -->
@@ -8774,6 +8787,7 @@ input.search:focus {
 <script src="vocabulary-schema.js"></script>
 <script src="typing-verification.js"></script>
 <script src="learning-session.js"></script>
+<script src="learning-progress.js"></script>
 
 <script>
 const BASE = [
@@ -14770,6 +14784,11 @@ function updateTodayDashboard(){
     sessionState = window.VokabelSession.getTodaySessionState();
   }
 
+  let progressTruth = { unseen: 0, learning: 0, needsReview: 0, stable: 0, total: 0, seen: 0 };
+  if (window.VokabelProgressTruth && typeof window.VokabelProgressTruth.getSummary === 'function') {
+    progressTruth = window.VokabelProgressTruth.getSummary(typeof allCards === 'function' ? allCards() : []);
+  }
+
   const ratioEl = document.getElementById('todayHeroProgressRatio');
   const statusEl = document.getElementById('todayHeroProgressStatus');
   const fillEl = document.getElementById('todayHeroProgressFill');
@@ -14816,27 +14835,58 @@ function updateTodayDashboard(){
       statusEl.textContent = count > 0 ? `Còn ${5 - count} từ nữa` : 'Chưa hoàn thành';
       statusEl.style.color = 'var(--primary)';
     }
-    if (titleEl) titleEl.textContent = count > 0 ? 'Tiếp tục bài học hôm nay 🐾' : 'Bắt đầu bài học hôm nay 🚀';
-    if (descEl) descEl.textContent = 'Học tối thiểu 5 từ qua Active Recall để nhớ sâu và câu cá cùng bé mèo.';
+    if (titleEl) titleEl.textContent = count > 0 ? 'Tiếp tục bài học hôm nay 🐾' : 'Bắt đầu phiên học hôm nay 🚀';
+    if (descEl) {
+      if (count > 0) {
+        descEl.textContent = `Đang học · ${count}/5 mục tiêu. Hoàn thành để mở khóa câu cá hôm nay.`;
+      } else if (progressTruth.needsReview > 0) {
+        descEl.textContent = `Có ${progressTruth.needsReview} từ đang đến lượt ôn. VokabelGo sẽ ưu tiên những từ đến lượt ôn và thêm từ mới vừa đủ cho phiên 5 mục tiêu.`;
+      } else {
+        descEl.textContent = 'VokabelGo sẽ ưu tiên những từ đến lượt ôn và thêm từ mới vừa đủ cho phiên 5 mục tiêu.';
+      }
+    }
     if (ctaText) ctaText.textContent = count > 0 ? `Tiếp tục học (${count}/5 từ)` : 'Bắt đầu học ngay (0/5 từ)';
     if (ctaIcon) ctaIcon.textContent = '🚀';
     if (ctaBtn) ctaBtn.className = 'today-primary-cta';
   }
 
-  const knownCount = Object.values(progress).filter(v => v === 'known').length;
-  const knownEl = document.getElementById('todayMetricKnown');
-  if (knownEl) knownEl.textContent = knownCount;
+  // Phase 4B: Derived Learning Progress Truth Layer metrics
+  const needsReviewEl = document.getElementById('todayMetricNeedsReview');
+  if (needsReviewEl) needsReviewEl.textContent = `${progressTruth.needsReview} từ`;
 
-  const streakEl = document.getElementById('todayMetricStreak');
-  if (streakEl) streakEl.textContent = summary.streak > 0 ? `${summary.streak} ngày` : 'Khởi động';
+  const learningEl = document.getElementById('todayMetricLearning');
+  if (learningEl) learningEl.textContent = `${progressTruth.learning} từ`;
 
+  const stableEl = document.getElementById('todayMetricStable');
+  if (stableEl) stableEl.textContent = `${progressTruth.stable} từ`;
+
+  // Secondary consistency & gamification row
   let fishCount = 0;
   try {
     const rawFish = localStorage.getItem('vokabelgo_fish_collection_v1');
     if (rawFish) fishCount = JSON.parse(rawFish).length;
   } catch(e){}
+  const fishTextEl = document.getElementById('todayMetaFishText');
+  if (fishTextEl) fishTextEl.textContent = `${fishCount} chú trong Hồ cá`;
   const fishEl = document.getElementById('todayMetricFish');
   if (fishEl) fishEl.textContent = `${fishCount} chú`;
+
+  const streakTextEl = document.getElementById('todayMetaStreakText');
+  if (streakTextEl) {
+    if (summary.streak > 0) {
+      streakTextEl.textContent = `${summary.streak} ngày học đều`;
+    } else {
+      streakTextEl.textContent = 'Hôm nay là một ngày học mới.';
+    }
+  }
+  const streakEl = document.getElementById('todayMetricStreak');
+  if (streakEl) streakEl.textContent = summary.streak > 0 ? `${summary.streak} ngày` : 'Khởi động';
+
+  // Legacy metric fallbacks for compatibility
+  const knownEl = document.getElementById('todayMetricKnown');
+  if (knownEl) knownEl.textContent = progressTruth.stable;
+  const goalEl = document.getElementById('todayMetricGoal');
+  if (goalEl) goalEl.textContent = '5 từ';
 
   const resumeState = getLearningResumeState();
   const resumeDeckTag = document.getElementById('todayResumeDeckTag');
