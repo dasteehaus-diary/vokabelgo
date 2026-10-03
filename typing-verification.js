@@ -9,6 +9,20 @@
   const GERMAN_ARTICLES = ['der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einen', 'einem', 'einer', 'eines'];
   const EXCLUDED_TAGS = ['inhalt', 'grammatik', 'fragen', 'qa', 'q&a', 'redemittel_lang'];
 
+  let schemaModule = null;
+  function getSchema() {
+    if (typeof window !== 'undefined' && window.VokabelCardSchema) return window.VokabelCardSchema;
+    if (typeof global !== 'undefined' && global.VokabelCardSchema) return global.VokabelCardSchema;
+    if (schemaModule) return schemaModule;
+    if (typeof require !== 'undefined') {
+      try {
+        schemaModule = require('./vocabulary-schema.js');
+        return schemaModule;
+      } catch (e) {}
+    }
+    return null;
+  }
+
   const VokabelTypingVerification = {
     // 1. Chuẩn hóa câu trả lời (trim, collapse spaces, lowercase, strip edge punctuation)
     normalizeAnswer: function(text) {
@@ -22,65 +36,53 @@
     },
 
     // 2. Rút trích đáp án chuẩn (Canonical German Answer)
-    // Ví dụ: "die Geste, -n" -> "die Geste"
+    // Delegated to VokabelCardSchema.normalizeCard(card).canonicalAnswer (Phase 4A)
     getCanonicalTypingAnswer: function(card) {
       if (!card) return '';
+      const schema = getSchema();
+      if (schema && typeof schema.normalizeCard === 'function') {
+        return schema.normalizeCard(card).canonicalAnswer;
+      }
       let term = (card.term || card.de || '').trim();
       if (!term) return '';
-
       // Loại bỏ annotation plural sau dấu phẩy: ", -n", ", -er", ", -¨er", ", pl.", ", die ..."
       term = term.replace(/,\s*(-[^\s,]*|pl\.?|Pl\.?|die\s+[^,]+)$/i, '').trim();
-
-      // Collapse whitespace
       term = term.replace(/\s+/g, ' ').trim();
-
       return term;
     },
 
     // 3. Kiểm tra tính hợp lệ của thẻ cho Typing Verification
+    // Delegated to VokabelCardSchema.normalizeCard(card).objectiveTypingEligible (Phase 4A)
     isTypingEligible: function(card) {
       if (!card) return false;
+      const schema = getSchema();
+      if (schema && typeof schema.normalizeCard === 'function') {
+        return schema.normalizeCard(card).objectiveTypingEligible;
+      }
       const rawTerm = (card.term || card.de || '').trim();
       const rawMeaning = (card.meaning || card.vi || '').trim();
       if (!rawTerm || !rawMeaning) return false;
-
-      // Loại trừ câu hỏi
       if (rawTerm.includes('?') || rawMeaning.includes('?')) return false;
-
-      // Loại trừ placeholder kiểu ... hoặc …
       if (rawTerm.includes('...') || rawTerm.includes('…')) return false;
-
-      // Loại trừ nhiều biến thể ngăn cách bằng / hoặc ;
       if (rawTerm.includes('/') || rawTerm.includes(';')) return false;
-
-      // P1-1: Loại trừ các thẻ chứa metadata ngữ pháp (ví dụ: " + Dat.", " + Akk.", " + Genitiv", " + Passiv")
       if (rawTerm.includes('+') || /\b(dat\.|akk\.|genitiv|gen\.|passiv|infinitiv)\b/i.test(rawTerm)) {
         return false;
       }
-
-      // Loại trừ các tags: Inhalt, Grammatik, Fragen
       const tags = Array.isArray(card.tags) ? card.tags : [];
       for (const t of tags) {
         if (EXCLUDED_TAGS.includes(String(t).toLowerCase().trim())) {
           return false;
         }
       }
-
-      // Loại trừ deck nếu chứa Grammatik hoặc Inhalt
       const deck = String(card.deck || '').toLowerCase();
       if (deck.includes('grammatik') || deck.includes('inhalt')) {
         return false;
       }
-
-      // Phải rút trích được canonical answer an toàn
       const canonical = this.getCanonicalTypingAnswer(card);
       if (!canonical || canonical.length < 2) return false;
-
-      // Giới hạn độ dài: tối đa 45 ký tự và tối đa 4 từ
       if (canonical.length > 45) return false;
       const words = canonical.split(/\s+/).filter(Boolean);
       if (words.length > 4) return false;
-
       return true;
     },
 

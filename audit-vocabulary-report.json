@@ -1,0 +1,534 @@
+{
+  "generatedAt": "2026-10-03T05:50:22.726Z",
+  "totalCards": 294,
+  "sources": {
+    "baseCards": 234,
+    "videoCards": 60
+  },
+  "byCardType": {
+    "noun": 51,
+    "verb": 37,
+    "phrase": 121,
+    "expression": 7,
+    "grammar": 26,
+    "question": 20,
+    "content": 4,
+    "other": 28
+  },
+  "questionOrContentCombined": 24,
+  "objectiveTypingEligible": 177,
+  "objectiveTypingIneligible": 117,
+  "needsManualReviewCount": 46,
+  "ambiguousCards": [
+    {
+      "id": "b_9",
+      "source": "base",
+      "term": "schreien / jemanden anschreien",
+      "meaning": "hét / quát vào ai",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon"
+      ]
+    },
+    {
+      "id": "b_17",
+      "source": "base",
+      "term": "bilingual / zweisprachig",
+      "meaning": "song ngữ",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon"
+      ]
+    },
+    {
+      "id": "b_18",
+      "source": "base",
+      "term": "monolingual / einsprachig",
+      "meaning": "đơn ngữ",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon"
+      ]
+    },
+    {
+      "id": "b_26",
+      "source": "base",
+      "term": "ein Gespräch beginnen / führen / am Laufen halten",
+      "meaning": "bắt đầu / tiến hành / duy trì cuộc trò chuyện",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon"
+      ]
+    },
+    {
+      "id": "b_33",
+      "source": "base",
+      "term": "Kritik an jemandem/etwas üben",
+      "meaning": "phê bình ai / điều gì",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon"
+      ]
+    },
+    {
+      "id": "b_34",
+      "source": "base",
+      "term": "jemanden/etwas kritisieren",
+      "meaning": "phê bình ai / điều gì bằng động từ",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon"
+      ]
+    },
+    {
+      "id": "b_55",
+      "source": "base",
+      "term": "Sprachkenntnisse erwerben / verbessern",
+      "meaning": "tích lũy / cải thiện năng lực ngôn ngữ",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon"
+      ]
+    },
+    {
+      "id": "b_62",
+      "source": "base",
+      "term": "Langer Rede kurzer Sinn: …",
+      "meaning": "Tóm lại là…",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_63",
+      "source": "base",
+      "term": "Kurz gesagt: …",
+      "meaning": "Nói ngắn gọn là…",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_64",
+      "source": "base",
+      "term": "Zusammenfassend lässt sich sagen, dass …",
+      "meaning": "Tóm lại có thể nói rằng…",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_67",
+      "source": "base",
+      "term": "nicht nur …, sondern auch …",
+      "meaning": "không chỉ … mà còn …",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_68",
+      "source": "base",
+      "term": "zwar …, aber …",
+      "meaning": "tuy … nhưng …; đưa hai mặt của một ý",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_71",
+      "source": "base",
+      "term": "um … zu",
+      "meaning": "để; diễn đạt mục đích khi cùng chủ ngữ",
+      "cardType": "verb",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_73",
+      "source": "base",
+      "term": "Mir ist aufgefallen, dass …",
+      "meaning": "Tôi nhận thấy rằng…",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_74",
+      "source": "base",
+      "term": "Dadurch konnte ich …",
+      "meaning": "Do đó / Vì vậy tôi đã không thể…",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_75",
+      "source": "base",
+      "term": "Könntest du … bitte …?",
+      "meaning": "Bạn có thể… được không?",
+      "cardType": "question",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_76",
+      "source": "base",
+      "term": "Habe ich dich richtig verstanden, dass …?",
+      "meaning": "Tôi hiểu đúng ý bạn là… phải không?",
+      "cardType": "question",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_77",
+      "source": "base",
+      "term": "So habe ich das nicht gemeint. Ich wollte sagen, dass …",
+      "meaning": "Tôi không có ý như vậy. Ý tôi muốn nói là…",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_78",
+      "source": "base",
+      "term": "In diesem Punkt stimme ich dir zu. Bei … sehe ich es anders.",
+      "meaning": "Về điểm này tôi đồng ý với bạn. Nhưng ở… tôi nghĩ khác.",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_79",
+      "source": "base",
+      "term": "Wie wäre es, wenn wir …?",
+      "meaning": "Hay là chúng ta…?",
+      "cardType": "question",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_110",
+      "source": "base",
+      "term": "können … verstärken",
+      "meaning": "có thể làm … trầm trọng hơn",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_111",
+      "source": "base",
+      "term": "Man sollte …",
+      "meaning": "Nên…; đưa ra lời khuyên",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_112",
+      "source": "base",
+      "term": "… kann helfen, … zu …",
+      "meaning": "… có thể giúp làm gì",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_113",
+      "source": "base",
+      "term": "Bei starken Beschwerden sollte man …",
+      "meaning": "Khi có triệu chứng nặng, nên…",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_115",
+      "source": "base",
+      "term": "Stress → Hormone → Darmarbeit → Verdauung → Wahrnehmung",
+      "meaning": "Chuỗi kiến thức: Stress → cơ thể sản xuất hormone → hoạt động của ruột có thể thay đổi → tiêu hóa có thể nhanh/chậm hơn → đau và thay đổi trong bụng có thể được cảm nhận rõ hơn.",
+      "cardType": "content",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_flow_arrow"
+      ]
+    },
+    {
+      "id": "b_121",
+      "source": "base",
+      "term": "Problem → Ursache/Faktor → Folge → Lösung",
+      "meaning": "Khung logic để hiểu và trình bày: nêu vấn đề → nguyên nhân/yếu tố → hệ quả có thể có → cách hỗ trợ/giải pháp.",
+      "cardType": "content",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon",
+        "has_flow_arrow"
+      ]
+    },
+    {
+      "id": "b_123",
+      "source": "base",
+      "term": "Wenn man Stress hat, … / Dadurch …",
+      "meaning": "Khi người ta bị stress,… / Qua đó, do đó…",
+      "cardType": "phrase",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon",
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_125",
+      "source": "base",
+      "term": "Um Stress zu reduzieren, kann man …",
+      "meaning": "Để giảm stress, người ta có thể…",
+      "cardType": "verb",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_130",
+      "source": "base",
+      "term": "Deshalb sollte man …",
+      "meaning": "Vì vậy, người ta nên…",
+      "cardType": "verb",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_132",
+      "source": "base",
+      "term": "Schreibplan: Einleitung → Problem → Erklärung → Lösung → Schluss",
+      "meaning": "Khung viết: mở chủ đề → nêu vấn đề/tác động → giải thích nguyên nhân-hệ quả → đưa lời khuyên/giải pháp → kết luận.",
+      "cardType": "phrase",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_flow_arrow"
+      ]
+    },
+    {
+      "id": "b_157",
+      "source": "base",
+      "term": "Wer …, der …",
+      "meaning": "Ai … thì người đó …",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_158",
+      "source": "base",
+      "term": "Wen …, dem …",
+      "meaning": "Người mà … thì với người đó …",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_159",
+      "source": "base",
+      "term": "Wer …, den …",
+      "meaning": "Ai … thì người đó ở Akkusativ …",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_160",
+      "source": "base",
+      "term": "Wem …, der …",
+      "meaning": "Người được / với người mà … thì người đó …",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_161",
+      "source": "base",
+      "term": "Seitdem …",
+      "meaning": "kể từ khi …; diễn đạt thay đổi từ một mốc trong quá khứ đến hiện tại",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_164",
+      "source": "base",
+      "term": "der von … gegründete Verein",
+      "meaning": "câu lạc bộ được … thành lập",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_175",
+      "source": "base",
+      "term": "Am Anfang versucht man oft, … / Das reicht aber nicht immer aus.",
+      "meaning": "Ban đầu người ta thường cố… / Nhưng như vậy không phải lúc nào cũng đủ.",
+      "cardType": "phrase",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon",
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_183",
+      "source": "base",
+      "term": "Sport kann dabei eine wichtige Rolle spielen, weil …",
+      "meaning": "Thể thao có thể đóng vai trò quan trọng vì…",
+      "cardType": "phrase",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_187",
+      "source": "base",
+      "term": "jemandem/etwas begegnen + Dat.",
+      "meaning": "gặp / bắt gặp ai hoặc điều gì",
+      "cardType": "phrase",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon"
+      ]
+    },
+    {
+      "id": "b_214",
+      "source": "base",
+      "term": "Wer …, …",
+      "meaning": "Ai / bất kỳ người nào mà …",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_215",
+      "source": "base",
+      "term": "ohne … zu müssen",
+      "meaning": "mà không cần phải …",
+      "cardType": "verb",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "b_217",
+      "source": "base",
+      "term": "zwar …, doch/aber …",
+      "meaning": "tuy … nhưng …",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_slash_or_semicolon",
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "vk_3",
+      "source": "video",
+      "term": "so tun, als ob...",
+      "meaning": "giả vờ như thể là, làm như thể...",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "vk_7",
+      "source": "video",
+      "term": "Erinnerungen hängen an...",
+      "meaning": "kỷ niệm gắn liền / đọng lại với một đồ vật hay nơi chốn",
+      "cardType": "other",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "vk_19",
+      "source": "video",
+      "term": "aufpassen auf...",
+      "meaning": "để mắt, trông nom, chăm sóc cẩn thận",
+      "cardType": "verb",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    },
+    {
+      "id": "vk_30",
+      "source": "video",
+      "term": "sich gewöhnen an...",
+      "meaning": "dần quen với điều gì, thích nghi với sự thay đổi",
+      "cardType": "grammar",
+      "objectiveTypingEligible": false,
+      "reasons": [
+        "has_ellipsis"
+      ]
+    }
+  ]
+}
