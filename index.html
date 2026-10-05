@@ -7165,6 +7165,154 @@ input.search:focus {
   <link rel="stylesheet" href="learning-ux.css">
 </head>
 <body>
+<!-- VOKABELGO REUSABLE SVG ICON SYSTEM (ROUND 1) -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;" aria-hidden="true">
+  <defs>
+    <!-- NAVIGATION ICONS -->
+    <symbol id="icon-today" viewBox="0 0 24 24">
+      <path d="M3 10.5L12 3l9 7.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5 9.5V20a1 1 0 001 1h12a1 1 0 001-1V9.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M9.5 21v-5.5a2.5 2.5 0 015 0V21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 4.5v3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="icon-study" viewBox="0 0 24 24">
+      <path d="M12 6.5c-2.5-1.5-5.5-1.5-8-1v13c2.5-.5 5.5-.5 8 1 2.5-1.5 5.5-1.5 8-1v-13c-2.5-.5-5.5-.5-8 1z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12 6.5v14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M6.5 10.5h3M6.5 14h3M14.5 10.5h3M14.5 14h3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+
+    <symbol id="icon-kino" viewBox="0 0 24 24">
+      <rect x="3" y="4.5" width="18" height="15.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="3" y1="9.5" x2="21" y2="9.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="7.5" y1="4.5" x2="6" y2="9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <line x1="13" y1="4.5" x2="11.5" y2="9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <line x1="18.5" y1="4.5" x2="17" y2="9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M10.5 12.5l4.5 2.5-4.5 2.5v-5z" fill="currentColor"/>
+    </symbol>
+
+    <symbol id="icon-library" viewBox="0 0 24 24">
+      <line x1="3" y1="20" x2="21" y2="20" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      <rect x="4.5" y="6" width="3.5" height="14" rx="1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="4.5" y1="10" x2="8" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <rect x="9.5" y="4" width="3.5" height="16" rx="1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="9.5" y1="9" x2="13" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M16 6.5l3.5 1.5a1 1 0 01.5 1.3l-4 9.2a1 1 0 01-1.3.5l-3.5-1.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- PROGRESS TRUTH ICONS -->
+    <symbol id="icon-needs-review" viewBox="0 0 24 24">
+      <path d="M20 12A8 8 0 1 1 16.5 5.5L20 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M20 2.5V6h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12 8.5v4l2.8 1.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="icon-learning" viewBox="0 0 24 24">
+      <path d="M12 6.5c-2.5-1.5-5.5-1.5-8-1v13c2.5-.5 5.5-.5 8 1 2.5-1.5 5.5-1.5 8-1v-13c-2.5-.5-5.5-.5-8 1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12 6.5v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M6.5 10h3M6.5 13.5h3M14.5 10h3M14.5 13.5h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </symbol>
+
+    <symbol id="icon-stable" viewBox="0 0 24 24">
+      <path d="M12 3.5l2.4 5.3a1 1 0 00.8.6l5.7.6a.8.8 0 01.5 1.4l-4.2 3.8a1 1 0 00-.3.9l1.2 5.6a.8.8 0 01-1.2.9L12 19.3a1 1 0 00-1 0l-4.8 2.7a.8.8 0 01-1.2-.9l1.2-5.6a1 1 0 00-.3-.9L1.7 11.4a.8.8 0 01.5-1.4l5.7-.6a1 1 0 00.8-.6L12 3.5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- LEARNING / SESSION ICONS -->
+    <symbol id="icon-recall" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M12 4a8 8 0 0 1 7.8 6.2 8 8 0 0 1-2.3 7.8 8 8 0 1 1-1.5-11.8L18 8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 4v4h-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="icon-typing" viewBox="0 0 24 24">
+      <rect x="3" y="6" width="18" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="7" cy="10" r=".6" fill="currentColor"/>
+      <circle cx="10.5" cy="10" r=".6" fill="currentColor"/>
+      <circle cx="14" cy="10" r=".6" fill="currentColor"/>
+      <circle cx="17.5" cy="10" r=".6" fill="currentColor"/>
+      <line x1="7" y1="14.5" x2="12.5" y2="14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="15.5" y1="13" x2="15.5" y2="16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+
+    <symbol id="icon-listening" viewBox="0 0 24 24">
+      <path d="M7.5 11c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6c0 3.8-2.8 5.2-3.3 7.2-.3 1.1-.9 1.8-2.2 1.8a2.3 2.3 0 0 1-2.3-2.3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M13 9a2 2 0 0 1 2 2c0 1.3-.9 1.8-.9 2.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M4 11a7 7 0 0 1 1.8-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M2 11a9.5 9.5 0 0 1 2.5-6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+
+    <symbol id="icon-new-word" viewBox="0 0 24 24">
+      <rect x="4" y="6" width="12.5" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="7" y1="10" x2="12" y2="10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="7" y1="13.5" x2="13.5" y2="13.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M19 2.5l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6L19 2.5z" fill="currentColor"/>
+    </symbol>
+
+    <symbol id="icon-reinforce" viewBox="0 0 24 24">
+      <path d="M12 3.5L4.5 7v5.5c0 5 3.3 8.7 7.5 10 4.2-1.3 7.5-5 7.5-10V7L12 3.5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M9 12.5l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- CONTENT / CALLOUT ICONS -->
+    <symbol id="icon-memory-tip" viewBox="0 0 24 24">
+      <rect x="4" y="4.5" width="16" height="15.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="12" cy="8" r="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="8" y1="15.5" x2="13" y2="15.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </symbol>
+
+    <symbol id="icon-easy-to-confuse" viewBox="0 0 24 24">
+      <rect x="7" y="7" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M10.5 13.5c1-1 2-1 3 0s2 1 3 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+
+    <symbol id="icon-grammar-structure" viewBox="0 0 24 24">
+      <circle cx="6" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="1.9"/>
+      <circle cx="18" cy="6.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.9"/>
+      <circle cx="18" cy="17.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.9"/>
+      <path d="M8.5 12h3c1.5 0 2.5-1 3.5-3.5L15.5 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M11.5 12c1 0 2 1 3 3.5l1 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+
+    <symbol id="icon-example" viewBox="0 0 24 24">
+      <path d="M20 4.5H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3v3.5l4-3.5h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M8.5 9.5a1.5 1.5 0 0 0-1.5 1.5c0 1.2 1.5 2 1.5 2M14.5 9.5a1.5 1.5 0 0 0-1.5 1.5c0 1.2 1.5 2 1.5 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- COLLECTION / REWARD ICONS -->
+    <symbol id="icon-fish" viewBox="0 0 24 24">
+      <path d="M19.5 12c-3.2-4-8.5-5.5-13.5-3.5 0 0 4 3.5 4 3.5s-4 3.5-4 3.5c5 2 10.3.5 13.5-3.5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M6 12L2.5 8.5v7L6 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="16" cy="11.5" r=".9" fill="currentColor"/>
+    </symbol>
+
+    <symbol id="icon-reward" viewBox="0 0 24 24">
+      <path d="M12 3v9a4 4 0 0 1-8 0v-2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4 10l-1.5 1.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 6l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L18 6z" fill="currentColor"/>
+    </symbol>
+
+    <!-- UTILITY ICONS -->
+    <symbol id="icon-audio" viewBox="0 0 24 24">
+      <path d="M11 5L6 9H3v6h3l5 4V5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18.5 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="icon-audio-muted" viewBox="0 0 24 24">
+      <path d="M11 5L6 9H3v6h3l5 4V5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="16" y1="9.5" x2="21" y2="14.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="21" y1="9.5" x2="16" y2="14.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+    </symbol>
+
+    <symbol id="icon-settings" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.9"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
 <div class="app">
   <!-- MODERN 4-HUB PEDAGOGICAL HEADER -->
   <header class="app-header-modern">
@@ -7178,19 +7326,19 @@ input.search:focus {
     <!-- 4 MAIN LEARNER HUBS -->
     <nav class="main-nav-hubs" aria-label="Điều hướng chính">
       <button type="button" class="nav-hub-btn active" data-nav="today" onclick="setPrimaryHub('today')">
-        <span class="nav-hub-icon">🏠</span>
+        <span class="nav-hub-icon"><svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-today"></use></svg></span>
         <span>Hôm Nay</span>
       </button>
       <button type="button" class="nav-hub-btn" data-nav="study" onclick="setPrimaryHub('study')">
-        <span class="nav-hub-icon">📖</span>
+        <span class="nav-hub-icon"><svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-study"></use></svg></span>
         <span>Học Từ</span>
       </button>
       <button type="button" class="nav-hub-btn" data-nav="kino" onclick="setPrimaryHub('kino')">
-        <span class="nav-hub-icon">🎬</span>
+        <span class="nav-hub-icon"><svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-kino"></use></svg></span>
         <span>Kino</span>
       </button>
       <button type="button" class="nav-hub-btn" data-nav="library" onclick="setPrimaryHub('library')">
-        <span class="nav-hub-icon">📚</span>
+        <span class="nav-hub-icon"><svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-library"></use></svg></span>
         <span>Thư Viện</span>
       </button>
     </nav>
@@ -7199,7 +7347,7 @@ input.search:focus {
     <div class="header-utility-group">
       <!-- Global Audio Mute Toggle (Simple 🔊 / 🔇) -->
       <button type="button" id="globalAudioToggleBtn" class="header-audio-toggle-btn" onclick="toggleGlobalAudio()" title="Bật / Tắt âm thanh" aria-label="Bật hoặc tắt âm thanh">
-        <span id="globalAudioIcon">🔊</span>
+        <span id="globalAudioIcon"><svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-audio"></use></svg></span>
       </button>
 
       <!-- Dev Reward Button (Dev only) -->
@@ -7242,7 +7390,7 @@ input.search:focus {
         </button>
         <div class="dropdown-menu-divider"></div>
         <button type="button" class="dropdown-menu-item" id="manageBtn" onclick="openManageModal(); closeProfileDropdown();">
-          <span>⚙️</span>
+          <span><svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-settings"></use></svg></span>
           <span>Quản lý & Sao lưu thẻ</span>
         </button>
       </div>
@@ -7318,17 +7466,17 @@ input.search:focus {
     <!-- Quick Metrics Strip: Pure Learning Truth (Cần ôn · Đang học · Nhớ ổn) -->
     <div class="today-metrics-strip">
       <div class="metric-card-modern metric-needs-review">
-        <span class="metric-card-icon">🕒</span>
+        <span class="metric-card-icon"><svg class="v-icon icon-lg" aria-hidden="true"><use href="#icon-needs-review"></use></svg></span>
         <span class="metric-card-val" id="todayMetricNeedsReview">0 từ</span>
         <span class="metric-card-label">Cần ôn</span>
       </div>
       <div class="metric-card-modern metric-learning">
-        <span class="metric-card-icon">📖</span>
+        <span class="metric-card-icon"><svg class="v-icon icon-lg" aria-hidden="true"><use href="#icon-learning"></use></svg></span>
         <span class="metric-card-val" id="todayMetricLearning">0 từ</span>
         <span class="metric-card-label">Đang học</span>
       </div>
       <div class="metric-card-modern metric-stable">
-        <span class="metric-card-icon">🧠</span>
+        <span class="metric-card-icon"><svg class="v-icon icon-lg" aria-hidden="true"><use href="#icon-stable"></use></svg></span>
         <span class="metric-card-val" id="todayMetricStable">0 từ</span>
         <span class="metric-card-label">Nhớ ổn</span>
       </div>
@@ -7337,7 +7485,7 @@ input.search:focus {
     <!-- Secondary Consistency & Gamification Row (Low-pressure, supportive) -->
     <div class="today-secondary-meta" id="todaySecondaryMeta">
       <span class="secondary-meta-item" onclick="setPrimaryHub('library'); setLibraryTab('fish');" style="cursor:pointer;" title="Bấm để xem Hồ cá">
-        <span class="secondary-meta-icon">🐟</span>
+        <span class="secondary-meta-icon"><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-fish"></use></svg></span>
         <span id="todayMetaFishText">0 chú trong Hồ cá</span>
         <span id="todayMetricFish" style="display:none;">0 chú</span>
       </span>
@@ -7360,7 +7508,7 @@ input.search:focus {
       <div class="today-pathways-grid" style="margin-top:12px;">
         <div class="pathway-card" onclick="setPrimaryHub('study'); setStudySubMode('flash');">
           <div>
-            <div class="pathway-icon">📇</div>
+            <div class="pathway-icon"><svg class="v-icon icon-md" aria-hidden="true"><use href="#icon-study"></use></svg></div>
             <div class="pathway-title">Thẻ Ghi Nhớ & Ôn Tập</div>
             <div class="pathway-sub">Chủ động lật thẻ, nghe phát âm và ôn tập sâu toàn bộ từ vựng B1·B2.</div>
           </div>
@@ -7369,7 +7517,7 @@ input.search:focus {
 
         <div class="pathway-card" onclick="setPrimaryHub('kino');">
           <div>
-            <div class="pathway-icon">🎬</div>
+            <div class="pathway-icon"><svg class="v-icon icon-md" aria-hidden="true"><use href="#icon-kino"></use></svg></div>
             <div class="pathway-title">Rạp Phim Kino</div>
             <div class="pathway-sub">Xem clip tiếng Đức, nghe chép chính tả và lồng tiếng theo nhân vật.</div>
           </div>
@@ -7378,7 +7526,7 @@ input.search:focus {
 
         <div class="pathway-card" onclick="setPrimaryHub('library'); setLibraryTab('fish');">
           <div>
-            <div class="pathway-icon">🐟</div>
+            <div class="pathway-icon"><svg class="v-icon icon-md" aria-hidden="true"><use href="#icon-fish"></use></svg></div>
             <div class="pathway-title">Hồ Cá & Bộ Sưu Tập</div>
             <div class="pathway-sub">Xem các loài cá đã câu được sau các mốc học tập, từ vựng và chỉ số.</div>
           </div>
@@ -7396,19 +7544,19 @@ input.search:focus {
     <div class="study-subnav-bar">
       <div class="study-mode-pills" role="tablist" aria-label="Chế độ học từ">
         <button type="button" class="study-mode-pill active" data-studymode="flash" onclick="setStudySubMode('flash')">
-          <span>📇</span>
+          <span><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-study"></use></svg></span>
           <span>Thẻ học</span>
         </button>
         <button type="button" class="study-mode-pill" data-studymode="mcq" onclick="setStudySubMode('mcq')">
-          <span>📝</span>
+          <span><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-example"></use></svg></span>
           <span>Trắc nghiệm</span>
         </button>
         <button type="button" class="study-mode-pill" data-studymode="typing" onclick="setStudySubMode('typing')">
-          <span>✍️</span>
+          <span><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-typing"></use></svg></span>
           <span>Tự gõ từ</span>
         </button>
         <button type="button" class="study-mode-pill" data-studymode="match" onclick="setStudySubMode('match')">
-          <span>⚡</span>
+          <span><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-recall"></use></svg></span>
           <span>Ghép cặp</span>
         </button>
       </div>
@@ -7434,7 +7582,7 @@ input.search:focus {
         <!-- SESSION HEADER BAR (Visible only during active 5-target study session) -->
         <div id="sessionHeaderBar" class="session-header-bar hidden">
           <div class="session-header-left">
-            <span class="session-badge intro" id="sessionStepBadge">✨ TỪ MỚI</span>
+            <span class="session-badge intro" id="sessionStepBadge"><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-new-word"></use></svg> <span>TỪ MỚI</span></span>
             <span class="session-targets-indicator" id="sessionTargetsIndicator">🎯 0/5 mục tiêu</span>
           </div>
           <div class="session-header-right">
@@ -7464,15 +7612,15 @@ input.search:focus {
             <p class="session-complete-desc" id="sessionCompleteDesc">Bạn đã hoàn thành phiên học hôm nay. Bé mèo đã sẵn sàng nhận thưởng!</p>
             <div class="session-complete-actions">
               <button type="button" class="btn-session-reward-cta" id="btnSessionClaimReward" onclick="handleSessionClaimReward()">
-                <span>🎣</span>
+                <svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-reward"></use></svg>
                 <span>Nhận thưởng Mèo câu cá ngay!</span>
               </button>
               <button type="button" class="btn-session-secondary-cta" onclick="exitSessionToFreeStudy()">
-                <span>📚</span>
+                <svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-library"></use></svg>
                 <span>Ôn tự do các thẻ khác</span>
               </button>
               <button type="button" class="btn-session-secondary-cta" id="btnSessionReturnToday" onclick="handleSessionReturnToday()">
-                <span>🏠</span>
+                <svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-today"></use></svg>
                 <span>Về trang Hôm nay</span>
               </button>
             </div>
@@ -7487,7 +7635,7 @@ input.search:focus {
               <!-- 1. Normal / Active Recall Front Action -->
               <div class="active-recall-front-action" id="activeRecallFrontAction">
                 <button type="button" class="btn-reveal-answer" onclick="revealFlashcardAnswer(event)" title="Bấm để lật xem đáp án (hoặc phím Space)">
-                  <span>👁️</span>
+                  <svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-recall"></use></svg>
                   <span>Xem đáp án (Space)</span>
                 </button>
                 <div class="hint" style="font-size:12px; margin-top:4px;">Cố gắng tự nhớ nghĩa trước khi lật thẻ nhé!</div>
@@ -7508,7 +7656,7 @@ input.search:focus {
 
               <!-- 3. Session REINFORCE Action Box (Fail-safe after 3 failures) -->
               <div class="session-reinforce-box hidden" id="sessionReinforceBox">
-                <div class="session-reinforce-guidance">💡 <strong>Hướng dẫn củng cố:</strong> Từ này cần thêm thời gian để ghi nhớ. Hãy xem kỹ đáp án và ví dụ bên dưới:</div>
+                <div class="session-reinforce-guidance"><svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-reinforce"></use></svg> <strong>Hướng dẫn củng cố:</strong> Từ này cần thêm thời gian để ghi nhớ. Hãy xem kỹ đáp án và ví dụ bên dưới:</div>
                 <div class="session-reinforce-meaning" id="sessionReinforceMeaning"></div>
                 <div class="session-reinforce-details" id="sessionReinforceDetails"></div>
                 <div class="session-reinforce-cta-wrap">
@@ -7522,7 +7670,7 @@ input.search:focus {
               <!-- 4. Session TYPING Action Box (Phase 3 Objective Verification) -->
               <div class="session-typing-box hidden" id="sessionTypingBox">
                 <div class="session-typing-header">
-                  <span class="session-typing-icon">✍️</span>
+                  <span class="session-typing-icon"><svg class="v-icon icon-md" aria-hidden="true"><use href="#icon-typing"></use></svg></span>
                   <span class="session-typing-title">TỰ NHỚ TIẾNG ĐỨC</span>
                 </div>
                 <div class="session-typing-prompt-wrap">
@@ -7562,13 +7710,13 @@ input.search:focus {
               <!-- 5. Session LISTENING Action Box (Phase 5 Objective Verification) -->
               <div class="session-listening-box hidden" id="sessionListeningBox">
                 <div class="session-listening-header">
-                  <span class="session-listening-icon">🎧</span>
+                  <span class="session-listening-icon"><svg class="v-icon icon-md" aria-hidden="true"><use href="#icon-listening"></use></svg></span>
                   <span class="session-listening-title">NGHE VÀ VIẾT LẠI</span>
                 </div>
 
                 <div class="session-listening-audio-row">
                   <button type="button" class="btn-session-listening-play" id="btnSessionListeningPlay" onclick="handleSessionListeningPlay(event)" aria-label="Nghe từ tiếng Đức">
-                    <span class="listen-icon">🔊</span>
+                    <span class="listen-icon"><svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-audio"></use></svg></span>
                     <span class="listen-text">Nghe từ</span>
                   </button>
                 </div>
@@ -7599,7 +7747,8 @@ input.search:focus {
                   <div class="session-listening-meaning" id="sessionListeningMeaning"></div>
                   <div class="session-listening-feedback-cta">
                     <button type="button" class="btn-session-listening-replay" id="btnSessionListeningFeedbackReplay" onclick="handleSessionListeningPlay(event)" aria-label="Nghe lại âm thanh">
-                      <span>🔊 Nghe lại (S)</span>
+                      <svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-audio"></use></svg>
+                      <span>Nghe lại (S)</span>
                     </button>
                     <button type="button" class="btn-session-typing-continue btn-session-listening-continue" id="btnSessionListeningContinue" onclick="handleSessionListeningContinue(event)">
                       <span>Tiếp tục (Enter) →</span>
@@ -7626,15 +7775,15 @@ input.search:focus {
 
               <!-- Progressive Disclosure: Collapsible deep details -->
               <button type="button" class="progressive-disclosure-toggle" id="btnToggleCardDetails" onclick="toggleFlashcardDetails(event)" title="Xem thêm cụm từ, ngữ pháp, ví dụ">
-                <span>📖</span>
+                <svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-grammar-structure"></use></svg>
                 <span id="toggleCardDetailsText">Xem thêm chi tiết & ngữ pháp ▾</span>
               </button>
 
               <div class="card-deep-details collapsed" id="cardDeepDetails">
-                <div class="block" id="collocBlock"><h3>CỤM NÊN NHỚ</h3><div class="tags" id="collocations"></div></div>
-                <div class="block" id="grammarBlock"><h3>NGỮ PHÁP / CẤU TRÚC</h3><div id="grammar"></div></div>
-                <div class="block" id="exampleBlock"><h3>VÍ DỤ</h3><div class="example" id="example"></div></div>
-                <div class="block" id="noteBlock"><h3>ĐIỂM DỄ NHẦM / GHI NHỚ</h3><div id="note"></div></div>
+                <div class="block" id="collocBlock"><h3><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-memory-tip"></use></svg> CỤM NÊN NHỚ</h3><div class="tags" id="collocations"></div></div>
+                <div class="block" id="grammarBlock"><h3><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-grammar-structure"></use></svg> NGỮ PHÁP / CẤU TRÚC</h3><div id="grammar"></div></div>
+                <div class="block" id="exampleBlock"><h3><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-example"></use></svg> VÍ DỤ</h3><div class="example" id="example"></div></div>
+                <div class="block" id="noteBlock"><h3><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-easy-to-confuse"></use></svg> ĐIỂM DỄ NHẦM / GHI NHỚ</h3><div id="note"></div></div>
                 <div class="block" id="tagBlock"><h3>NHÓM / TAG</h3><div class="tags" id="cardTags"></div></div>
               </div>
             </div>
@@ -14278,7 +14427,7 @@ function renderSessionInteraction() {
     if (completeBox) completeBox.classList.remove('hidden');
     const badge = document.getElementById('sessionStepBadge');
     if (badge) {
-      badge.textContent = '⭐ HOÀN THÀNH';
+      badge.innerHTML = '<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-stable"></use></svg> <span>HOÀN THÀNH</span>';
       badge.className = 'session-badge completed';
     }
     const indicator = document.getElementById('sessionTargetsIndicator');
@@ -14377,7 +14526,7 @@ function renderSessionInteraction() {
 
   if (interaction.type === 'typing') {
     if (badge) {
-      badge.textContent = '✍️ TỰ NHỚ TIẾNG ĐỨC';
+      badge.innerHTML = '<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-typing"></use></svg> <span>TỰ NHỚ TIẾNG ĐỨC</span>';
       badge.className = 'session-badge typing';
     }
     // HIDE German term and metadata on front to avoid revealing answer!
@@ -14451,7 +14600,7 @@ function renderSessionInteraction() {
     }
   } else if (interaction.type === 'listening') {
     if (badge) {
-      badge.textContent = '🎧 NGHE VÀ VIẾT LẠI';
+      badge.innerHTML = '<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-listening"></use></svg> <span>NGHE VÀ VIẾT LẠI</span>';
       badge.className = 'session-badge listening';
     }
     // HIDE German term, metadata, meaning, and translation on front to avoid revealing answer!
@@ -14552,7 +14701,7 @@ function renderSessionInteraction() {
 
     if (interaction.type === 'intro') {
       if (badge) {
-        badge.textContent = '✨ TỪ MỚI';
+        badge.innerHTML = '<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-new-word"></use></svg> <span>TỪ MỚI</span>';
         badge.className = 'session-badge intro';
       }
       if (recallAction) recallAction.classList.add('hidden');
@@ -14573,7 +14722,7 @@ function renderSessionInteraction() {
       }
     } else if (interaction.type === 'reinforce') {
       if (badge) {
-        badge.textContent = '💡 CỦNG CỐ KIẾN THỨC';
+        badge.innerHTML = '<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-reinforce"></use></svg> <span>CỦNG CỐ KIẾN THỨC</span>';
         badge.className = 'session-badge reinforce';
       }
       if (recallAction) recallAction.classList.add('hidden');
@@ -14595,7 +14744,7 @@ function renderSessionInteraction() {
     } else {
       // 'recall'
       if (badge) {
-        badge.textContent = '🧠 ACTIVE RECALL';
+        badge.innerHTML = '<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-recall"></use></svg> <span>ACTIVE RECALL</span>';
         badge.className = 'session-badge recall';
       }
       if (introBox) introBox.classList.add('hidden');
@@ -15437,7 +15586,11 @@ function toggleGlobalAudio(){
 
   const icon = document.getElementById('globalAudioIcon');
   const btn = document.getElementById('globalAudioToggleBtn');
-  if (icon) icon.textContent = muted ? '🔇' : '🔊';
+  if (icon) {
+    icon.innerHTML = muted 
+      ? '<svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-audio-muted"></use></svg>' 
+      : '<svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-audio"></use></svg>';
+  }
   if (btn) btn.classList.toggle('muted', muted);
 
   if (typeof setAudioMode === 'function') {
@@ -16570,7 +16723,11 @@ applyFilter();
   const isMuted = localStorage.getItem('vokabelgo_global_mute') === 'true';
   const audioIcon = document.getElementById('globalAudioIcon');
   const audioBtn = document.getElementById('globalAudioToggleBtn');
-  if (audioIcon) audioIcon.textContent = isMuted ? '🔇' : '🔊';
+  if (audioIcon) {
+    audioIcon.innerHTML = isMuted 
+      ? '<svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-audio-muted"></use></svg>' 
+      : '<svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-audio"></use></svg>';
+  }
   if (audioBtn) audioBtn.classList.toggle('muted', isMuted);
 
   const savedHub = (function() {

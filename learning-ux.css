@@ -98,9 +98,159 @@
   box-shadow: 0 2px 0 var(--ink-border);
 }
 
-.nav-hub-icon {
-  font-size: 16px;
+/* Custom Icon System Utility Classes */
+.v-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   line-height: 1;
+}
+
+.icon-xs {
+  width: 15px;
+  height: 15px;
+}
+
+.icon-sm {
+  width: 18px;
+  height: 18px;
+}
+
+.icon-md {
+  width: 21px;
+  height: 21px;
+}
+
+.icon-lg {
+  width: 25px;
+  height: 25px;
+}
+
+.nav-hub-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.nav-hub-icon .v-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.metric-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.metric-card-icon .v-icon {
+  width: 26px;
+  height: 26px;
+}
+
+.metric-card-modern.metric-needs-review .metric-card-icon {
+  color: #D97706;
+}
+
+.metric-card-modern.metric-learning .metric-card-icon {
+  color: #2563EB;
+}
+
+.metric-card-modern.metric-stable .metric-card-icon {
+  color: #059669;
+}
+
+.session-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.session-badge .v-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.session-typing-icon,
+.session-listening-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.session-typing-icon .v-icon,
+.session-listening-icon .v-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-reveal-answer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.btn-reveal-answer .v-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.card-deep-details .block h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-deep-details .block h3 .v-icon {
+  width: 15px;
+  height: 15px;
+  color: var(--primary);
+}
+
+.pathway-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pathway-icon .v-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--primary);
+}
+
+.btn-session-listening-play .listen-icon,
+.btn-session-listening-replay .v-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-audio-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#globalAudioIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+#globalAudioIcon .v-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--ink-text);
 }
 
 /* Header Utilities */
@@ -1055,6 +1205,16 @@
     min-width: 0;
     justify-content: center;
     white-space: nowrap;
+  }
+  
+  .nav-hub-icon .v-icon {
+    width: 15px;
+    height: 15px;
+  }
+  
+  .metric-card-icon .v-icon {
+    width: 22px;
+    height: 22px;
   }
   
   .today-hero-card {
