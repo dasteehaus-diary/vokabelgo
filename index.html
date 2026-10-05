@@ -15904,6 +15904,25 @@ function renderLibraryFishCollection(){
     return;
   }
 
+  const RARITY_LABELS = {
+    common: 'Phổ thông',
+    rare: 'Hiếm',
+    legendary: 'Huyền thoại'
+  };
+
+  const VIETNAMESE_CLEANUP_MAP = {
+    'b2_meisterfisch': 'Cá Meister đặc biệt',
+    'Cá Thần Đạt Chuẩn B2': 'Cá Meister đặc biệt',
+    'Cá hồi Bắc Đại Tây Dương': 'cá hồi',
+    'Cá hồi hương / Cá tráp suối': 'cá hồi nước ngọt / cá trout',
+    'Cá chép sông Danube': 'cá chép',
+    'Cá vàng tri thức Goethe': 'cá vàng',
+    'Thủy quái sông Rhine': 'cá nheo khổng lồ',
+    'Cá hồi cầu vồng bảy sắc': 'cá hồi cầu vồng',
+    'Cá mòi bạc đại dương': 'cá mòi',
+    'Cá vược sông': 'cá rô / cá perch'
+  };
+
   grid.innerHTML = '';
   collection.forEach(f => {
     const item = document.createElement('div');
@@ -15914,12 +15933,21 @@ function renderLibraryFishCollection(){
     if (f.rarity === 'rare') badgeClass = 'rarity-rare';
     if (f.rarity === 'legendary') badgeClass = 'rarity-legendary';
 
+    const rarityText = RARITY_LABELS[f.rarity] || f.rarityLabel || f.rarity || 'Phổ thông';
+
+    let germanWord = f.german;
+    if (germanWord === 'B2-Meisterfisch' || f.fishId === 'b2_meisterfisch') {
+      germanWord = 'Meisterfisch';
+    }
+
+    const vietnameseWord = VIETNAMESE_CLEANUP_MAP[f.vietnamese] || (f.fishId ? VIETNAMESE_CLEANUP_MAP[f.fishId] : null) || f.vietnamese || '';
+
     item.innerHTML = `
-      <span class="catch-rarity-pill ${badgeClass}" style="position:static;margin-bottom:8px;font-size:10px;padding:2px 8px;">${esc(f.rarityLabel || f.rarity)}</span>
+      <span class="catch-rarity-pill ${badgeClass}" style="position:static;margin-bottom:8px;font-size:10px;padding:2px 8px;">${esc(rarityText)}</span>
       <div class="fish-collected-art">${svgArt}</div>
-      <div class="fish-collected-word"><span class="article-pill ${esc(f.article)}" style="font-size:11px;padding:1px 5px;margin-right:4px;">${esc(f.article)}</span>${esc(f.german)}</div>
-      <div class="fish-collected-meaning">${esc(f.vietnamese)}</div>
-      <div style="font-size:11px;color:var(--ink-muted);margin-bottom:6px;">📏 ${f.length || '30'} cm · ⚖️ ${f.weight || '1.2'} kg · +${f.exp || 25} EXP</div>
+      <div class="fish-collected-word"><span class="article-pill ${esc(f.article)}" style="font-size:11px;padding:1px 5px;margin-right:4px;">${esc(f.article)}</span>${esc(germanWord)}</div>
+      <div class="fish-collected-meaning">${esc(vietnameseWord)}</div>
+      <div style="font-size:11px;color:var(--ink-muted);margin-bottom:6px;">📏 ${f.length || '30'} cm · ⚖️ ${f.weight || '1.2'} kg</div>
       <div class="fish-collected-date">Câu ngày: ${dateStr}</div>
     `;
     grid.appendChild(item);
@@ -19565,7 +19593,7 @@ function playKinoMixtape(){
                 </button>
               </div>
               <div class="catch-vietnamese-row">
-                <span class="catch-vietnamese-text" id="catchVietnameseText">Cá hồi Bắc Đại Tây Dương</span>
+                <span class="catch-vietnamese-text" id="catchVietnameseText">cá hồi</span>
               </div>
               <!-- Rarity là thông tin phụ, hiển thị dưới cùng của từ vựng -->
               <div class="catch-rarity-row">

@@ -312,9 +312,9 @@
       article: 'der',
       german: 'Lachs',
       plural: 'die Lachse',
-      vietnamese: 'Cá hồi Bắc Đại Tây Dương',
+      vietnamese: 'cá hồi',
       rarity: 'rare',
-      rarityLabel: '★ HIẾM · SELTEN ★',
+      rarityLabel: 'Hiếm',
       minLen: 42.0, maxLen: 68.0,
       minWeight: 1.8, maxWeight: 4.5,
       exp: 60,
@@ -326,9 +326,9 @@
       article: 'die',
       german: 'Forelle',
       plural: 'die Forellen',
-      vietnamese: 'Cá hồi hương / Cá tráp suối',
+      vietnamese: 'cá hồi nước ngọt / cá trout',
       rarity: 'common',
-      rarityLabel: 'PHỔ THÔNG · GEWÖHNLICH',
+      rarityLabel: 'Phổ thông',
       minLen: 22.0, maxLen: 34.0,
       minWeight: 0.35, maxWeight: 0.85,
       exp: 25,
@@ -340,9 +340,9 @@
       article: 'der',
       german: 'Karpfen',
       plural: 'die Karpfen',
-      vietnamese: 'Cá chép sông Danube',
+      vietnamese: 'cá chép',
       rarity: 'common',
-      rarityLabel: 'PHỔ THÔNG · GEWÖHNLICH',
+      rarityLabel: 'Phổ thông',
       minLen: 28.0, maxLen: 46.0,
       minWeight: 0.9, maxWeight: 2.8,
       exp: 30,
@@ -354,9 +354,9 @@
       article: 'der',
       german: 'Goldfisch',
       plural: 'die Goldfische',
-      vietnamese: 'Cá vàng tri thức Goethe',
+      vietnamese: 'cá vàng',
       rarity: 'rare',
-      rarityLabel: '★ HIẾM · SELTEN ★',
+      rarityLabel: 'Hiếm',
       minLen: 16.0, maxLen: 25.0,
       minWeight: 0.2, maxWeight: 0.5,
       exp: 75,
@@ -368,9 +368,9 @@
       article: 'der',
       german: 'Riesenwels',
       plural: 'die Riesenwelse',
-      vietnamese: 'Thủy quái sông Rhine',
+      vietnamese: 'cá nheo khổng lồ',
       rarity: 'legendary',
-      rarityLabel: '★ HUYỀN THOẠI · LEGENDÄR ★',
+      rarityLabel: 'Huyền thoại',
       minLen: 95.0, maxLen: 145.0,
       minWeight: 14.0, maxWeight: 32.0,
       exp: 150,
@@ -380,15 +380,15 @@
     {
       id: 'b2_meisterfisch',
       article: 'der',
-      german: 'B2-Meisterfisch',
+      german: 'Meisterfisch',
       plural: 'die Meisterfische',
-      vietnamese: 'Cá Thần Đạt Chuẩn B2',
+      vietnamese: 'Cá Meister đặc biệt',
       rarity: 'legendary',
-      rarityLabel: '★ HUYỀN THOẠI · LEGENDÄR ★',
+      rarityLabel: 'Huyền thoại',
       minLen: 77.7, maxLen: 88.8,
       minWeight: 7.7, maxWeight: 9.9,
       exp: 200,
-      quote: 'ĐỈNH CAO! Chú cá đội mũ cử nhân đem theo chứng chỉ Goethe B2! Nắm chắc vé đi Đức rồi nha!',
+      quote: 'Meow! Một chú Meisterfisch cực kỳ đặc biệt — chuyến câu hôm nay đáng nhớ thật đó!',
       color: '#F59E0B'
     },
     {
@@ -396,9 +396,9 @@
       article: 'die',
       german: 'Regenbogenforelle',
       plural: 'die Regenbogenforellen',
-      vietnamese: 'Cá hồi cầu vồng bảy sắc',
+      vietnamese: 'cá hồi cầu vồng',
       rarity: 'rare',
-      rarityLabel: '★ HIẾM · SELTEN ★',
+      rarityLabel: 'Hiếm',
       minLen: 35.0, maxLen: 55.0,
       minWeight: 1.4, maxWeight: 3.2,
       exp: 80,
@@ -410,9 +410,9 @@
       article: 'die',
       german: 'Sardine',
       plural: 'die Sardinen',
-      vietnamese: 'Cá mòi bạc đại dương',
+      vietnamese: 'cá mòi',
       rarity: 'common',
-      rarityLabel: 'PHỔ THÔNG · GEWÖHNLICH',
+      rarityLabel: 'Phổ thông',
       minLen: 12.0, maxLen: 18.5,
       minWeight: 0.05, maxWeight: 0.12,
       exp: 15,
@@ -424,9 +424,9 @@
       article: 'der',
       german: 'Barsch',
       plural: 'die Barsche',
-      vietnamese: 'Cá vược sông',
+      vietnamese: 'cá rô / cá perch',
       rarity: 'common',
-      rarityLabel: 'PHỔ THÔNG · GEWÖHNLICH',
+      rarityLabel: 'Phổ thông',
       minLen: 18.0, maxLen: 29.0,
       minWeight: 0.25, maxWeight: 0.65,
       exp: 20,
@@ -436,7 +436,9 @@
   ];
 
   function getFishSvg(fish) {
-    const id = fish.id;
+    if (!fish) return '';
+    const rawId = fish.fishId || fish.id || '';
+    const id = rawId.replace(/^fish_/, '');
     if (id === 'sardine') {
       return `<svg viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M15 35 C25 20, 75 18, 95 32 C105 34, 112 28, 115 25 C114 35, 114 35, 115 45 C112 42, 105 36, 95 38 C75 52, 25 50, 15 35 Z" fill="#94A3B8"/>
@@ -789,7 +791,7 @@
         label = 'Hiếm';
         cls = 'rarity-rare';
       } else if (fish.rarity === 'legendary') {
-        label = 'Rất hiếm';
+        label = 'Huyền thoại';
         cls = 'rarity-legendary';
       }
       rarityBadge.className = `catch-rarity-badge ${cls}`;
@@ -978,7 +980,7 @@
       const isAct = selectedFishId === f.id ? 'active' : '';
       let badge = '';
       if (f.rarity === 'rare') badge = '<span class="pill-badge rare">Hiếm</span>';
-      if (f.rarity === 'legendary') badge = '<span class="pill-badge legendary">Thần</span>';
+      if (f.rarity === 'legendary') badge = '<span class="pill-badge legendary">Huyền thoại</span>';
 
       html += `
         <button type="button" class="reward-fish-pill ${isAct}" data-fish-id="${f.id}" onclick="selectTestFish('${f.id}')" title="${f.vietnamese}">

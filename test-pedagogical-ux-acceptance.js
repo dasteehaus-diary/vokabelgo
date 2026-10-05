@@ -238,6 +238,179 @@ it('Test F: learning-ux.css defines neutral soft paper style for .callout-note',
 });
 
 // ------------------------------------------------------------------------------
+// TEST SUITE 8: FISH REWARD CLEANUP 0.1 (LOW-RISK DATA & UI CLEANUP)
+// ------------------------------------------------------------------------------
+console.log('\n--- TEST GROUP 8: Fish Reward Cleanup 0.1 (Data & UI Semantics) ---');
+
+const vm = require('vm');
+const mockSandbox = {
+  window: {},
+  document: {
+    addEventListener: () => {},
+    getElementById: () => null,
+    querySelectorAll: () => [],
+    querySelector: () => null,
+    readyState: 'loading'
+  },
+  localStorage: {
+    getItem: () => null,
+    setItem: () => {}
+  }
+};
+vm.createContext(mockSandbox);
+vm.runInContext(rewardJs, mockSandbox);
+const db = mockSandbox.window.VokabelFishDatabase;
+
+it('EXP is removed from all user-facing fish collection UI', () => {
+  const renderFishFuncMatch = indexHtml.match(/function renderLibraryFishCollection\(\)\{[\s\S]*?\n\}/);
+  assert.ok(renderFishFuncMatch, 'renderLibraryFishCollection must exist in index.html');
+  const funcBody = renderFishFuncMatch[0];
+  assert.ok(!funcBody.includes('EXP'), 'renderLibraryFishCollection must not display EXP');
+  assert.ok(!funcBody.includes('+${f.exp'), 'renderLibraryFishCollection must not contain exp expression');
+  assert.ok(!indexHtml.includes('id="catchStatExp"'), 'Catch modal must not have catchStatExp');
+});
+
+it('Existing exp data field is retained in FISH_DATABASE for backward compatibility', () => {
+  assert.ok(Array.isArray(db) && db.length === 9, 'FISH_DATABASE must contain exactly 9 fish');
+  db.forEach(f => {
+    assert.strictEqual(typeof f.exp, 'number', `Fish ${f.id} must retain numeric exp`);
+    assert.ok(f.exp > 0, `Fish ${f.id} exp must be positive`);
+  });
+});
+
+it('b2_meisterfisch is renamed to Meisterfisch with neutral milestone quote and no B2 claims', () => {
+  const meister = db.find(f => f.id === 'b2_meisterfisch');
+  assert.ok(meister, 'Stable id b2_meisterfisch must be preserved');
+  assert.strictEqual(meister.article, 'der');
+  assert.strictEqual(meister.german, 'Meisterfisch');
+  assert.strictEqual(meister.plural, 'die Meisterfische');
+  assert.strictEqual(meister.vietnamese, 'Cá Meister đặc biệt');
+  assert.strictEqual(meister.rarity, 'legendary');
+  assert.strictEqual(meister.rarityLabel, 'Huyền thoại');
+  assert.strictEqual(meister.exp, 200, 'Exp 200 preserved for compatibility');
+
+  const fullText = `${meister.german} ${meister.vietnamese} ${meister.quote}`.toLowerCase();
+  assert.ok(!fullText.includes('b2'), 'b2_meisterfisch must not claim B2 level');
+  assert.ok(!fullText.includes('đạt chuẩn'), 'b2_meisterfisch must not claim đạt chuẩn');
+  assert.ok(!fullText.includes('chứng chỉ'), 'b2_meisterfisch must not claim chứng chỉ');
+  assert.ok(!fullText.includes('vé đi đức'), 'b2_meisterfisch must not claim vé đi Đức');
+});
+
+it('Standardized rarity labels use exactly Phổ thông, Hiếm, Huyền thoại (No "Rất hiếm")', () => {
+  const allowedLabels = new Set(['Phổ thông', 'Hiếm', 'Huyền thoại']);
+  db.forEach(f => {
+    assert.ok(allowedLabels.has(f.rarityLabel), `Fish ${f.id} rarityLabel must be standardized, got: ${f.rarityLabel}`);
+    if (f.rarity === 'common') assert.strictEqual(f.rarityLabel, 'Phổ thông');
+    if (f.rarity === 'rare') assert.strictEqual(f.rarityLabel, 'Hiếm');
+    if (f.rarity === 'legendary') assert.strictEqual(f.rarityLabel, 'Huyền thoại');
+  });
+
+  assert.ok(!rewardJs.includes("'Rất hiếm'"), 'rewardJs must not use Rất hiếm for legendary');
+});
+
+it('Cleaned up Vietnamese fish meanings represent German fish words neutrally', () => {
+  const expectedMeanings = {
+    lachs: 'cá hồi',
+    forelle: 'cá hồi nước ngọt / cá trout',
+    karpfen: 'cá chép',
+    goldfisch: 'cá vàng',
+    riesenwels: 'cá nheo khổng lồ',
+    b2_meisterfisch: 'Cá Meister đặc biệt',
+    regenbogenforelle: 'cá hồi cầu vồng',
+    sardine: 'cá mòi',
+    barsch: 'cá rô / cá perch'
+  };
+
+  db.forEach(f => {
+    assert.strictEqual(f.vietnamese, expectedMeanings[f.id], `Fish ${f.id} meaning must match expected cleanup`);
+  });
+});
+
+it('Backward compatibility: Existing stored fish entries (including old B2-Meisterfisch) render safely', () => {
+  const mockStorage = {
+    vokabelgo_fish_collection_v1: JSON.stringify([
+      {
+        id: 'fish_legacy_1',
+        fishId: 'b2_meisterfisch',
+        german: 'B2-Meisterfisch',
+        article: 'der',
+        vietnamese: 'Cá Thần Đạt Chuẩn B2',
+        rarity: 'legendary',
+        rarityLabel: '★ HUYỀN THOẠI · LEGENDÄR ★',
+        length: '82.5',
+        weight: '8.4',
+        exp: 200,
+        caughtAt: '2026-10-01T10:00:00.000Z'
+      },
+      {
+        id: 'fish_legacy_2',
+        fishId: 'lachs',
+        german: 'Lachs',
+        article: 'der',
+        vietnamese: 'Cá hồi Bắc Đại Tây Dương',
+        rarity: 'rare',
+        rarityLabel: '★ HIẾM · SELTEN ★',
+        length: '55.0',
+        weight: '3.2',
+        exp: 60,
+        caughtAt: '2026-10-02T10:00:00.000Z'
+      }
+    ])
+  };
+
+  const createdItems = [];
+  const mockGrid = {
+    innerHTML: '',
+    appendChild: (item) => createdItems.push(item)
+  };
+  const mockCountEl = { textContent: '' };
+
+  const renderSandbox = {
+    document: {
+      getElementById: (id) => {
+        if (id === 'libraryFishGrid') return mockGrid;
+        if (id === 'libFishTotalCount') return mockCountEl;
+        return null;
+      },
+      createElement: () => ({ innerHTML: '', className: '' })
+    },
+    localStorage: {
+      getItem: (k) => mockStorage[k] || null
+    },
+    esc: (s) => String(s || ''),
+    window: {
+      getVokabelFishSvg: mockSandbox.window.getVokabelFishSvg
+    }
+  };
+
+  const renderFuncCode = indexHtml.match(/function renderLibraryFishCollection\(\)\{[\s\S]*?\n\}/)[0];
+  vm.createContext(renderSandbox);
+  vm.runInContext(renderFuncCode + '; renderLibraryFishCollection();', renderSandbox);
+
+  assert.strictEqual(createdItems.length, 2, 'Must render both stored fish items');
+
+  const meisterItem = createdItems[0].innerHTML;
+  assert.ok(meisterItem.includes('der'), 'Must render article der');
+  assert.ok(meisterItem.includes('Meisterfisch'), 'Must render Meisterfisch');
+  assert.ok(!meisterItem.includes('B2-Meisterfisch'), 'Must NOT render legacy B2-Meisterfisch');
+  assert.ok(meisterItem.includes('Cá Meister đặc biệt'), 'Must render cleaned Vietnamese meaning Cá Meister đặc biệt');
+  assert.ok(!meisterItem.includes('Cá Thần Đạt Chuẩn B2'), 'Must NOT render legacy Cá Thần Đạt Chuẩn B2');
+  assert.ok(meisterItem.includes('Huyền thoại'), 'Must render standardized rarity label Huyền thoại');
+  assert.ok(!meisterItem.includes('EXP'), 'Must NOT display EXP for stored fish');
+  assert.ok(!meisterItem.includes('+200'), 'Must NOT display +200 EXP');
+
+  const lachsItem = createdItems[1].innerHTML;
+  assert.ok(lachsItem.includes('cá hồi'), 'Must render cleaned Vietnamese meaning cá hồi');
+  assert.ok(!lachsItem.includes('Cá hồi Bắc Đại Tây Dương'), 'Must NOT render legacy lore Cá hồi Bắc Đại Tây Dương');
+  assert.ok(lachsItem.includes('Hiếm'), 'Must render standardized rarity label Hiếm');
+  assert.ok(!lachsItem.includes('EXP'), 'Must NOT display EXP for stored fish');
+
+  const storedJson = JSON.parse(mockStorage.vokabelgo_fish_collection_v1);
+  assert.strictEqual(storedJson[0].exp, 200, 'Original stored exp 200 must remain unchanged');
+  assert.strictEqual(storedJson[0].fishId, 'b2_meisterfisch', 'Original stored fishId must remain unchanged');
+});
+
+// ------------------------------------------------------------------------------
 // SUMMARY
 // ------------------------------------------------------------------------------
 console.log('\n========================================');

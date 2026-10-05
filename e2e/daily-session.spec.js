@@ -276,6 +276,22 @@ test.describe('E2E Test 2: Full Real Daily Session Lifecycle', () => {
     expect(parseInt(learningAfter, 10)).toBeGreaterThanOrEqual(0);
     expect(parseInt(stableAfter, 10)).toBeGreaterThanOrEqual(0);
 
+    // --------------------------------------------------------------------------
+    // STEP 10: Library Hồ cá View Check (Fish Reward Cleanup 0.1 Verification)
+    // --------------------------------------------------------------------------
+    await page.locator('[data-nav="library"]').click();
+    await page.evaluate(() => {
+      if (typeof setLibraryTab === 'function') setLibraryTab('fish');
+    });
+    const fishGrid = page.locator('#libraryFishGrid');
+    await expect(fishGrid).toBeVisible();
+    const fishCards = fishGrid.locator('.fish-collected-card');
+    await expect(fishCards).toHaveCount(initialFishCount + 1);
+
+    // Verify EXP is NOT shown anywhere in the fish collection UI
+    const gridText = await fishGrid.innerText();
+    expect(gridText).not.toContain('EXP');
+
     // Ensure no uncaught page errors
     expect(pageErrors).toHaveLength(0);
   });
