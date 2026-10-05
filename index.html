@@ -7831,17 +7831,17 @@ input.search:focus {
                   </div>
                   <div class="callout-content example" id="example"></div>
                 </div>
-                <div class="block learning-callout callout-memory-tip" id="collocBlock">
+                <div class="block learning-callout callout-collocation callout-memory-tip" id="collocBlock">
                   <div class="callout-header">
                     <svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-memory-tip"></use></svg>
-                    <h4 class="callout-title">Mẹo nhớ</h4>
+                    <h4 class="callout-title" id="collocTitleText">Cụm thường dùng</h4>
                   </div>
                   <div class="callout-content tags" id="collocations"></div>
                 </div>
-                <div class="block learning-callout callout-confusion" id="noteBlock">
+                <div class="block learning-callout callout-note" id="noteBlock">
                   <div class="callout-header">
-                    <svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-easy-to-confuse"></use></svg>
-                    <h4 class="callout-title">Dễ nhầm</h4>
+                    <svg class="v-icon icon-xs" aria-hidden="true"><use id="noteIconUse" href="#icon-memory-tip"></use></svg>
+                    <h4 class="callout-title" id="noteTitleText">Ghi chú</h4>
                   </div>
                   <div id="note" class="callout-content body-text"></div>
                 </div>
@@ -14172,6 +14172,50 @@ function renderMiniLearningDiagram(c) {
   container.appendChild(diagramEl);
 }
 
+function classifyCardNote(note) {
+  if (!note || typeof note !== 'string') return null;
+  const raw = note.trim();
+  if (!raw) return null;
+  const lower = raw.toLowerCase();
+  const confusionMarkers = ['≠', 'phân biệt', 'dễ nhầm', 'khác với', 'đừng nhầm', 'so với', 'vs.'];
+  const hasConfusion = confusionMarkers.some(marker => marker === '≠' ? raw.includes('≠') : lower.includes(marker));
+  if (hasConfusion) {
+    return { type: 'confusion', label: 'Dễ nhầm', calloutClass: 'callout-confusion', iconId: 'icon-easy-to-confuse' };
+  }
+  if (lower.includes('mở rộng')) {
+    return { type: 'extension', label: 'Mở rộng', calloutClass: 'callout-note', iconId: 'icon-memory-tip' };
+  }
+  return { type: 'note', label: 'Ghi chú', calloutClass: 'callout-note', iconId: 'icon-memory-tip' };
+}
+if (typeof window !== 'undefined') {
+  window.classifyCardNote = classifyCardNote;
+}
+
+function renderNoteCallout(noteText) {
+  const noteBlock = document.getElementById('noteBlock');
+  const noteEl = document.getElementById('note');
+  const noteTitleEl = document.getElementById('noteTitleText');
+  const noteIconUse = document.getElementById('noteIconUse');
+  if (!noteText) {
+    if (noteEl) noteEl.textContent = '';
+    if (noteBlock) noteBlock.classList.add('hidden');
+    return;
+  }
+  const info = classifyCardNote(noteText) || { type: 'note', label: 'Ghi chú', calloutClass: 'callout-note', iconId: 'icon-memory-tip' };
+  if (noteEl) noteEl.textContent = noteText;
+  if (noteTitleEl) noteTitleEl.textContent = info.label;
+  if (noteBlock) {
+    noteBlock.className = `block learning-callout ${info.calloutClass}`;
+    noteBlock.classList.remove('hidden');
+  }
+  if (noteIconUse) {
+    noteIconUse.setAttribute('href', `#${info.iconId}`);
+    if (noteIconUse.setAttributeNS) {
+      noteIconUse.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${info.iconId}`);
+    }
+  }
+}
+
 function render(){
   if (window.isStudySessionMode) return;
   const scBox = document.getElementById('sessionCompleteBox');
@@ -14218,8 +14262,7 @@ function render(){
   }
   document.getElementById('example').textContent=c.example||'';
   document.getElementById('exampleBlock').classList.toggle('hidden',!c.example);
-  document.getElementById('note').textContent=c.note||'';
-  document.getElementById('noteBlock').classList.toggle('hidden',!c.note);
+  renderNoteCallout(c.note);
 
   const tags=document.getElementById('cardTags'); tags.innerHTML='';
   [c.deck,...(c.tags||[])].filter(Boolean).forEach(x=>{const s=document.createElement('span');s.className='tag';s.textContent=x;tags.appendChild(s)});
@@ -14676,10 +14719,7 @@ function renderSessionInteraction() {
   const exampleBlock = document.getElementById('exampleBlock');
   if (exampleBlock) exampleBlock.classList.toggle('hidden', !c.example);
 
-  const note = document.getElementById('note');
-  if (note) note.textContent = c.note || '';
-  const noteBlock = document.getElementById('noteBlock');
-  if (noteBlock) noteBlock.classList.toggle('hidden', !c.note);
+  renderNoteCallout(c.note);
 
   const tags = document.getElementById('cardTags');
   if (tags) {

@@ -174,6 +174,70 @@ it('learning-ux.css includes mobile responsive breakpoints (<= 768px)', () => {
 });
 
 // ------------------------------------------------------------------------------
+// TEST SUITE 7: SEMANTIC CALLOUT CLEANUP (ROUND 2.1 ACCEPTANCE)
+// ------------------------------------------------------------------------------
+console.log('\n--- TEST GROUP 7: Semantic Callout Classification & Styling (Round 2.1) ---');
+
+const classifyCardNoteMatch = indexHtml.match(/function classifyCardNote\([\s\S]*?\n\}/);
+const classifyCardNote = classifyCardNoteMatch ? new Function(`${classifyCardNoteMatch[0]}; return classifyCardNote;`)() : null;
+
+it('Deterministic note classification exists and is exported in index.html', () => {
+  assert.ok(classifyCardNote, 'classifyCardNote function must exist in index.html');
+  assert.ok(indexHtml.includes('window.classifyCardNote = classifyCardNote'), 'classifyCardNote must be attached to window');
+});
+
+it('Test A: Note with "≠" is classified as Dễ nhầm (callout-confusion, icon-easy-to-confuse)', () => {
+  const res = classifyCardNote('≠ die Gestik: cách sử dụng cử chỉ nói chung.');
+  assert.strictEqual(res.type, 'confusion');
+  assert.strictEqual(res.label, 'Dễ nhầm');
+  assert.strictEqual(res.calloutClass, 'callout-confusion');
+  assert.strictEqual(res.iconId, 'icon-easy-to-confuse');
+});
+
+it('Test B: Note with confusion markers (phân biệt, dễ nhầm, khác với, đừng nhầm, so với, vs.) is classified as Dễ nhầm', () => {
+  const res1 = classifyCardNote('Phân biệt với từ khác khi dùng trong văn cảnh trang trọng.');
+  assert.strictEqual(res1.type, 'confusion');
+  assert.strictEqual(res1.label, 'Dễ nhầm');
+  assert.strictEqual(res1.calloutClass, 'callout-confusion');
+  assert.strictEqual(res1.iconId, 'icon-easy-to-confuse');
+
+  const res2 = classifyCardNote('Đừng nhầm với cấu trúc bị động.');
+  assert.strictEqual(res2.type, 'confusion');
+  assert.strictEqual(res2.label, 'Dễ nhầm');
+});
+
+it('Test C: Note with "mở rộng" is classified as Mở rộng (callout-note, icon-memory-tip)', () => {
+  const res = classifyCardNote('Mở rộng: die Stirn runzeln; die Augenbrauen heben.');
+  assert.strictEqual(res.type, 'extension');
+  assert.strictEqual(res.label, 'Mở rộng');
+  assert.strictEqual(res.calloutClass, 'callout-note');
+  assert.strictEqual(res.iconId, 'icon-memory-tip');
+});
+
+it('Test D: Standard notes are classified as neutral Ghi chú (callout-note, icon-memory-tip)', () => {
+  const res = classifyCardNote('wirken auf + Akk. giúp diễn đạt đây là ấn tượng của người nói.');
+  assert.strictEqual(res.type, 'note');
+  assert.strictEqual(res.label, 'Ghi chú');
+  assert.strictEqual(res.calloutClass, 'callout-note');
+  assert.strictEqual(res.iconId, 'icon-memory-tip');
+});
+
+it('Test E: Collocations block is titled "Cụm thường dùng" and NOT "Mẹo nhớ"', () => {
+  const collocMatch = indexHtml.match(/<div[^>]*id="collocBlock"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/);
+  assert.ok(collocMatch, 'collocBlock must exist in index.html');
+  assert.ok(collocMatch[1].includes('Cụm thường dùng'), 'collocBlock header must be "Cụm thường dùng"');
+  assert.ok(!collocMatch[1].includes('Mẹo nhớ'), 'collocBlock header must NOT be "Mẹo nhớ"');
+});
+
+it('Test F: learning-ux.css defines neutral soft paper style for .callout-note', () => {
+  assert.ok(learningCss.includes('.learning-callout.callout-note'), 'CSS must define .learning-callout.callout-note');
+  assert.ok(learningCss.includes('#FAF7EE'), 'callout-note background must be #FAF7EE');
+  assert.ok(learningCss.includes('#E2DDD2'), 'callout-note border must be #E2DDD2');
+  assert.ok(learningCss.includes('#5C5248'), 'callout-note header color must be #5C5248');
+  assert.ok(learningCss.includes('#38312A'), 'callout-note content color must be #38312A');
+});
+
+// ------------------------------------------------------------------------------
 // SUMMARY
 // ------------------------------------------------------------------------------
 console.log('\n========================================');

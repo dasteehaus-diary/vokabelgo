@@ -1020,14 +1020,17 @@
   line-height: 1.5;
 }
 
-/* 1. Mẹo nhớ (Memory Tip) - Soft butter / warm yellow */
+/* 1. Cụm thường dùng (Collocation) / Mẹo nhớ (Memory Tip) - Soft butter / warm yellow */
+.learning-callout.callout-collocation,
 .learning-callout.callout-memory-tip {
   background: #FFFDF0;
   border-color: #FDE68A;
 }
+.learning-callout.callout-collocation .callout-header,
 .learning-callout.callout-memory-tip .callout-header {
   color: #92400E;
 }
+.learning-callout.callout-collocation .callout-content,
 .learning-callout.callout-memory-tip .callout-content {
   color: #78350F;
 }
@@ -1074,6 +1077,18 @@
   margin: 0 !important;
   color: inherit !important;
   font-style: italic;
+}
+
+/* 5. Ghi chú / Mở rộng (Note / Extension) - Soft cream / paper tone */
+.learning-callout.callout-note {
+  background: #FAF7EE;
+  border-color: #E2DDD2;
+}
+.learning-callout.callout-note .callout-header {
+  color: #5C5248;
+}
+.learning-callout.callout-note .callout-content {
+  color: #38312A;
 }
 
 /* ==============================================================================
