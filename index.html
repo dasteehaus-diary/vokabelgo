@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>VokabelGo · Thư viện Flashcard tiếng Đức</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Quicksand:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Quicksand:wght@600;700;800&display=swap');
 
 :root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-brand:   'Quicksand', system-ui, sans-serif;
+
   /* THE EXACT COLOR PALETTE FROM IMAGE 1 (Тепло) */
   --c-matcha:     #E2F0BD; /* Cốm non dịu mát */
   --c-olive:      #8DB654; /* Xanh lá tươi rêu */
@@ -1112,7 +1116,7 @@ input.search:focus {
 .front .term {
   font-size: 40px;
   font-weight: 800;
-  font-family: 'Quicksand', sans-serif;
+  font-family: var(--font-display, 'Fraunces', Georgia, serif);
   color: var(--ink-text);
   margin-bottom: 12px;
   letter-spacing: -0.01em;
@@ -1157,7 +1161,7 @@ input.search:focus {
 .meaning {
   font-size: 22px;
   font-weight: 800;
-  font-family: 'Quicksand', sans-serif;
+  font-family: var(--font-display, 'Fraunces', Georgia, serif);
   color: var(--ink-text);
 }
 .tags {
@@ -7468,8 +7472,8 @@ input.search:focus {
         <span class="today-time-estimate"><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-time"></use></svg> Khoảng 5–7 phút</span>
       </div>
 
-      <h3 class="today-hero-title" id="todayHeroTitle">Bắt đầu bài học hôm nay</h3>
-      <p class="today-hero-desc" id="todayHeroDesc">Học tối thiểu 5 từ vựng qua Active Recall. Đạt mốc để xem mèo câu cá trúng thưởng!</p>
+      <h3 class="today-hero-title display-title" id="todayHeroTitle">Bắt đầu bài học hôm nay</h3>
+      <p class="today-hero-desc body-text" id="todayHeroDesc">Học tối thiểu 5 từ vựng qua Active Recall. Đạt mốc để xem mèo câu cá trúng thưởng!</p>
 
       <!-- Daily 5-word Progress Track -->
       <div class="today-hero-progress-box">
@@ -7812,11 +7816,39 @@ input.search:focus {
               </button>
 
               <div class="card-deep-details collapsed" id="cardDeepDetails">
-                <div class="block" id="collocBlock"><h3><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-memory-tip"></use></svg> CỤM NÊN NHỚ</h3><div class="tags" id="collocations"></div></div>
-                <div class="block" id="grammarBlock"><h3><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-grammar-structure"></use></svg> NGỮ PHÁP / CẤU TRÚC</h3><div id="grammar"></div></div>
-                <div class="block" id="exampleBlock"><h3><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-example"></use></svg> VÍ DỤ</h3><div class="example" id="example"></div></div>
-                <div class="block" id="noteBlock"><h3><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-easy-to-confuse"></use></svg> ĐIỂM DỄ NHẦM / GHI NHỚ</h3><div id="note"></div></div>
-                <div class="block" id="tagBlock"><h3>NHÓM / TAG</h3><div class="tags" id="cardTags"></div></div>
+                <div class="block learning-callout callout-structure" id="grammarBlock">
+                  <div class="callout-header">
+                    <svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-grammar-structure"></use></svg>
+                    <h4 class="callout-title">Cấu trúc</h4>
+                  </div>
+                  <div id="grammar" class="callout-content body-text"></div>
+                  <div id="grammarDiagram" class="mini-diagram-wrap"></div>
+                </div>
+                <div class="block learning-callout callout-example" id="exampleBlock">
+                  <div class="callout-header">
+                    <svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-example"></use></svg>
+                    <h4 class="callout-title">Ví dụ</h4>
+                  </div>
+                  <div class="callout-content example" id="example"></div>
+                </div>
+                <div class="block learning-callout callout-memory-tip" id="collocBlock">
+                  <div class="callout-header">
+                    <svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-memory-tip"></use></svg>
+                    <h4 class="callout-title">Mẹo nhớ</h4>
+                  </div>
+                  <div class="callout-content tags" id="collocations"></div>
+                </div>
+                <div class="block learning-callout callout-confusion" id="noteBlock">
+                  <div class="callout-header">
+                    <svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-easy-to-confuse"></use></svg>
+                    <h4 class="callout-title">Dễ nhầm</h4>
+                  </div>
+                  <div id="note" class="callout-content body-text"></div>
+                </div>
+                <div class="block" id="tagBlock">
+                  <div class="meta-label"><h4 class="learning-label" style="margin:0 0 6px;color:var(--ink-muted);">NHÓM / TAG</h4></div>
+                  <div class="tags" id="cardTags"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -8363,7 +8395,7 @@ input.search:focus {
     <!-- TAB 1: DECKS VIEW -->
     <div id="libDecksView">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h3 style="margin:0;font-size:18px;font-weight:800;color:var(--ink-text);">Các Bộ Thẻ Đang Có</h3>
+        <h3 class="section-title" style="margin:0;font-size:18px;">Các Bộ Thẻ Đang Có</h3>
         <button type="button" class="btn primary" onclick="openManageModal()" style="font-size:13px;padding:6px 14px;">+ Thêm thẻ mới</button>
       </div>
       <div class="library-decks-grid" id="libraryDecksGrid">
@@ -8375,10 +8407,19 @@ input.search:focus {
     <div id="libFishView" class="hidden">
       <div class="fish-collection-header">
         <div>
-          <h3 style="margin:0 0 4px;font-size:18px;font-weight:800;color:var(--ink-text);">🐟 Hồ Cá Của Bé Mèo</h3>
-          <p style="margin:0;font-size:13px;color:var(--ink-muted);">Mỗi ngày hoàn thành 5 từ vựng, bé mèo sẽ câu được một chú cá quý kèm từ vựng tiếng Đức!</p>
+          <h3 class="section-title" style="margin:0 0 4px;font-size:18px;">🐟 Hồ Cá Của Bé Mèo</h3>
+          <p class="body-text" style="margin:0;font-size:13px;color:var(--ink-muted);">Mỗi ngày hoàn thành 5 từ vựng, bé mèo sẽ câu được một chú cá quý kèm từ vựng tiếng Đức!</p>
         </div>
         <div style="font-size:13px;font-weight:800;color:var(--primary);" id="libFishTotalCount">Đã câu: 0 chú cá</div>
+      </div>
+      <div class="learning-callout callout-memory-tip" style="margin-bottom: 16px;">
+        <div class="callout-header">
+          <svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-memory-tip"></use></svg>
+          <h4 class="callout-title">Mẹo nhớ từ vựng</h4>
+        </div>
+        <div class="callout-content body-text">
+          Mỗi chú cá bạn câu được mang theo một từ vựng độc đáo. Nhấp vào từng chú cá trong bể để xem lại ngữ nghĩa và ví dụ mẫu!
+        </div>
       </div>
       <div class="fish-collection-grid" id="libraryFishGrid">
         <!-- Rendered by JS from vokabelgo_fish_collection_v1 -->
@@ -8394,8 +8435,17 @@ input.search:focus {
     <div id="libManageView" class="hidden">
       <div class="box" style="text-align:center;padding:30px 20px;">
         <span style="font-size:40px;display:block;margin-bottom:12px;">⚙️</span>
-        <h3 style="margin:0 0 8px;font-size:18px;font-weight:800;">Quản Lý Thư Viện Thẻ Học</h3>
-        <p style="font-size:13.5px;color:var(--ink-muted);max-width:480px;margin:0 auto 18px;">Thêm thẻ mới, chỉnh sửa thẻ tự tạo, nhập file CSV/JSON hàng loạt hoặc sao lưu thẻ về máy tính.</p>
+        <h3 class="section-title" style="margin:0 0 8px;font-size:18px;">Quản Lý Thư Viện Thẻ Học</h3>
+        <p class="body-text" style="font-size:13.5px;color:var(--ink-muted);max-width:480px;margin:0 auto 14px;">Thêm thẻ mới, chỉnh sửa thẻ tự tạo, nhập file CSV/JSON hàng loạt hoặc sao lưu thẻ về máy tính.</p>
+        <div class="learning-callout callout-structure" style="max-width:480px;margin:0 auto 18px;text-align:left;">
+          <div class="callout-header">
+            <svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-grammar-structure"></use></svg>
+            <h4 class="callout-title">Cấu trúc bộ thẻ chuẩn</h4>
+          </div>
+          <div class="callout-content body-text">
+            Mỗi thẻ từ vựng chuẩn nên bao gồm: Thuật ngữ, Giới từ đi kèm (nếu có), Nghĩa tiếng Việt và ít nhất một câu ví dụ ngữ cảnh.
+          </div>
+        </div>
         <button type="button" class="btn primary" onclick="openManageModal()" style="padding:10px 24px;font-weight:800;">Mở Bảng Quản Lý Thẻ ➔</button>
       </div>
     </div>
@@ -14065,6 +14115,63 @@ function esc(s){
     .replace(/'/g, '&#39;');
 }
 
+function getMiniLearningDiagramNodes(c) {
+  if (!c) return null;
+  // 1. Verb + Preposition + Case in grammar (e.g. 'achten auf + Akk.' or 'sich bewerben + um + Akk.')
+  const mVerbPrepCase = (c.grammar || '').match(/([a-zA-ZäöüßÄÖÜ\s]+)\s+(auf|um|an|für|über|mit|nach|von|zu|bei|in|vor|hinter)\s*\+\s*(Akk\.|Dat\.|Gen\.)/i);
+  if (mVerbPrepCase) {
+    return [mVerbPrepCase[1].trim(), '+ ' + mVerbPrepCase[2].trim(), mVerbPrepCase[3].trim()];
+  }
+  // 2. Preposition + Case (e.g. 'in + Dat.')
+  const mPrepCase = (c.grammar || '').match(/\b(in|auf|um|an|für|über|mit|nach|von|zu|bei|vor|hinter)\s*\+\s*(Akk\.|Dat\.|Gen\.)/i);
+  if (mPrepCase) {
+    return [mPrepCase[1].trim(), '+ ' + mPrepCase[2].trim()];
+  }
+  // 3. Simple + Case with verb
+  const mCase = (c.grammar || '').match(/^\+\s*(Akk\.|Dat\.|Gen\.)/i);
+  if (mCase) {
+    const cleanTerm = (c.term || '').replace(/^(jemandem|jemanden|etwas|sich)\s+/i, '').split('/')[0].trim();
+    if (cleanTerm) return [cleanTerm, mCase[0].trim()];
+  }
+  // 4. Article + Noun
+  const mNoun = (c.term || '').match(/^(der|die|das)\s+([A-ZÄÖÜ][a-zäöüßA-Z]+)/);
+  if (mNoun) {
+    const nodes = [mNoun[1], mNoun[2]];
+    if (c.example && c.example.length <= 40) {
+      nodes.push(c.example);
+    }
+    return nodes;
+  }
+  return null;
+}
+
+function renderMiniLearningDiagram(c) {
+  const container = document.getElementById('grammarDiagram');
+  if (!container) return;
+  container.innerHTML = '';
+  const nodes = getMiniLearningDiagramNodes(c);
+  if (!nodes || nodes.length < 2) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = 'flex';
+  const diagramEl = document.createElement('div');
+  diagramEl.className = 'mini-diagram';
+  nodes.forEach((nodeText, idx) => {
+    if (idx > 0) {
+      const arrow = document.createElement('span');
+      arrow.className = 'mini-diagram-arrow';
+      arrow.textContent = '→';
+      diagramEl.appendChild(arrow);
+    }
+    const nodeEl = document.createElement('span');
+    nodeEl.className = 'mini-diagram-node';
+    nodeEl.textContent = nodeText;
+    diagramEl.appendChild(nodeEl);
+  });
+  container.appendChild(diagramEl);
+}
+
 function render(){
   if (window.isStudySessionMode) return;
   const scBox = document.getElementById('sessionCompleteBox');
@@ -14096,8 +14203,19 @@ function render(){
   (c.collocations||[]).forEach(x=>{const s=document.createElement('span');s.className='tag';s.textContent=x;coll.appendChild(s)});
   document.getElementById('collocBlock').classList.toggle('hidden',!(c.collocations||[]).length);
 
-  document.getElementById('grammar').textContent=c.grammar||'';
-  document.getElementById('grammarBlock').classList.toggle('hidden',!c.grammar);
+  const grammar = document.getElementById('grammar');
+  if (grammar) grammar.textContent = c.grammar || '';
+  renderMiniLearningDiagram(c);
+  const diagramNodes = getMiniLearningDiagramNodes(c);
+  const grammarBlock = document.getElementById('grammarBlock');
+  if (grammarBlock) {
+    grammarBlock.classList.toggle('hidden', !c.grammar && !diagramNodes);
+    if (!c.grammar && diagramNodes && grammar) {
+      grammar.style.display = 'none';
+    } else if (grammar) {
+      grammar.style.display = '';
+    }
+  }
   document.getElementById('example').textContent=c.example||'';
   document.getElementById('exampleBlock').classList.toggle('hidden',!c.example);
   document.getElementById('note').textContent=c.note||'';
@@ -14161,6 +14279,12 @@ function revealFlashcardAnswer(e){
   if(e) e.stopPropagation();
   const cardEl = document.getElementById('card');
   if(cardEl) cardEl.classList.add('flipped');
+  const details = document.getElementById('cardDeepDetails');
+  const label = document.getElementById('toggleCardDetailsText');
+  if(details && details.classList.contains('collapsed')){
+    details.classList.remove('collapsed');
+    if(label) label.textContent = 'Thu gọn chi tiết & ngữ pháp ▴';
+  }
 }
 
 function toggleFlashcardDetails(e){
@@ -14191,7 +14315,15 @@ document.getElementById('card').onclick = () => {
       }
     }
   }
-  document.getElementById('card').classList.toggle('flipped');
+  const isFlipped = document.getElementById('card').classList.toggle('flipped');
+  if (isFlipped) {
+    const details = document.getElementById('cardDeepDetails');
+    const label = document.getElementById('toggleCardDetailsText');
+    if (details && details.classList.contains('collapsed')) {
+      details.classList.remove('collapsed');
+      if (label) label.textContent = 'Thu gọn chi tiết & ngữ pháp ▴';
+    }
+  }
 };
 document.querySelectorAll('[data-rate]').forEach(b=>b.onclick=(e)=>{ if(e) e.stopPropagation(); rate(b.dataset.rate); });
 document.getElementById('nextBtn').onclick=(e)=>{ if(e) e.stopPropagation(); next(); };
@@ -14527,8 +14659,17 @@ function renderSessionInteraction() {
 
   const grammar = document.getElementById('grammar');
   if (grammar) grammar.textContent = c.grammar || '';
+  renderMiniLearningDiagram(c);
+  const diagramNodes = getMiniLearningDiagramNodes(c);
   const grammarBlock = document.getElementById('grammarBlock');
-  if (grammarBlock) grammarBlock.classList.toggle('hidden', !c.grammar);
+  if (grammarBlock) {
+    grammarBlock.classList.toggle('hidden', !c.grammar && !diagramNodes);
+    if (!c.grammar && diagramNodes && grammar) {
+      grammar.style.display = 'none';
+    } else if (grammar) {
+      grammar.style.display = '';
+    }
+  }
 
   const example = document.getElementById('example');
   if (example) example.textContent = c.example || '';
@@ -15349,7 +15490,18 @@ function handleSessionKeydown(e) {
     const isFlipped = cardEl && cardEl.classList.contains('flipped');
     if (e.code === 'Space') {
       e.preventDefault();
-      if (cardEl) cardEl.classList.toggle('flipped');
+      if (cardEl) {
+        const willFlip = !cardEl.classList.contains('flipped');
+        cardEl.classList.toggle('flipped');
+        if (willFlip) {
+          const details = document.getElementById('cardDeepDetails');
+          const label = document.getElementById('toggleCardDetailsText');
+          if (details && details.classList.contains('collapsed')) {
+            details.classList.remove('collapsed');
+            if (label) label.textContent = 'Thu gọn chi tiết & ngữ pháp ▴';
+          }
+        }
+      }
     } else if (e.key === '1') {
       if (isFlipped) handleSessionRate('unknown');
     } else if (e.key === '2') {
@@ -16049,7 +16201,22 @@ document.addEventListener('keydown',e=>{
       handleSessionKeydown(e);
       return;
     }
-    if(e.code==='Space'){e.preventDefault();document.getElementById('card').classList.toggle('flipped')}
+    if(e.code==='Space'){
+      e.preventDefault();
+      const cardEl = document.getElementById('card');
+      if(cardEl){
+        const willFlip = !cardEl.classList.contains('flipped');
+        cardEl.classList.toggle('flipped');
+        if(willFlip){
+          const details = document.getElementById('cardDeepDetails');
+          const label = document.getElementById('toggleCardDetailsText');
+          if(details && details.classList.contains('collapsed')){
+            details.classList.remove('collapsed');
+            if(label) label.textContent = 'Thu gọn chi tiết & ngữ pháp ▴';
+          }
+        }
+      }
+    }
     if(e.key==='1')rate('unknown');if(e.key==='2')rate('hard');if(e.key==='3')rate('known');if(e.key==='ArrowRight')next();if(e.key==='s'||e.key==='S')speak();
   }
 });

@@ -3,6 +3,74 @@
    Focus: Low Cognitive Load, Clear Hierarchy, Active Recall, 4 Main Hubs
    ============================================================================== */
 
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-brand:   'Quicksand', system-ui, sans-serif;
+}
+
+/* ==============================================================================
+   ROUND 2: EDITORIAL TYPOGRAPHY & TEXT ROLES
+   ============================================================================== */
+.display-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.4px;
+  color: var(--ink-text);
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+  color: var(--ink-text);
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink-text);
+}
+
+.callout-title {
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.body-text {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--ink-text);
+}
+
+.meta-text {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink-muted);
+}
+
+.learning-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
 /* --------------------------------------------------------------------------
    1. GLOBAL HEADER & PRIMARY NAVIGATION HUBS
    -------------------------------------------------------------------------- */
@@ -513,14 +581,17 @@
 }
 
 .today-hero-title {
+  font-family: var(--font-display);
   font-size: 26px;
   font-weight: 800;
   color: var(--ink-text);
   margin: 0 0 10px;
   line-height: 1.25;
+  letter-spacing: -0.3px;
 }
 
 .today-hero-desc {
+  font-family: var(--font-body);
   font-size: 14.5px;
   color: var(--ink-muted);
   margin: 0 0 22px;
@@ -921,6 +992,151 @@
 
 .card-deep-details.collapsed {
   display: none !important;
+}
+
+/* ==============================================================================
+   ROUND 2: REUSABLE MICRO-CALLOUT SYSTEM
+   ============================================================================== */
+.learning-callout {
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  border-width: 1.5px;
+  border-style: solid;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.learning-callout .callout-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 5px;
+}
+
+.learning-callout .callout-content {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* 1. Mẹo nhớ (Memory Tip) - Soft butter / warm yellow */
+.learning-callout.callout-memory-tip {
+  background: #FFFDF0;
+  border-color: #FDE68A;
+}
+.learning-callout.callout-memory-tip .callout-header {
+  color: #92400E;
+}
+.learning-callout.callout-memory-tip .callout-content {
+  color: #78350F;
+}
+
+/* 2. Dễ nhầm (Confusion) - Soft terracotta / peach */
+.learning-callout.callout-confusion {
+  background: #FFF7ED;
+  border-color: #FED7AA;
+}
+.learning-callout.callout-confusion .callout-header {
+  color: #9A3412;
+}
+.learning-callout.callout-confusion .callout-content {
+  color: #7C2D12;
+}
+
+/* 3. Cấu trúc (Structure) - Soft olive / green */
+.learning-callout.callout-structure {
+  background: #F0FDF4;
+  border-color: #BBF7D0;
+}
+.learning-callout.callout-structure .callout-header {
+  color: #166534;
+}
+.learning-callout.callout-structure .callout-content {
+  color: #14532D;
+}
+
+/* 4. Ví dụ (Example) - Soft blue / neutral */
+.learning-callout.callout-example {
+  background: #F0F9FF;
+  border-color: #BAE6FD;
+}
+.learning-callout.callout-example .callout-header {
+  color: #0369A1;
+}
+.learning-callout.callout-example .callout-content {
+  color: #075985;
+}
+.learning-callout.callout-example .example {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: inherit !important;
+  font-style: italic;
+}
+
+/* ==============================================================================
+   ROUND 2: MINI LEARNING DIAGRAM
+   ============================================================================== */
+.mini-diagram-wrap {
+  display: flex;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.mini-diagram {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px dashed #86efac;
+  border-radius: 10px;
+  max-width: 100%;
+}
+
+.mini-diagram-node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  background: #ffffff;
+  border: 1.5px solid var(--ink-border);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-text);
+  box-shadow: 0 1.5px 0 var(--ink-border);
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.mini-diagram-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  color: #16a34a;
+  line-height: 1;
+  user-select: none;
+}
+
+@media (max-width: 480px) {
+  .mini-diagram {
+    gap: 6px;
+    padding: 6px 8px;
+  }
+  .mini-diagram-node {
+    font-size: 11.5px;
+    padding: 3px 8px;
+  }
+  .mini-diagram-arrow {
+    font-size: 12px;
+  }
 }
 
 /* --------------------------------------------------------------------------
