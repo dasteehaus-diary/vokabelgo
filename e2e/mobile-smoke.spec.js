@@ -23,9 +23,31 @@ test.describe('E2E Test 4: Mobile Responsive Usability & Touch Flow', () => {
     const todayHub = page.locator('#todayMode');
     await expect(todayHub).toBeVisible();
 
-    // Check no horizontal scroll overflow on Today Hub
+    // Check no horizontal scroll overflow on Today Hub (Requirement E)
     const todayOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
     expect(todayOverflow).toBe(false);
+
+    // Round 1.1 Mobile Visual Regression Assertions
+    // Requirement A & B: Welcome title width reasonable (>= 150px) and not word-by-word wrapping into tall column
+    const welcomeBar = page.locator('.today-welcome-bar');
+    await expect(welcomeBar).toBeVisible();
+
+    const greetingTitle = page.locator('#todayGreetingText');
+    await expect(greetingTitle).toBeVisible();
+    const titleBox = await greetingTitle.boundingBox();
+    expect(titleBox).not.toBeNull();
+    expect(titleBox.width).toBeGreaterThanOrEqual(150);
+    // At normal 2-line wrapping, height is ~40-55px; if squeezed into a 1-word column, height would be > 120px
+    expect(titleBox.height).toBeLessThan(80);
+
+    // Requirement C: Date badge remains visible
+    const dateBadge = page.locator('#todayDateStr');
+    await expect(dateBadge).toBeVisible();
+
+    // Requirement D: Today nav remains usable
+    const mainNav = page.locator('.main-nav-hubs');
+    await expect(mainNav).toBeVisible();
+    await expect(page.locator('.nav-hub-btn[data-nav="today"]')).toBeVisible();
 
     // Assert key mobile elements are rendered and visible
     const primaryCta = page.locator('#todayPrimaryCta');

@@ -795,7 +795,7 @@ check(lStateJ.cards['w1'].status === 'learning', 'Learning state preserves statu
 check(normHtml.includes('Đã xem lại · Tiếp tục (Space) →'), 'P1-3 Copy: Đã xem lại · Tiếp tục (Space) → exists');
 check(normHtml.includes('Bạn đã hoàn thành phiên học hôm nay.'), 'P1-3 Copy: Bạn đã hoàn thành phiên học hôm nay. exists');
 check(normHtml.includes('Từ này sẽ được ưu tiên ôn lại ở phiên sau.'), 'P1-3 Copy: Từ này sẽ được ưu tiên ôn lại ở phiên sau. exists');
-check(normHtml.includes('🎯 Đang học · ${sessionState.completedCount}/5 mục tiêu'), 'P1-4 Copy: 🎯 Đang học · X/5 mục tiêu hint exists');
+check(normHtml.includes('Đang học · ${sessionState.completedCount}/5 mục tiêu'), 'P1-4 Copy: Đang học · X/5 mục tiêu hint exists');
 
 // --------------------------------------------------------------------------
 // TEST K: Session complete exits active session mode (window.isStudySessionMode = false, UI unlocked)

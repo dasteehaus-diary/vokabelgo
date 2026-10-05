@@ -7310,6 +7310,38 @@ input.search:focus {
       <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.9"/>
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
+
+    <!-- ROUND 1.1: CLEANUP & CONSISTENCY ICONS -->
+    <symbol id="icon-daily-goal" viewBox="0 0 24 24">
+      <rect x="2.5" y="7" width="19" height="10" rx="5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="6" cy="12" r="1.3" fill="currentColor"/>
+      <circle cx="9" cy="12" r="1.3" fill="currentColor"/>
+      <circle cx="12" cy="12" r="1.3" fill="currentColor"/>
+      <circle cx="15" cy="12" r="1.3" fill="currentColor"/>
+      <circle cx="18" cy="12" r="1.3" fill="currentColor"/>
+    </symbol>
+
+    <symbol id="icon-time" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="12 7 12 12 15.5 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="icon-start" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="icon-streak" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="12" y1="2.5" x2="12" y2="4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="12" y1="19.2" x2="12" y2="21.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="5.3" y1="5.3" x2="6.9" y2="6.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="17.1" y1="17.1" x2="18.7" y2="18.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="2.5" y1="12" x2="4.8" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="19.2" y1="12" x2="21.5" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="5.3" y1="18.7" x2="6.9" y2="17.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="17.1" y1="6.9" x2="18.7" y2="5.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -7432,11 +7464,11 @@ input.search:focus {
     <!-- 🎯 HERO LEARNING CARD: THE SINGLE PRIMARY LEARNING ACTION -->
     <div class="today-hero-card">
       <div class="today-hero-top">
-        <span class="today-session-badge">🎯 MỤC TIÊU HÔM NAY</span>
-        <span class="today-time-estimate">⏱️ Khoảng 5–7 phút</span>
+        <span class="today-session-badge"><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-daily-goal"></use></svg> MỤC TIÊU HÔM NAY</span>
+        <span class="today-time-estimate"><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-time"></use></svg> Khoảng 5–7 phút</span>
       </div>
 
-      <h3 class="today-hero-title" id="todayHeroTitle">Bắt đầu bài học hôm nay 🚀</h3>
+      <h3 class="today-hero-title" id="todayHeroTitle">Bắt đầu bài học hôm nay</h3>
       <p class="today-hero-desc" id="todayHeroDesc">Học tối thiểu 5 từ vựng qua Active Recall. Đạt mốc để xem mèo câu cá trúng thưởng!</p>
 
       <!-- Daily 5-word Progress Track -->
@@ -7452,7 +7484,7 @@ input.search:focus {
 
       <!-- Single Primary Action Button -->
       <button type="button" class="today-primary-cta" id="todayPrimaryCta" onclick="handleTodayPrimaryAction()">
-        <span id="todayCtaIcon">🚀</span>
+        <span id="todayCtaIcon"><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-start"></use></svg></span>
         <span id="todayCtaText">Bắt đầu phiên học ngay (0/5 từ)</span>
       </button>
 
@@ -7491,7 +7523,7 @@ input.search:focus {
       </span>
       <span class="secondary-meta-dot">·</span>
       <span class="secondary-meta-item">
-        <span class="secondary-meta-icon">🔥</span>
+        <span class="secondary-meta-icon"><svg class="v-icon icon-xs" aria-hidden="true" style="color: #ea580c;"><use href="#icon-streak"></use></svg></span>
         <span id="todayMetaStreakText">Hôm nay là một ngày học mới.</span>
         <span id="todayMetricStreak" style="display:none;">0 ngày</span>
       </span>
@@ -7583,7 +7615,7 @@ input.search:focus {
         <div id="sessionHeaderBar" class="session-header-bar hidden">
           <div class="session-header-left">
             <span class="session-badge intro" id="sessionStepBadge"><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-new-word"></use></svg> <span>TỪ MỚI</span></span>
-            <span class="session-targets-indicator" id="sessionTargetsIndicator">🎯 0/5 mục tiêu</span>
+            <span class="session-targets-indicator" id="sessionTargetsIndicator"><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-daily-goal"></use></svg> 0/5 mục tiêu</span>
           </div>
           <div class="session-header-right">
             <button type="button" class="btn-session-exit" onclick="exitSessionToFreeStudy()" title="Thoát phiên hôm nay để ôn tự do">Ôn tự do ✕</button>
@@ -7945,8 +7977,8 @@ input.search:focus {
           <div class="kino-v3-progress-card">
             <div class="kino-v3-prog-row">
               <div class="kino-v3-prog-left">
-                <div class="kino-v3-streak-badge" id="kinoStreakBadge" title="Ngọn lửa hoàn thành câu tích lũy">
-                  <span class="kino-v3-streak-flame">🔥</span>
+                <div class="kino-v3-streak-badge" id="kinoStreakBadge" title="Tiến độ hoàn thành câu tích lũy">
+                  <span class="kino-v3-streak-flame"><svg class="v-icon icon-xs" aria-hidden="true" style="color: #ea580c;"><use href="#icon-streak"></use></svg></span>
                   <span id="kinoStreakText">0 câu</span>
                 </div>
                 <div class="kino-v3-prog-stats" id="kinoProgressCount">0 / 72 câu (0%)</div>
@@ -8205,14 +8237,14 @@ input.search:focus {
           <!-- Top Stats Banner -->
           <div class="checkin-stats-grid">
             <div class="stat-card">
-              <div class="stat-icon-wrap stat-icon-flame">🔥</div>
+              <div class="stat-icon-wrap stat-icon-flame"><svg class="v-icon icon-sm" aria-hidden="true" style="color: #ea580c;"><use href="#icon-streak"></use></svg></div>
               <div>
                 <div class="stat-label">Chuỗi ngày học</div>
                 <div class="stat-value"><span id="streakCount">0</span> <span style="font-size:14px;font-weight:600">ngày liên tiếp</span></div>
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon-wrap stat-icon-cal">📅</div>
+              <div class="stat-icon-wrap stat-icon-cal"><svg class="v-icon icon-sm" aria-hidden="true"><use href="#icon-today"></use></svg></div>
               <div>
                 <div class="stat-label">Điểm danh tháng này</div>
                 <div class="stat-value"><span id="monthlyCheckinCount">0</span> <span style="font-size:14px;font-weight:600">ngày học</span></div>
@@ -8777,8 +8809,8 @@ input.search:focus {
 
     <!-- TABS -->
     <div class="leaderboard-tabs">
-      <button type="button" class="leaderboard-tab active" id="lbTabStreak" onclick="switchLeaderboardTab('streak')">🔥 Chuỗi Chăm Chỉ</button>
-      <button type="button" class="leaderboard-tab" id="lbTabWords" onclick="switchLeaderboardTab('words')">📚 Vốn Từ Đã Thuộc</button>
+      <button type="button" class="leaderboard-tab active" id="lbTabStreak" onclick="switchLeaderboardTab('streak')"><svg class="v-icon icon-xs" aria-hidden="true" style="color: #ea580c;"><use href="#icon-streak"></use></svg> Chuỗi Chăm Chỉ</button>
+      <button type="button" class="leaderboard-tab" id="lbTabWords" onclick="switchLeaderboardTab('words')"><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-library"></use></svg> Vốn Từ Đã Thuộc</button>
       <button type="button" class="leaderboard-tab" id="lbTabBlitz" onclick="switchLeaderboardTab('blitz')">⚡ Kỷ Lục Ghép Thẻ</button>
     </div>
 
@@ -14431,7 +14463,7 @@ function renderSessionInteraction() {
       badge.className = 'session-badge completed';
     }
     const indicator = document.getElementById('sessionTargetsIndicator');
-    if (indicator) indicator.textContent = '🎯 5/5 mục tiêu';
+    if (indicator) indicator.innerHTML = '<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-daily-goal"></use></svg> 5/5 mục tiêu';
 
     let summary = { catchStatus: 'none' };
     if (window.VokabelDaily && typeof window.VokabelDaily.getSummary === 'function') {
@@ -14463,7 +14495,7 @@ function renderSessionInteraction() {
   const badge = document.getElementById('sessionStepBadge');
   const indicator = document.getElementById('sessionTargetsIndicator');
   if (indicator) {
-    indicator.textContent = `🎯 ${interaction.completedCount}/${interaction.totalTargets} mục tiêu`;
+    indicator.innerHTML = `<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-daily-goal"></use></svg> ${interaction.completedCount}/${interaction.totalTargets} mục tiêu`;
   }
 
   // Update top progress bar & stats
@@ -15411,7 +15443,7 @@ function updateTodayDashboard(){
       if (titleEl) titleEl.textContent = 'Đã hoàn thành phiên hôm nay! 🎉';
       if (descEl) descEl.textContent = 'Bé mèo đã no bụng. Bạn có thể tiếp tục ôn luyện thêm hoặc chiêm ngưỡng Hồ cá!';
       if (ctaText) ctaText.textContent = 'Ôn thêm từ vựng';
-      if (ctaIcon) ctaIcon.textContent = '📖';
+      if (ctaIcon) ctaIcon.innerHTML = '<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-study"></use></svg>';
       if (ctaBtn) ctaBtn.className = 'today-primary-cta completed';
     }
   } else {
@@ -15420,7 +15452,7 @@ function updateTodayDashboard(){
       statusEl.textContent = (isSessionInProgress || count > 0) ? `Còn ${5 - count} từ nữa` : 'Chưa hoàn thành';
       statusEl.style.color = 'var(--primary)';
     }
-    if (titleEl) titleEl.textContent = (isSessionInProgress || count > 0) ? 'Tiếp tục bài học hôm nay 🐾' : 'Bắt đầu phiên học hôm nay 🚀';
+    if (titleEl) titleEl.textContent = (isSessionInProgress || count > 0) ? 'Tiếp tục bài học hôm nay 🐾' : 'Bắt đầu phiên học hôm nay';
     if (descEl) {
       if (isSessionInProgress || count > 0) {
         descEl.textContent = `Đang học · ${count}/5 mục tiêu. Hoàn thành để mở khóa câu cá hôm nay.`;
@@ -15431,7 +15463,7 @@ function updateTodayDashboard(){
       }
     }
     if (ctaText) ctaText.textContent = (isSessionInProgress || count > 0) ? `Tiếp tục học (${count}/5 từ)` : 'Bắt đầu học ngay (0/5 từ)';
-    if (ctaIcon) ctaIcon.textContent = '🚀';
+    if (ctaIcon) ctaIcon.innerHTML = '<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-start"></use></svg>';
     if (ctaBtn) ctaBtn.className = 'today-primary-cta';
   }
 
@@ -15477,14 +15509,14 @@ function updateTodayDashboard(){
   const resumeDeckTag = document.getElementById('todayResumeDeckTag');
   if (resumeDeckTag) {
     if (sessionState && !sessionState.isCompleted) {
-      resumeDeckTag.textContent = `🎯 Đang học · ${sessionState.completedCount}/5 mục tiêu`;
+      resumeDeckTag.innerHTML = `<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-daily-goal"></use></svg> Đang học · ${sessionState.completedCount}/5 mục tiêu`;
     } else if (resumeState) {
       if (resumeState.lastMode === 'diktat') {
-        resumeDeckTag.textContent = `🎬 Rạp phim Kino · Câu ${(resumeState.lastSentence || 0) + 1}`;
+        resumeDeckTag.innerHTML = `<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-kino"></use></svg> Rạp phim Kino · Câu ${(resumeState.lastSentence || 0) + 1}`;
       } else {
         const deckName = resumeState.lastDeck || 'Tất cả bộ';
         const cIdx = (resumeState.lastCardIndex || 0) + 1;
-        resumeDeckTag.textContent = `${deckName} · Thẻ ${cIdx}`;
+        resumeDeckTag.innerHTML = `<svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-study"></use></svg> ${deckName} · Thẻ ${cIdx}`;
       }
     }
   }
