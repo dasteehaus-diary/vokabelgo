@@ -176,4 +176,34 @@ test.describe('E2E Test 4: Mobile Responsive Usability & Touch Flow', () => {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
     expect(overflow).toBe(false);
   });
+
+  test('Mobile viewport (390x844): Kino hub transition has no leaked study mode and zero horizontal overflow', async ({ page }) => {
+    const fixture = createDeterministicDailySessionFixture();
+    await seedStorage(page, fixture);
+    await page.goto('/');
+
+    const navStudy = page.locator('[data-nav="study"]');
+    const navKino = page.locator('[data-nav="kino"]');
+
+    // 1. Open Study
+    await navStudy.click();
+    await expect(page.locator('#flashMode')).toBeVisible();
+
+    // 2. Switch to Kino
+    await navKino.click();
+    await expect(page.locator('#diktatMode')).toBeVisible();
+    await expect(page.locator('#flashMode')).toBeHidden();
+    await expect(page.locator('#mcqMode')).toBeHidden();
+    await expect(page.locator('#typingMode')).toBeHidden();
+    await expect(page.locator('#matchMode')).toBeHidden();
+
+    // Check zero horizontal overflow on mobile Kino
+    const kinoOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    expect(kinoOverflow).toBe(false);
+
+    // 3. Return to Study
+    await navStudy.click();
+    await expect(page.locator('#flashMode')).toBeVisible();
+    await expect(page.locator('#diktatMode')).toBeHidden();
+  });
 });

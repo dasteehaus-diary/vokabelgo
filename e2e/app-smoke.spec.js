@@ -84,4 +84,64 @@ test.describe('E2E Test 1: App Boot & Smoke', () => {
     // 8. Assert NO uncaught JS page errors occurred
     expect(pageErrors, `Uncaught page errors found: ${pageErrors.join(', ')}`).toHaveLength(0);
   });
+
+  test('Kino hub transition: Study submode does not leak into Kino and restores upon return', async ({ page }) => {
+    const fixture = createDeterministicDailySessionFixture();
+    await seedStorage(page, fixture);
+    await page.goto('/');
+
+    const navStudy = page.locator('[data-nav="study"]');
+    const navKino = page.locator('[data-nav="kino"]');
+
+    // 1. Open Study -> Flashcard
+    await navStudy.click();
+    const flashMode = page.locator('#flashMode');
+    const mcqMode = page.locator('#mcqMode');
+    const typingMode = page.locator('#typingMode');
+    const matchMode = page.locator('#matchMode');
+    const diktatMode = page.locator('#diktatMode');
+
+    // 2. Verify #flashMode visible
+    await expect(flashMode).toBeVisible();
+    await expect(mcqMode).toBeHidden();
+    await expect(typingMode).toBeHidden();
+    await expect(matchMode).toBeHidden();
+    await expect(diktatMode).toBeHidden();
+
+    // 3. Click Kino
+    await navKino.click();
+
+    // 4. Verify:
+    //    - #diktatMode visible
+    //    - #flashMode hidden
+    //    - #mcqMode hidden
+    //    - #typingMode hidden
+    //    - #matchMode hidden
+    await expect(diktatMode).toBeVisible();
+    await expect(flashMode).toBeHidden();
+    await expect(mcqMode).toBeHidden();
+    await expect(typingMode).toBeHidden();
+    await expect(matchMode).toBeHidden();
+
+    // Verify no flashcard text or controls appear above Kino
+    await expect(page.locator('#flashActionsBar')).toBeHidden();
+    await expect(page.locator('#activeRecallFrontAction')).toBeHidden();
+
+    // Verify Kino starts immediately after header/navigation (no blank Study space)
+    const diktatBox = await diktatMode.boundingBox();
+    const headerBox = await page.locator('.app-header-modern').boundingBox();
+    expect(diktatBox).not.toBeNull();
+    expect(headerBox).not.toBeNull();
+    expect(diktatBox.y - (headerBox.y + headerBox.height)).toBeLessThan(120);
+
+    // 5. Return to Study
+    await navStudy.click();
+
+    // 6. Verify previous Study submode (#flashMode) is visible again
+    await expect(flashMode).toBeVisible();
+    await expect(diktatMode).toBeHidden();
+    await expect(mcqMode).toBeHidden();
+    await expect(typingMode).toBeHidden();
+    await expect(matchMode).toBeHidden();
+  });
 });

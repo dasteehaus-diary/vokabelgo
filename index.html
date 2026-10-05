@@ -14434,6 +14434,11 @@ function setPrimaryHub(hub){
   const kinoSec = document.getElementById('diktatMode');
   const librarySec = document.getElementById('libraryMode');
 
+  const flashModeEl = document.getElementById('flashMode');
+  const mcqModeEl = document.getElementById('mcqMode');
+  const typingModeEl = document.getElementById('typingMode');
+  const matchModeEl = document.getElementById('matchMode');
+
   if (todaySec) todaySec.classList.toggle('hidden', hub !== 'today');
   if (studySec) studySec.classList.toggle('hidden', hub !== 'study' && hub !== 'kino');
   if (kinoSec) {
@@ -14441,6 +14446,14 @@ function setPrimaryHub(hub){
     kinoSec.style.display = (hub === 'kino') ? 'block' : 'none';
   }
   if (librarySec) librarySec.classList.toggle('hidden', hub !== 'library');
+
+  // Explicitly hide all Study submodes when entering Kino to prevent UI leaks
+  if (hub === 'kino') {
+    if (flashModeEl) flashModeEl.classList.add('hidden');
+    if (mcqModeEl) mcqModeEl.classList.add('hidden');
+    if (typingModeEl) typingModeEl.classList.add('hidden');
+    if (matchModeEl) matchModeEl.classList.add('hidden');
+  }
 
   const studySubnav = document.querySelector('.study-subnav-bar');
   const toplineEl = document.querySelector('.topline');

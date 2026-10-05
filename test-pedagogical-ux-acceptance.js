@@ -77,6 +77,15 @@ it('setMode and setPrimaryHub support seamless switching between all 4 hubs', ()
   assert.ok(indexHtml.includes('function resumeLastLearningSession('), 'Must define resumeLastLearningSession');
 });
 
+it('setPrimaryHub(kino) explicitly hides #flashMode, #mcqMode, #typingMode, and #matchMode without resetting currentStudySubMode', () => {
+  const setPrimaryHubCode = indexHtml.match(/function setPrimaryHub\(hub\)\{[\s\S]*?\n\}/)[0];
+  assert.ok(setPrimaryHubCode.includes("flashModeEl.classList.add('hidden')"), 'Must explicitly hide flashMode on kino');
+  assert.ok(setPrimaryHubCode.includes("mcqModeEl.classList.add('hidden')"), 'Must explicitly hide mcqMode on kino');
+  assert.ok(setPrimaryHubCode.includes("typingModeEl.classList.add('hidden')"), 'Must explicitly hide typingMode on kino');
+  assert.ok(setPrimaryHubCode.includes("matchModeEl.classList.add('hidden')"), 'Must explicitly hide matchMode on kino');
+  assert.ok(setPrimaryHubCode.includes("setStudySubMode(currentStudySubMode)"), 'Must restore currentStudySubMode upon returning to study hub');
+});
+
 // ------------------------------------------------------------------------------
 // TEST SUITE 3: ACTIVE RECALL & PROGRESSIVE DISCLOSURE (SECTION F, G)
 // ------------------------------------------------------------------------------
