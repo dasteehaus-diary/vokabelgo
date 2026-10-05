@@ -14981,13 +14981,35 @@ function handleSessionRate(rating) {
   renderSessionInteraction();
 }
 
+let activeRewardAutoOpenTimer = null;
+
+function cancelRewardAutoOpenTimer() {
+  if (activeRewardAutoOpenTimer) {
+    clearTimeout(activeRewardAutoOpenTimer);
+    activeRewardAutoOpenTimer = null;
+  }
+}
+window.cancelRewardAutoOpenTimer = cancelRewardAutoOpenTimer;
+
 function checkDailyMilestoneAndReward() {
+  if (typeof cancelRewardAutoOpenTimer === 'function') {
+    cancelRewardAutoOpenTimer();
+  }
   if (window.VokabelDaily && typeof window.VokabelDaily.getTodayState === 'function') {
     const dState = window.VokabelDaily.getTodayState();
-    if (dState.completed && dState.catchStatus === 'pending') {
-      setTimeout(() => {
-        if (typeof openRewardPrototypeModal === 'function') {
-          openRewardPrototypeModal();
+    if (dState && dState.completed && dState.catchStatus === 'pending') {
+      activeRewardAutoOpenTimer = setTimeout(() => {
+        activeRewardAutoOpenTimer = null;
+        if (!window.VokabelDaily || typeof window.VokabelDaily.getTodayState !== 'function') return;
+        const latest = window.VokabelDaily.getTodayState();
+        if (
+          latest &&
+          latest.completed === true &&
+          latest.catchStatus === 'pending'
+        ) {
+          if (typeof openRewardPrototypeModal === 'function') {
+            openRewardPrototypeModal();
+          }
         }
       }, 700);
     }
@@ -14995,6 +15017,9 @@ function checkDailyMilestoneAndReward() {
 }
 
 function handleSessionClaimReward() {
+  if (typeof cancelRewardAutoOpenTimer === 'function') {
+    cancelRewardAutoOpenTimer();
+  }
   if (typeof openRewardPrototypeModal === 'function') {
     openRewardPrototypeModal();
   }
@@ -15002,6 +15027,9 @@ function handleSessionClaimReward() {
 
 function exitSessionToFreeStudy() {
   stopListeningSpeech();
+  if (typeof cancelRewardAutoOpenTimer === 'function') {
+    cancelRewardAutoOpenTimer();
+  }
   if (activeSessionTypingTimer) {
     clearTimeout(activeSessionTypingTimer);
     activeSessionTypingTimer = null;
@@ -15040,6 +15068,9 @@ function exitSessionToFreeStudy() {
 
 function handleSessionReturnToday() {
   stopListeningSpeech();
+  if (typeof cancelRewardAutoOpenTimer === 'function') {
+    cancelRewardAutoOpenTimer();
+  }
   if (activeSessionTypingTimer) {
     clearTimeout(activeSessionTypingTimer);
     activeSessionTypingTimer = null;
