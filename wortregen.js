@@ -7,40 +7,10 @@
   'use strict';
 
   // ---------------------------------------------------------------------------
-  // 1. Vocabulary Dataset (30 Core German Words)
+  // 1. Vocabulary Dataset Integration (Phase 2)
+  // Hardcoded WORD_POOL has been completely removed in production.
+  // WortregenVocabularyProvider connects real VokabelGo repository via allCards()
   // ---------------------------------------------------------------------------
-  const WORD_POOL = [
-    { vi: "quyết định", de: "die Entscheidung" },
-    { vi: "cuộc hẹn", de: "der Termin" },
-    { vi: "đáng tin cậy", de: "zuverlässig" },
-    { vi: "ứng tuyển", de: "sich bewerben" },
-    { vi: "siêu thị", de: "der Supermarkt" },
-    { vi: "bánh mì", de: "das Brot" },
-    { vi: "quả táo", de: "der Apfel" },
-    { vi: "thành phố", de: "die Stadt" },
-    { vi: "ngôi nhà", de: "das Haus" },
-    { vi: "người bạn", de: "der Freund" },
-    { vi: "công việc", de: "die Arbeit" },
-    { vi: "thời gian", de: "die Zeit" },
-    { vi: "trường học", de: "die Schule" },
-    { vi: "tiền bạc", de: "das Geld" },
-    { vi: "cuốn sách", de: "das Buch" },
-    { vi: "câu hỏi", de: "die Frage" },
-    { vi: "câu trả lời", de: "die Antwort" },
-    { vi: "nước uống", de: "das Wasser" },
-    { vi: "gia đình", de: "die Familie" },
-    { vi: "chiếc xe", de: "das Auto" },
-    { vi: "học tập", de: "lernen" },
-    { vi: "hiểu", de: "verstehen" },
-    { vi: "nói", de: "sprechen" },
-    { vi: "viết", de: "schreiben" },
-    { vi: "đọc", de: "lesen" },
-    { vi: "giúp đỡ", de: "helfen" },
-    { vi: "bắt đầu", de: "beginnen" },
-    { vi: "nhanh", de: "schnell" },
-    { vi: "quan trọng", de: "wichtig" },
-    { vi: "đơn giản", de: "einfach" }
-  ];
 
   // ---------------------------------------------------------------------------
   // 2. Sound Effects Engine (Web Audio API Synthesizer)
@@ -159,7 +129,7 @@
   // 4. Wortregen Game Engine
   // ---------------------------------------------------------------------------
   class WortregenGame {
-    constructor() {
+    constructor(options = {}) {
       // DOM Elements
       this.appEl = document.getElementById('wortregen-app');
       this.fallingArea = document.getElementById('falling-area');
@@ -183,6 +153,13 @@
       this.summaryMissed = document.getElementById('summary-missed');
       this.summaryCombo = document.getElementById('summary-combo');
 
+      // Vocabulary Provider (Phase 2)
+      this.vocabProvider = options.vocabProvider || 
+        (typeof window !== 'undefined' && window.WortregenVocabularyProvider ? new window.WortregenVocabularyProvider(options) : null);
+      if (!this.vocabProvider && typeof WortregenVocabularyProvider !== 'undefined') {
+        this.vocabProvider = new WortregenVocabularyProvider(options);
+      }
+
       // Audio
       this.sound = new SoundEngine();
 
@@ -198,7 +175,7 @@
       // Mechanics & FIFO Queue
       this.activeWords = [];
       this.wordIdCounter = 1;
-      this.availableWords = [...WORD_POOL];
+      this.availableWords = [];
       this.baseSpeed = 40;
       this.maxConcurrent = 2; // Strict 2 cards maximum: 1 target, 1 waiting
       this.spawnTimer = null;
@@ -316,17 +293,14 @@
         });
       }
 
-      // Tap / Click anywhere refocuses keyboard on touch devices only
-      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-      if (isTouch) {
-        document.addEventListener('click', (e) => {
-          if (this.state === 'PLAYING') {
-            if (!e.target.closest('#btn-mute')) {
-              this.focusKeyboard();
-            }
+      // Tap / Click anywhere refocuses keyboard capture input
+      document.addEventListener('click', (e) => {
+        if (this.state === 'PLAYING') {
+          if (!e.target.closest('#btn-mute')) {
+            this.focusKeyboard();
           }
-        });
-      }
+        }
+      });
 
       // Visual Viewport Handling for Mobile Virtual Keyboard
       if (window.visualViewport) {
@@ -363,6 +337,19 @@
     startGame() {
       this.cleanup();
 
+      // Check vocabulary provider source (Phase 2)
+      if (!this.vocabProvider) {
+        this.showVocabularyError("Wortregen vocabulary source unavailable");
+        return;
+      }
+      try {
+        this.vocabProvider.buildQueue();
+      } catch (err) {
+        console.error("Vocabulary initialization failed:", err);
+        this.showVocabularyError(err.message || "Wortregen vocabulary source unavailable");
+        return;
+      }
+
       this.state = 'PLAYING';
       this.lives = 3;
       this.score = 0;
@@ -371,8 +358,6 @@
       this.solvedCount = 0;
       this.missedCount = 0;
       this.activeWords = [];
-      this.availableWords = [...WORD_POOL];
-      this.shuffleArray(this.availableWords);
 
       // Hide overlays
       this.startScreen.classList.add('hidden');
@@ -384,11 +369,8 @@
       // Update HUD
       this.renderHUD();
 
-      // Focus invisible input for virtual keyboard on touch devices
-      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-      if (isTouch) {
-        this.focusKeyboard();
-      }
+      // Focus invisible input to capture all character inputs (including desktop umlauts & mobile virtual keyboard)
+      this.focusKeyboard();
 
       // Start Loops
       this.lastFrameTime = performance.now();
@@ -399,6 +381,27 @@
           this.maybeSpawnWord(); // 2nd word spawn (waiting)
         }
       }, 2200);
+    }
+
+    showVocabularyError(msg) {
+      this.state = 'ERROR';
+      this.cleanup();
+      if (this.startScreen) {
+        this.startScreen.classList.remove('hidden');
+        const descEl = this.startScreen.querySelector('.overlay-instruction');
+        if (descEl) {
+          descEl.textContent = `Lỗi dữ liệu: ${msg}`;
+          descEl.style.color = '#ef4444';
+        }
+      }
+      let errBanner = document.getElementById('vocab-error-banner');
+      if (!errBanner) {
+        errBanner = document.createElement('div');
+        errBanner.id = 'vocab-error-banner';
+        errBanner.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#ef4444;color:#fff;padding:10px 20px;border-radius:10px;font-weight:700;font-size:14px;z-index:9999;box-shadow:0 6px 18px rgba(0,0,0,0.35);';
+        document.body.appendChild(errBanner);
+      }
+      errBanner.textContent = msg;
     }
 
     gameOver() {
@@ -448,13 +451,30 @@
         return;
       }
 
-      if (this.availableWords.length === 0) {
-        this.availableWords = [...WORD_POOL];
-        this.shuffleArray(this.availableWords);
+      if (!this.vocabProvider) {
+        this.showVocabularyError("Wortregen vocabulary source unavailable");
+        return;
       }
 
-      // Pick next word
-      const wordData = this.availableWords.pop();
+      // Active card IDs currently on screen to avoid immediate duplicate cards
+      const activeScreenCardIds = activeNonDying
+        .filter(w => w.cardId)
+        .map(w => w.cardId);
+
+      // Pick next card from vocabulary provider
+      let wordData;
+      try {
+        wordData = this.vocabProvider.getNextCard(activeScreenCardIds);
+      } catch (err) {
+        console.error("Failed to get next card:", err);
+        this.showVocabularyError(err.message || "Wortregen vocabulary source unavailable");
+        return;
+      }
+
+      if (!wordData || !wordData.de || !wordData.vi) {
+        return;
+      }
+
       const areaWidth = this.fallingArea.clientWidth || 340;
       const cardWidth = Math.min(230, Math.max(140, areaWidth * 0.5));
       const minX = 10;
@@ -486,6 +506,10 @@
       const cardEl = document.createElement('div');
       cardEl.className = 'word-card';
       cardEl.id = `word-${this.wordIdCounter}`;
+      cardEl.dataset.tier = wordData.tier || 1;
+      if (wordData.id) {
+        cardEl.dataset.cardId = wordData.id;
+      }
 
       const innerEl = document.createElement('div');
       innerEl.className = 'word-card-inner';
@@ -547,18 +571,8 @@
       spawnX = Math.max(minX, Math.min(spawnX, clampedMaxX));
       const startY = 8;
 
-      // Fall Duration: short words ~18-20s, longer words ~21-25s
-      const cleanLettersCount = letters.length;
-      let targetDuration = 18.5;
-      if (cleanLettersCount <= 6) {
-        targetDuration = 18.0;
-      } else if (cleanLettersCount <= 10) {
-        targetDuration = 19.5;
-      } else if (cleanLettersCount <= 15) {
-        targetDuration = 22.0;
-      } else {
-        targetDuration = 25.0;
-      }
+      // Fall Duration: Tier 1 (18.5s - 21.0s), Tier 2 (24.0s - 26.5s), Tier 3 (28.5s)
+      let targetDuration = wordData.duration || 18.5;
 
       const areaHeight = this.fallingArea.clientHeight || 560;
       const totalDistance = Math.max(120, areaHeight - actualHeight - startY - 4);
@@ -573,6 +587,8 @@
 
       const wordObj = {
         id: this.wordIdCounter++,
+        cardId: wordData.id || null,
+        tier: wordData.tier || 1,
         vi: wordData.vi,
         de: wordData.de,
         x: spawnX,
@@ -944,6 +960,9 @@
   // ---------------------------------------------------------------------------
   // Bootstrapping
   // ---------------------------------------------------------------------------
+  if (typeof window !== 'undefined') {
+    window.WortregenGame = WortregenGame;
+  }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       window.wortregenGame = new WortregenGame();

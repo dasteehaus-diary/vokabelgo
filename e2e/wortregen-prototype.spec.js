@@ -680,4 +680,273 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     }
   });
 
+  // ---------------------------------------------------------------------------
+  // Phase 2: Data Integration Acceptance Tests (Tests I1 - I10)
+  // ---------------------------------------------------------------------------
+
+  test('Test I1: Wortregen reads cards from VokabelGo real repository (allCards)', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.wortregenGame !== undefined && window.WortregenVocabularyProvider !== undefined);
+
+    const check = await page.evaluate(() => {
+      const g = window.wortregenGame;
+      const provider = g.vocabProvider;
+      const allCards = typeof window.allCards === 'function' ? window.allCards() : [];
+      return {
+        hasProvider: !!provider,
+        allCardsCount: allCards.length,
+        eligibleCount: provider.stats.eligibleCount || provider.getEligibleCards().length
+      };
+    });
+
+    expect(check.hasProvider).toBe(true);
+    expect(check.allCardsCount).toBe(294);
+    expect(check.eligibleCount).toBe(177);
+
+    // Click start and check spawned card has cardId from repository
+    await page.click('#btn-start');
+    const wordCard = page.locator('.word-card').first();
+    await wordCard.waitFor({ state: 'visible', timeout: 5000 });
+
+    const cardData = await page.evaluate(() => {
+      const w = window.wortregenGame.activeWords[0];
+      return { cardId: w.cardId, tier: w.tier, de: w.de, vi: w.vi };
+    });
+
+    expect(cardData.cardId).toBeTruthy();
+    expect(cardData.tier).toBeGreaterThanOrEqual(1);
+    expect(cardData.de.length).toBeGreaterThan(0);
+    expect(cardData.vi.length).toBeGreaterThan(0);
+  });
+
+  test('Test I2: Exclusions (grammar, questions, content, ellipsis are excluded)', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.WortregenVocabularyProvider !== undefined);
+
+    const stats = await page.evaluate(() => {
+      const provider = new window.WortregenVocabularyProvider();
+      const eligible = provider.getEligibleCards();
+      return {
+        total: provider.stats.totalCards,
+        eligible: provider.stats.eligibleCount,
+        excluded: provider.stats.excludedCount,
+        reasons: provider.stats.exclusionReasons,
+        // Check no excluded types made it into eligible
+        hasGrammar: eligible.some(c => c.cardType === 'grammar'),
+        hasContent: eligible.some(c => c.cardType === 'content'),
+        hasQuestion: eligible.some(c => c.cardType === 'question'),
+        hasEllipsis: eligible.some(c => c.de.includes('...'))
+      };
+    });
+
+    expect(stats.total).toBe(294);
+    expect(stats.eligible).toBe(177);
+    expect(stats.excluded).toBe(117);
+    expect(stats.hasGrammar).toBe(false);
+    expect(stats.hasContent).toBe(false);
+    expect(stats.hasQuestion).toBe(false);
+    expect(stats.hasEllipsis).toBe(false);
+    expect(stats.reasons.grammar_card).toBeGreaterThan(0);
+    expect(stats.reasons.question_card).toBeGreaterThan(0);
+    expect(stats.reasons.content_card).toBeGreaterThan(0);
+  });
+
+  test('Test I3: Tier classification verification (der Termin -> Tier 1, sich bewerben -> Tier 2)', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.WortregenVocabularyProvider !== undefined);
+
+    const tierClassifications = await page.evaluate(() => {
+      const provider = new window.WortregenVocabularyProvider();
+      const eligible = provider.getEligibleCards();
+      
+      // Direct method test on specific canonical samples
+      const terminTier = provider.classifyTier(
+        { term: 'der Termin' },
+        { cardType: 'noun', canonicalAnswer: 'der Termin' }
+      );
+      const bewerbenTier = provider.classifyTier(
+        { term: 'sich bewerben' },
+        { cardType: 'verb', canonicalAnswer: 'sich bewerben' }
+      );
+
+      // Real cards from repository
+      const koerpersprache = eligible.find(c => c.id === 'b_0'); // die Körpersprache (noun)
+      const sichAusdruecken = eligible.find(c => c.id === 'b_6'); // sich ausdrücken (reflexive)
+
+      return {
+        terminTier,
+        bewerbenTier,
+        koerperspracheTier: koerpersprache ? koerpersprache.tier : null,
+        sichAusdrueckenTier: sichAusdruecken ? sichAusdruecken.tier : null,
+        tier1Count: provider.stats.tier1Count,
+        tier2Count: provider.stats.tier2Count,
+        tier3Count: provider.stats.tier3Count
+      };
+    });
+
+    // Noun with article: single lexical item -> Tier 1
+    expect(tierClassifications.terminTier).toBe(1);
+    expect(tierClassifications.koerperspracheTier).toBe(1);
+    // Reflexive verb / phrase -> Tier 2
+    expect(tierClassifications.bewerbenTier).toBe(2);
+    expect(tierClassifications.sichAusdrueckenTier).toBe(2);
+    expect(tierClassifications.tier1Count).toBe(62);
+    expect(tierClassifications.tier2Count).toBe(87);
+    expect(tierClassifications.tier3Count).toBe(28);
+  });
+
+  test('Test I4: Early game priority (first 10 items spawned are 100% Tier 1)', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.WortregenVocabularyProvider !== undefined);
+
+    const first10Tiers = await page.evaluate(() => {
+      const provider = new window.WortregenVocabularyProvider();
+      const queue = provider.buildQueue();
+      return queue.slice(0, 10).map(c => c.tier);
+    });
+
+    expect(first10Tiers.length).toBe(10);
+    expect(first10Tiers.every(tier => tier === 1)).toBe(true);
+  });
+
+  test('Test I5: Later game mix (Tier 2 and Tier 3 appear after item 10)', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.WortregenVocabularyProvider !== undefined);
+
+    const queueMix = await page.evaluate(() => {
+      const provider = new window.WortregenVocabularyProvider();
+      const queue = provider.buildQueue();
+      const mid10 = queue.slice(10, 20).map(c => c.tier);
+      const rest = queue.slice(20, 50).map(c => c.tier);
+      return {
+        midHasTier2: mid10.includes(2),
+        midTier1Ratio: mid10.filter(t => t === 1).length / mid10.length,
+        restHasTier2: rest.includes(2),
+        restHasTier3: rest.includes(3)
+      };
+    });
+
+    expect(queueMix.midHasTier2).toBe(true);
+    expect(queueMix.midTier1Ratio).toBeGreaterThanOrEqual(0.7);
+    expect(queueMix.restHasTier2).toBe(true);
+    expect(queueMix.restHasTier3).toBe(true);
+  });
+
+  test('Test I6: No early repeat (cards do not repeat until pool exhausts)', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.WortregenVocabularyProvider !== undefined);
+
+    const uniqueness = await page.evaluate(() => {
+      const provider = new window.WortregenVocabularyProvider();
+      const queue = provider.buildQueue();
+      const ids = queue.map(c => c.id);
+      const uniqueIds = new Set(ids);
+      return {
+        queueLen: queue.length,
+        uniqueLen: uniqueIds.size
+      };
+    });
+
+    expect(uniqueness.queueLen).toBe(177);
+    expect(uniqueness.uniqueLen).toBe(177);
+  });
+
+  test('Test I7: No duplicate active cards (Target and Waiting never share the same card ID)', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.wortregenGame !== undefined);
+
+    await page.click('#btn-start');
+    // Wait until 2 cards are active on screen
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.activeWords.filter(w => !w.isDying && !w.isGrounded).length >= 2;
+    }, { timeout: 6000 });
+
+    const activeCardIds = await page.evaluate(() => {
+      const g = window.wortregenGame;
+      const active = g.activeWords.filter(w => !w.isDying && !w.isGrounded);
+      return active.map(w => w.cardId);
+    });
+
+    expect(activeCardIds.length).toBe(2);
+    expect(activeCardIds[0]).not.toBe(activeCardIds[1]);
+  });
+
+  test('Test I8: Duration scaling (phrases fall slower than single lexical items)', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.WortregenVocabularyProvider !== undefined);
+
+    const durations = await page.evaluate(() => {
+      const provider = new window.WortregenVocabularyProvider();
+      // Single short noun (Tier 1)
+      const t1Duration = provider.getFallDuration({ tier: 1 }, { canonicalAnswer: 'das Haus' });
+      // Single longer noun (Tier 1)
+      const t1LongDuration = provider.getFallDuration({ tier: 1 }, { canonicalAnswer: 'die Entscheidung' });
+      // Short phrase (Tier 2)
+      const t2Duration = provider.getFallDuration({ tier: 2 }, { canonicalAnswer: 'sich bewerben' });
+      // Longer phrase (Tier 3)
+      const t3Duration = provider.getFallDuration({ tier: 3 }, { canonicalAnswer: 'eine Entscheidung treffen' });
+      return { t1Duration, t1LongDuration, t2Duration, t3Duration };
+    });
+
+    expect(durations.t1Duration).toBe(18.5);
+    expect(durations.t1LongDuration).toBe(21.0);
+    expect(durations.t2Duration).toBe(24.0);
+    expect(durations.t3Duration).toBe(28.5);
+    expect(durations.t2Duration).toBeGreaterThan(durations.t1Duration);
+    expect(durations.t3Duration).toBeGreaterThan(durations.t2Duration);
+  });
+
+  test('Test I9: User cards (valid user card included, invalid excluded)', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.WortregenVocabularyProvider !== undefined);
+
+    const result = await page.evaluate(() => {
+      // Inject user cards
+      window.userCards = [
+        {
+          id: 'user_valid_1',
+          term: 'der Schreibtisch',
+          meaning: 'bàn làm việc',
+          deck: 'Từ của tôi',
+          source: 'user'
+        },
+        {
+          id: 'user_invalid_grammar',
+          term: 'Grammatik Frage?',
+          meaning: 'giải thích ngữ pháp',
+          cardType: 'grammar',
+          source: 'user'
+        }
+      ];
+
+      const provider = new window.WortregenVocabularyProvider();
+      const eligible = provider.getEligibleCards();
+      const hasValid = eligible.some(c => c.id === 'user_valid_1');
+      const hasInvalid = eligible.some(c => c.id === 'user_invalid_grammar');
+      return { hasValid, hasInvalid };
+    });
+
+    expect(result.hasValid).toBe(true);
+    expect(result.hasInvalid).toBe(false);
+  });
+
+  test('Test I10: Deck filter API (buildQueue({ deck }) restricts to matching deck)', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.WortregenVocabularyProvider !== undefined);
+
+    const deckResult = await page.evaluate(() => {
+      const provider = new window.WortregenVocabularyProvider();
+      const lektion2Deck = 'Lektion 2 · Sprich mit mir!';
+      const queue = provider.buildQueue({ deck: lektion2Deck });
+      return {
+        queueCount: queue.length,
+        allMatchDeck: queue.every(c => c.deck === lektion2Deck)
+      };
+    });
+
+    expect(deckResult.queueCount).toBeGreaterThan(0);
+    expect(deckResult.allMatchDeck).toBe(true);
+  });
+
 });
