@@ -106,8 +106,8 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
       await expect(page.locator('#hud-combo')).toHaveText('Combo x2');
     }
 
-    // 8. Test Ground Collision & Life Loss:
-    // Ensure there is an active word
+    // 8. Test Ground Collision & 3 Natural Life Losses (NO gameOver() mocking!):
+    // Miss 1: Word 1 touches ground -> lives = 2, missedCount = 1
     await page.waitForFunction(() => {
       return window.wortregenGame && window.wortregenGame.activeWords.some(w => !w.isDying);
     }, { timeout: 6000 });
@@ -115,39 +115,75 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     await page.evaluate(() => {
       const g = window.wortregenGame;
       const w = g.activeWords.find(item => !item.isDying);
-      if (w) {
-        // Move word to ground limit
-        w.y = g.fallingArea.clientHeight - w.height + 10;
+      if (w) w.y = g.fallingArea.clientHeight - w.height + 10;
+    });
+
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.lives === 2 && g.missedCount === 1;
+    }, { timeout: 3000 });
+
+    await expect(page.locator('#hud-combo')).toHaveText('Combo x0');
+    expect(await page.locator('#hud-lives .hud-heart.lost').count()).toBe(1);
+
+    // Miss 2: Word 2 touches ground -> lives = 1, missedCount = 2
+    await page.evaluate(() => {
+      const g = window.wortregenGame;
+      if (!g.activeWords.some(w => !w.isDying)) {
+        g.maybeSpawnWord();
       }
     });
 
-    // Wait for game loop tick to detect ground touch
-    await page.waitForTimeout(400);
+    await page.waitForFunction(() => {
+      return window.wortregenGame && window.wortregenGame.activeWords.some(w => !w.isDying);
+    }, { timeout: 6000 });
 
-    // One heart should be lost -> 2 lives left
-    const currentLives = await page.evaluate(() => window.wortregenGame.lives);
-    expect(currentLives).toBeLessThanOrEqual(2);
-
-    // Combo should be reset on life loss
-    await expect(page.locator('#hud-combo')).toHaveText('Combo x0');
-
-    // 9. Test Game Over: Force remaining lives to 0
     await page.evaluate(() => {
-      window.wortregenGame.lives = 1;
       const g = window.wortregenGame;
       const w = g.activeWords.find(item => !item.isDying);
-      if (w) {
-        w.y = g.fallingArea.clientHeight;
-      } else {
-        g.gameOver();
+      if (w) w.y = g.fallingArea.clientHeight - w.height + 10;
+    });
+
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.lives === 1 && g.missedCount === 2;
+    }, { timeout: 3000 });
+
+    expect(await page.locator('#hud-lives .hud-heart.lost').count()).toBe(2);
+
+    // Miss 3: Word 3 touches ground -> lives = 0, missedCount = 3 -> Game Over triggers naturally
+    await page.evaluate(() => {
+      const g = window.wortregenGame;
+      if (!g.activeWords.some(w => !w.isDying)) {
+        g.maybeSpawnWord();
       }
     });
 
-    await page.waitForTimeout(500);
+    await page.waitForFunction(() => {
+      return window.wortregenGame && window.wortregenGame.activeWords.some(w => !w.isDying);
+    }, { timeout: 6000 });
+
+    await page.evaluate(() => {
+      const g = window.wortregenGame;
+      const w = g.activeWords.find(item => !item.isDying);
+      if (w) w.y = g.fallingArea.clientHeight - w.height + 10;
+    });
+
+    // Wait for game engine to transition to GAME_OVER naturally via gameLoop
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.lives === 0 && g.missedCount === 3 && g.state === 'GAME_OVER';
+    }, { timeout: 4000 });
+
+    // Verify all 3 hearts are lost in UI
+    expect(await page.locator('#hud-lives .hud-heart.lost').count()).toBe(3);
+    const heartTexts = await page.locator('#hud-lives .hud-heart').allInnerTexts();
+    expect(heartTexts).toEqual(['🤍', '🤍', '🤍']);
 
     // Verify Game Over screen
     await expect(page.locator('#game-over-screen')).toBeVisible();
     await expect(page.locator('#game-over-screen .overlay-title')).toHaveText('Wortregen beendet!');
+    await expect(page.locator('#summary-missed')).toHaveText('3');
     await expect(page.locator('#summary-score')).not.toHaveText('0');
     await expect(page.locator('#btn-replay')).toBeVisible();
 
@@ -188,6 +224,11 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/wortregen.html');
     await page.waitForFunction(() => window.wortregenGame !== undefined);
+    
+    // Verify no horizontal overflow in header on 390px
+    const isHeaderWithinBounds = await page.locator('.wortregen-header').evaluate(el => el.scrollWidth <= el.clientWidth + 1);
+    expect(isHeaderWithinBounds).toBe(true);
+
     await page.click('#btn-start');
     await page.waitForSelector('.word-card');
     await page.waitForTimeout(2200);

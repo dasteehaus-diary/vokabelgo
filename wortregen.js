@@ -10,36 +10,36 @@
   // 1. Vocabulary Dataset (30 Core German Words)
   // ---------------------------------------------------------------------------
   const WORD_POOL = [
-    { vi: "quyết định", de: "die Entscheidung", hint: "die" },
-    { vi: "cuộc hẹn", de: "der Termin", hint: "der" },
-    { vi: "đáng tin cậy", de: "zuverlässig", hint: "adj." },
-    { vi: "ứng tuyển", de: "sich bewerben", hint: "v." },
-    { vi: "siêu thị", de: "der Supermarkt", hint: "der" },
-    { vi: "bánh mì", de: "das Brot", hint: "das" },
-    { vi: "trái táo", de: "der Apfel", hint: "der" },
-    { vi: "thành phố", de: "die Stadt", hint: "die" },
-    { vi: "ngôi nhà", de: "das Haus", hint: "das" },
-    { vi: "bạn bè", de: "der Freund", hint: "der" },
-    { vi: "công việc", de: "die Arbeit", hint: "die" },
-    { vi: "thời gian", de: "die Zeit", hint: "die" },
-    { vi: "trường học", de: "die Schule", hint: "die" },
-    { vi: "tiền bạc", de: "das Geld", hint: "das" },
-    { vi: "cuốn sách", de: "das Buch", hint: "das" },
-    { vi: "câu hỏi", de: "die Frage", hint: "die" },
-    { vi: "câu trả lời", de: "die Antwort", hint: "die" },
-    { vi: "nước uống", de: "das Wasser", hint: "das" },
-    { vi: "gia đình", de: "die Familie", hint: "die" },
-    { vi: "chiếc xe", de: "das Auto", hint: "das" },
-    { vi: "học tập", de: "lernen", hint: "v." },
-    { vi: "hiểu", de: "verstehen", hint: "v." },
-    { vi: "nói chuyện", de: "sprechen", hint: "v." },
-    { vi: "viết", de: "schreiben", hint: "v." },
-    { vi: "đọc", de: "lesen", hint: "v." },
-    { vi: "giúp đỡ", de: "helfen", hint: "v." },
-    { vi: "bắt đầu", de: "beginnen", hint: "v." },
-    { vi: "nhanh nhẹn", de: "schnell", hint: "adj." },
-    { vi: "quan trọng", de: "wichtig", hint: "adj." },
-    { vi: "đơn giản", de: "einfach", hint: "adj." }
+    { vi: "quyết định", de: "die Entscheidung" },
+    { vi: "cuộc hẹn", de: "der Termin" },
+    { vi: "đáng tin cậy", de: "zuverlässig" },
+    { vi: "ứng tuyển", de: "sich bewerben" },
+    { vi: "siêu thị", de: "der Supermarkt" },
+    { vi: "bánh mì", de: "das Brot" },
+    { vi: "quả táo", de: "der Apfel" },
+    { vi: "thành phố", de: "die Stadt" },
+    { vi: "ngôi nhà", de: "das Haus" },
+    { vi: "người bạn", de: "der Freund" },
+    { vi: "công việc", de: "die Arbeit" },
+    { vi: "thời gian", de: "die Zeit" },
+    { vi: "trường học", de: "die Schule" },
+    { vi: "tiền bạc", de: "das Geld" },
+    { vi: "cuốn sách", de: "das Buch" },
+    { vi: "câu hỏi", de: "die Frage" },
+    { vi: "câu trả lời", de: "die Antwort" },
+    { vi: "nước uống", de: "das Wasser" },
+    { vi: "gia đình", de: "die Familie" },
+    { vi: "chiếc xe", de: "das Auto" },
+    { vi: "học tập", de: "lernen" },
+    { vi: "hiểu", de: "verstehen" },
+    { vi: "nói", de: "sprechen" },
+    { vi: "viết", de: "schreiben" },
+    { vi: "đọc", de: "lesen" },
+    { vi: "giúp đỡ", de: "helfen" },
+    { vi: "bắt đầu", de: "beginnen" },
+    { vi: "nhanh", de: "schnell" },
+    { vi: "quan trọng", de: "wichtig" },
+    { vi: "đơn giản", de: "einfach" }
   ];
 
   // ---------------------------------------------------------------------------
@@ -410,13 +410,6 @@
       viEl.textContent = wordData.vi;
       cardEl.appendChild(viEl);
 
-      if (wordData.hint) {
-        const hintEl = document.createElement('div');
-        hintEl.className = 'word-card-hint';
-        hintEl.textContent = wordData.hint;
-        cardEl.appendChild(hintEl);
-      }
-
       this.fallingArea.appendChild(cardEl);
 
       // Measure real dimensions
@@ -433,7 +426,6 @@
         id: this.wordIdCounter++,
         vi: wordData.vi,
         de: wordData.de,
-        hint: wordData.hint,
         x: spawnX,
         y: startY,
         width: actualWidth,
