@@ -66,10 +66,12 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     const cleanLetters = firstWordInfo.de.replace(/\s+/g, '');
     expect(firstWordInfo.letterCount).toBe(cleanLetters.length);
 
-    // Verify slot elements in DOM
+    // Verify slot elements in DOM: slot 0 shows first-char hint (subtle amber), remaining slots show '_'
     const cardSlots = wordCard.locator('.char-slot');
     await expect(cardSlots).toHaveCount(cleanLetters.length);
-    for (let i = 0; i < cleanLetters.length; i++) {
+    await expect(cardSlots.nth(0)).toHaveClass(/first-char-hint/);
+    await expect(cardSlots.nth(0)).toHaveText(cleanLetters[0]);
+    for (let i = 1; i < cleanLetters.length; i++) {
       await expect(cardSlots.nth(i)).toHaveText('_');
     }
 
@@ -78,10 +80,12 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     const firstChar = cleanLetters[0];
     await page.keyboard.type(firstChar);
 
-    // Word should become locked target with .card-focused
+    // Word is active target with .card-target and .card-focused
+    await expect(wordCard).toHaveClass(/card-target/);
     await expect(wordCard).toHaveClass(/card-focused/);
-    // Slot 0 should be filled with firstChar and have class .typed
+    // Slot 0 should be filled with firstChar and have class .typed (hint removed)
     await expect(cardSlots.nth(0)).toHaveClass(/typed/);
+    await expect(cardSlots.nth(0)).not.toHaveClass(/first-char-hint/);
     await expect(cardSlots.nth(0)).toHaveText(firstChar);
 
     // 6. Test Mistake Feedback on locked card:
@@ -98,10 +102,13 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     // 7. Test Backspace:
     // Press backspace to erase slot 0
     await page.keyboard.press('Backspace');
-    await expect(cardSlots.nth(0)).toHaveText('_');
+    // Slot 0 restores the first-character hint!
+    await expect(cardSlots.nth(0)).toHaveClass(/first-char-hint/);
+    await expect(cardSlots.nth(0)).toHaveText(firstChar);
     await expect(cardSlots.nth(0)).not.toHaveClass(/typed/);
-    // Card should now be unlocked since typedCount === 0
-    await expect(wordCard).not.toHaveClass(/card-focused/);
+    // FIFO Rule: Target remains the current word even when backspaced to 0 letters!
+    await expect(wordCard).toHaveClass(/card-target/);
+    await expect(wordCard).toHaveClass(/card-focused/);
 
     // 8. Test Auto-Space Skip and Immediate Pop without Enter:
     // Type all letters of the word directly without typing any spaces!
@@ -110,8 +117,9 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
       await page.waitForTimeout(40);
     }
 
-    // Word must POP immediately, score becomes 100, combo becomes x1
-    await expect(page.locator('#hud-score-val')).toHaveText('100');
+    // Word must POP immediately, score increases, combo becomes x1
+    const expectedScore1 = cleanLetters.length * 10;
+    await expect(page.locator('#hud-score-val')).toHaveText(String(expectedScore1));
     await expect(page.locator('#hud-combo')).toHaveText('Combo x1');
 
     // 9. Test Combo Progression: wait for next active word and solve it
@@ -129,7 +137,8 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
         await page.keyboard.type(char);
         await page.waitForTimeout(30);
       }
-      await expect(page.locator('#hud-score-val')).toHaveText('200');
+      const expectedScore2 = expectedScore1 + secondWordClean.length * 10;
+      await expect(page.locator('#hud-score-val')).toHaveText(String(expectedScore2));
       await expect(page.locator('#hud-combo')).toHaveText('Combo x2');
     }
 
@@ -341,6 +350,273 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     // 4. Game Over screen visible with correct stats
     await expect(page.locator('#game-over-screen')).toBeVisible();
     await expect(page.locator('#summary-missed')).toHaveText('3');
+  });
+
+  // ---------------------------------------------------------------------------
+  // Phase 1 Required Acceptance Tests (Section 17 A - G)
+  // ---------------------------------------------------------------------------
+
+  test('Required Test A: Single-key input increases typedCount by exactly 1 with zero duplicate chars', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.wortregenGame !== undefined);
+    await page.click('#btn-start');
+
+    // Wait for target word
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.activeWords && g.activeWords.length > 0;
+    });
+
+    const targetInfo = await page.evaluate(() => {
+      const g = window.wortregenGame;
+      const target = g.getTargetWord();
+      return {
+        id: target.id,
+        clean: target.de.replace(/\s+/g, ''),
+        initialTyped: target.typedCount
+      };
+    });
+
+    expect(targetInfo.initialTyped).toBe(0);
+
+    // Type 1 character once
+    const firstChar = targetInfo.clean[0];
+    await page.keyboard.type(firstChar);
+
+    // Verify typedCount increased by exactly 1
+    const postTypedCount = await page.evaluate(() => {
+      const target = window.wortregenGame.getTargetWord();
+      return target.typedCount;
+    });
+    expect(postTypedCount).toBe(1);
+
+    // Verify slot 0 has class .typed with character, and slot 1 is untouched ('_')
+    const targetCard = page.locator(`#word-${targetInfo.id}`);
+    const slots = targetCard.locator('.char-slot');
+    await expect(slots.nth(0)).toHaveClass(/typed/);
+    await expect(slots.nth(0)).toHaveText(firstChar);
+    if (targetInfo.clean.length > 1) {
+      await expect(slots.nth(1)).toHaveText('_');
+    }
+
+    // Mobile Virtual Keyboard Deduplication verification:
+    // If virtual keyboard emits duplicate character within 100ms on keyboard-capture input, it must NOT double count
+    await page.evaluate((c) => {
+      const g = window.wortregenGame;
+      if (g.keyboardCapture) {
+        g.keyboardCapture.value = c;
+        g.keyboardCapture.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }, firstChar);
+
+    // typedCount must still be 1 (ignored duplicate!)
+    const dedupTypedCount = await page.evaluate(() => window.wortregenGame.getTargetWord().typedCount);
+    expect(dedupTypedCount).toBe(1);
+  });
+
+  test('Required Tests B & C: Strict FIFO queue and wrong-target rejection', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.wortregenGame !== undefined);
+    await page.click('#btn-start');
+
+    // Wait for at least 2 words to be active (Card A and Card B)
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.activeWords.filter(w => !w.isDying && !w.isGrounded).length >= 2;
+    }, { timeout: 8000 });
+
+    const words = await page.evaluate(() => {
+      const g = window.wortregenGame;
+      const active = g.activeWords.filter(w => !w.isDying && !w.isGrounded);
+      return {
+        wordA: { id: active[0].id, clean: active[0].de.replace(/\s+/g, '') },
+        wordB: { id: active[1].id, clean: active[1].de.replace(/\s+/g, '') }
+      };
+    });
+
+    const cardA = page.locator(`#word-${words.wordA.id}`);
+    const cardB = page.locator(`#word-${words.wordB.id}`);
+
+    // Verify Card A is target, Card B is waiting
+    await expect(cardA).toHaveClass(/card-target/);
+    await expect(cardB).toHaveClass(/card-waiting/);
+    await expect(cardB).not.toHaveClass(/card-target/);
+
+    // Determine a character that is matching B's first character, but different from A's expected first character
+    const charA = words.wordA.clean[0];
+    const charB = words.wordB.clean[0];
+
+    let testChar = charB;
+    if (charA.toLowerCase() === charB.toLowerCase()) {
+      testChar = charA.toLowerCase() === 'x' ? 'y' : 'x';
+    }
+
+    // Type the wrong character for A (which may belong to B or not)
+    await page.keyboard.type(testChar);
+
+    // Card A shakes with mistake error
+    await expect(cardA.locator('.word-card-inner')).toHaveClass(/shake-error/);
+
+    // Invariant: Card B MUST NOT receive the character! Card B typedCount remains 0!
+    const bTyped = await page.evaluate((bId) => {
+      const w = window.wortregenGame.activeWords.find(item => item.id === bId);
+      return w ? w.typedCount : null;
+    }, words.wordB.id);
+    expect(bTyped).toBe(0);
+
+    // Card B slot 0 must not be .typed
+    await expect(cardB.locator('.char-slot').first()).not.toHaveClass(/typed/);
+  });
+
+  test('Required Test D: Transition test - completing A promotes B to target; A grounding promotes B to target', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.wortregenGame !== undefined);
+    await page.click('#btn-start');
+
+    // Wait for Card A and Card B
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.activeWords.filter(w => !w.isDying && !w.isGrounded).length >= 2;
+    }, { timeout: 8000 });
+
+    const words = await page.evaluate(() => {
+      const g = window.wortregenGame;
+      const active = g.activeWords.filter(w => !w.isDying && !w.isGrounded);
+      return {
+        wordA: { id: active[0].id, clean: active[0].de.replace(/\s+/g, '') },
+        wordB: { id: active[1].id, clean: active[1].de.replace(/\s+/g, '') }
+      };
+    });
+
+    const cardB = page.locator(`#word-${words.wordB.id}`);
+    await expect(cardB).toHaveClass(/card-waiting/);
+
+    // Type all letters of Card A to complete it
+    for (const char of words.wordA.clean) {
+      await page.keyboard.type(char);
+      await page.waitForTimeout(30);
+    }
+
+    // Invariant: Card B immediately transitions from .card-waiting to .card-target!
+    await expect(cardB).toHaveClass(/card-target/);
+    await expect(cardB).not.toHaveClass(/card-waiting/);
+
+    // Now typing works directly on Card B
+    const bFirstChar = words.wordB.clean[0];
+    await page.keyboard.type(bFirstChar);
+    await expect(cardB.locator('.char-slot').first()).toHaveClass(/typed/);
+  });
+
+  test('Required Test E: Backspace to 0 preserves target', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.wortregenGame !== undefined);
+    await page.click('#btn-start');
+
+    // Wait for Card A and Card B
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.activeWords.filter(w => !w.isDying && !w.isGrounded).length >= 2;
+    }, { timeout: 8000 });
+
+    const wordAInfo = await page.evaluate(() => {
+      const g = window.wortregenGame;
+      const w = g.getTargetWord();
+      return { id: w.id, clean: w.de.replace(/\s+/g, '') };
+    });
+
+    const cardA = page.locator(`#word-${wordAInfo.id}`);
+
+    // Type 2 characters on Card A
+    await page.keyboard.type(wordAInfo.clean[0]);
+    await page.keyboard.type(wordAInfo.clean[1]);
+
+    let typed = await page.evaluate(() => window.wortregenGame.getTargetWord().typedCount);
+    expect(typed).toBe(2);
+
+    // Backspace once -> typedCount 1
+    await page.keyboard.press('Backspace');
+    typed = await page.evaluate(() => window.wortregenGame.getTargetWord().typedCount);
+    expect(typed).toBe(1);
+
+    // Backspace twice -> typedCount 0
+    await page.keyboard.press('Backspace');
+    typed = await page.evaluate(() => window.wortregenGame.getTargetWord().typedCount);
+    expect(typed).toBe(0);
+
+    // Invariant: Target STILL remains Card A! Card A is not unlocked or lost!
+    await expect(cardA).toHaveClass(/card-target/);
+    await expect(cardA).toHaveClass(/card-focused/);
+
+    const activeTargetId = await page.evaluate(() => window.wortregenGame.getTargetWord().id);
+    expect(activeTargetId).toBe(wordAInfo.id);
+  });
+
+  test('Required Test F: Timing & fall duration test - calm velocity and no overtaking', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.wortregenGame !== undefined);
+    await page.click('#btn-start');
+
+    // Wait for 2 words to be active
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.activeWords.filter(w => !w.isDying && !w.isGrounded).length >= 2;
+    }, { timeout: 8000 });
+
+    const timingData = await page.evaluate(() => {
+      const g = window.wortregenGame;
+      const active = g.activeWords.filter(w => !w.isDying && !w.isGrounded);
+      return active.map(w => ({
+        id: w.id,
+        cleanLen: w.letters.length,
+        duration: w.duration,
+        speed: w.speed,
+        y: w.y
+      }));
+    });
+
+    expect(timingData.length).toBeGreaterThanOrEqual(2);
+
+    // Invariant: Duration is >= 16s (specifically >= 18s in V0.1 engine)
+    for (const w of timingData) {
+      expect(w.duration).toBeGreaterThanOrEqual(18.0);
+    }
+
+    // Invariant: Word B born after Word A must not have faster speed than Word A
+    const wordA = timingData[0];
+    const wordB = timingData[1];
+    expect(wordB.speed).toBeLessThanOrEqual(wordA.speed);
+
+    // Invariant: Word B's y position is strictly above Word A's y position (no overtaking!)
+    expect(wordB.y).toBeLessThan(wordA.y);
+  });
+
+  test('Required Test G: German character exact match (a ≠ ä, o ≠ ö, u ≠ ü, s ≠ ß)', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.wortregenGame !== undefined);
+
+    const matchResults = await page.evaluate(() => {
+      const g = window.wortregenGame;
+      return {
+        a_matches_ä: g.charsMatch('a', 'ä'),
+        o_matches_ö: g.charsMatch('o', 'ö'),
+        u_matches_ü: g.charsMatch('u', 'ü'),
+        s_matches_ß: g.charsMatch('s', 'ß'),
+        ä_matches_ä: g.charsMatch('ä', 'ä'),
+        Ä_matches_ä: g.charsMatch('Ä', 'ä'),
+        b_matches_b: g.charsMatch('b', 'B')
+      };
+    });
+
+    // Invariant: In V0.1, strict equality required! a ≠ ä, o ≠ ö, u ≠ ü, s ≠ ß
+    expect(matchResults.a_matches_ä).toBe(false);
+    expect(matchResults.o_matches_ö).toBe(false);
+    expect(matchResults.u_matches_ü).toBe(false);
+    expect(matchResults.s_matches_ß).toBe(false);
+
+    // Exact matches (including case insensitivity) must be true
+    expect(matchResults.ä_matches_ä).toBe(true);
+    expect(matchResults.Ä_matches_ä).toBe(true);
+    expect(matchResults.b_matches_b).toBe(true);
   });
 
   test('record 15-20s authentic gameplay video demonstrating direct on-card typing and tempo', async ({ browser }) => {

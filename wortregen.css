@@ -342,15 +342,32 @@ html, body {
   white-space: nowrap;
 }
 
-/* Focused active target card */
-.word-card.card-focused {
+/* Focused active target card (FIFO priority 1) */
+.word-card.card-focused,
+.word-card.card-target {
   border-color: var(--c-terracotta);
   box-shadow: 0 4px 0 var(--c-terracotta), 0 0 0 3px rgba(219, 91, 35, 0.22);
   z-index: 8;
+  opacity: 1;
 }
 
-.word-card.card-focused::before {
+.word-card.card-focused::before,
+.word-card.card-target::before {
   background: var(--c-sunflower);
+}
+
+/* Waiting card (FIFO queue in waiting position) */
+.word-card.card-waiting {
+  opacity: 0.72;
+  filter: contrast(0.94);
+  border-color: #B5AD9E;
+  box-shadow: 0 2px 0 #B5AD9E;
+  z-index: 4;
+  transition: opacity 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+
+.word-card.card-waiting::before {
+  background: #E0DDD5;
 }
 
 /* Subtle mistake shake on target card */
@@ -396,11 +413,20 @@ html, body {
   transition: color 0.1s ease, border-color 0.1s ease;
 }
 
+/* First-character hint (subtle warm amber reference style) */
+.char-slot.first-char-hint {
+  color: #D97706;
+  font-weight: 800;
+  border-bottom-color: #F59E0B;
+  opacity: 0.95;
+}
+
 .char-slot.typed {
   color: var(--ink-text);
   border-bottom-color: var(--c-olive);
   border-bottom-width: 2.5px;
   font-weight: 800;
+  opacity: 1;
 }
 
 .char-slot.current {
@@ -438,6 +464,13 @@ html, body {
 
 /* Card Pop Animation (When Correct) */
 .word-card.word-popped {
+  border-color: var(--c-olive) !important;
+}
+
+.word-card.word-popped .char-slot {
+  color: #2F6F1E !important;
+  border-bottom-color: var(--c-olive) !important;
+}
   animation: cardPop 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
   z-index: 10;
 }

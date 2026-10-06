@@ -195,19 +195,59 @@
       this.solvedCount = 0;
       this.missedCount = 0;
 
-      // Mechanics & Fast Tempo
+      // Mechanics & FIFO Queue
       this.activeWords = [];
-      this.lockedWord = null;
       this.wordIdCounter = 1;
       this.availableWords = [...WORD_POOL];
-      this.baseSpeed = 65; // px per second (fast, snappy tempo)
-      this.speedIncrement = 1.4; // slight progression
-      this.maxConcurrent = 3;
+      this.baseSpeed = 40;
+      this.maxConcurrent = 2; // Strict 2 cards maximum: 1 target, 1 waiting
       this.spawnTimer = null;
       this.animFrameId = null;
       this.lastFrameTime = 0;
+      this.lastProcessed = { char: '', time: 0, source: '' };
 
       this.initEvents();
+    }
+
+    // FIFO Target Helper: Always returns the oldest active, non-grounded, non-dying word
+    getTargetWord() {
+      return this.activeWords.find(w => !w.isDying && !w.isGrounded) || null;
+    }
+
+    // Backwards compatibility getter
+    get lockedWord() {
+      return this.getTargetWord();
+    }
+
+    lockTarget(word) {
+      this.updateCardVisuals();
+    }
+
+    unlockTarget() {
+      this.updateCardVisuals();
+    }
+
+    // Update visual classes for Target vs Waiting cards
+    updateCardVisuals() {
+      const target = this.getTargetWord();
+      this.activeWords.forEach(w => {
+        if (w.isDying || w.isGrounded) return;
+        if (w === target) {
+          w.el.classList.add('card-target', 'card-focused');
+          w.el.classList.remove('card-waiting');
+          w.letters.forEach((l, idx) => {
+            if (idx === w.typedCount) {
+              l.slotEl.classList.add('current');
+            } else {
+              l.slotEl.classList.remove('current');
+            }
+          });
+        } else {
+          w.el.classList.remove('card-target', 'card-focused');
+          w.el.classList.add('card-waiting');
+          w.letters.forEach(l => l.slotEl.classList.remove('current'));
+        }
+      });
     }
 
     initEvents() {
@@ -234,28 +274,59 @@
         this.handleKeyDown(e);
       });
 
-      // Mobile Virtual Keyboard Capture
+      // Mobile Virtual Keyboard Capture with strict deduplication against keydown
       if (this.keyboardCapture) {
         this.keyboardCapture.addEventListener('input', () => {
           if (this.state !== 'PLAYING') return;
           const val = this.keyboardCapture.value;
-          if (val) {
-            for (const char of val) {
-              this.handleCharInput(char);
+          this.keyboardCapture.value = '';
+          if (!val) return;
+
+          const now = performance.now();
+          for (const char of val) {
+            // Check if this character was already handled by keydown within the last 120ms
+            if (
+              this.lastProcessed &&
+              this.lastProcessed.source === 'keydown' &&
+              this.lastProcessed.char === char.toLowerCase() &&
+              (now - this.lastProcessed.time) < 120
+            ) {
+              continue;
             }
-            this.keyboardCapture.value = '';
+            this.lastProcessed = { char: char.toLowerCase(), time: now, source: 'capture-input' };
+            this.handleCharInput(char, 'capture-input');
+          }
+        });
+
+        this.keyboardCapture.addEventListener('beforeinput', (e) => {
+          if (this.state !== 'PLAYING') return;
+          if (e.inputType === 'deleteContentBackward') {
+            const now = performance.now();
+            if (
+              this.lastProcessed &&
+              this.lastProcessed.source === 'keydown' &&
+              this.lastProcessed.char === 'backspace' &&
+              (now - this.lastProcessed.time) < 120
+            ) {
+              return;
+            }
+            this.lastProcessed = { char: 'backspace', time: now, source: 'capture-input' };
+            this.handleBackspace();
           }
         });
       }
 
-      // Tap / Click anywhere refocuses keyboard during play
-      document.addEventListener('click', (e) => {
-        if (this.state === 'PLAYING') {
-          if (!e.target.closest('#btn-mute')) {
-            this.focusKeyboard();
+      // Tap / Click anywhere refocuses keyboard on touch devices only
+      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      if (isTouch) {
+        document.addEventListener('click', (e) => {
+          if (this.state === 'PLAYING') {
+            if (!e.target.closest('#btn-mute')) {
+              this.focusKeyboard();
+            }
           }
-        }
-      });
+        });
+      }
 
       // Visual Viewport Handling for Mobile Virtual Keyboard
       if (window.visualViewport) {
@@ -299,9 +370,7 @@
       this.maxCombo = 0;
       this.solvedCount = 0;
       this.missedCount = 0;
-      this.baseSpeed = 65;
       this.activeWords = [];
-      this.lockedWord = null;
       this.availableWords = [...WORD_POOL];
       this.shuffleArray(this.availableWords);
 
@@ -315,18 +384,21 @@
       // Update HUD
       this.renderHUD();
 
-      // Focus invisible input for virtual keyboard
-      this.focusKeyboard();
+      // Focus invisible input for virtual keyboard on touch devices
+      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      if (isTouch) {
+        this.focusKeyboard();
+      }
 
       // Start Loops
       this.lastFrameTime = performance.now();
       this.animFrameId = requestAnimationFrame(this.gameLoop.bind(this));
-      this.scheduleSpawn(150); // 1st word spawn
+      this.scheduleSpawn(150); // 1st word spawn (target)
       setTimeout(() => {
-        if (this.state === 'PLAYING' && this.activeWords.length < this.maxConcurrent) {
-          this.maybeSpawnWord(); // 2nd word spawn
+        if (this.state === 'PLAYING' && this.activeWords.filter(w => !w.isDying && !w.isGrounded).length < this.maxConcurrent) {
+          this.maybeSpawnWord(); // 2nd word spawn (waiting)
         }
-      }, 1200);
+      }, 2200);
     }
 
     gameOver() {
@@ -355,7 +427,7 @@
     }
 
     // -------------------------------------------------------------------------
-    // Word Spawning & Collision Prevention
+    // Word Spawning & Viewport-Scaled Fall Velocity
     // -------------------------------------------------------------------------
     scheduleSpawn(delay = 2000) {
       if (this.state !== 'PLAYING') return;
@@ -363,14 +435,16 @@
       this.spawnTimer = setTimeout(() => {
         if (this.state === 'PLAYING') {
           this.maybeSpawnWord();
-          const nextDelay = Math.max(1600, 2400 - Math.min(600, this.solvedCount * 35));
+          const activeCount = this.activeWords.filter(w => !w.isDying && !w.isGrounded).length;
+          const nextDelay = activeCount < this.maxConcurrent ? 1800 : 3200;
           this.scheduleSpawn(nextDelay);
         }
       }, delay);
     }
 
     maybeSpawnWord() {
-      if (this.activeWords.length >= this.maxConcurrent) {
+      const activeNonDying = this.activeWords.filter(w => !w.isDying && !w.isGrounded);
+      if (activeNonDying.length >= this.maxConcurrent) {
         return;
       }
 
@@ -427,6 +501,7 @@
       // Parse letters and words
       const wordParts = wordData.de.trim().split(/\s+/);
       const letters = [];
+      let isFirstChar = true;
 
       wordParts.forEach((part, partIdx) => {
         const partEl = document.createElement('div');
@@ -436,7 +511,14 @@
           const char = part[i];
           const slotEl = document.createElement('span');
           slotEl.className = 'char-slot';
-          slotEl.textContent = '_';
+          // Subtle first-character hint (video reference style)
+          if (isFirstChar) {
+            slotEl.classList.add('first-char-hint');
+            slotEl.textContent = char;
+            isFirstChar = false;
+          } else {
+            slotEl.textContent = '_';
+          }
           slotEl.dataset.char = char;
           partEl.appendChild(slotEl);
 
@@ -465,6 +547,30 @@
       spawnX = Math.max(minX, Math.min(spawnX, clampedMaxX));
       const startY = 8;
 
+      // Fall Duration: short words ~18-20s, longer words ~21-25s
+      const cleanLettersCount = letters.length;
+      let targetDuration = 18.5;
+      if (cleanLettersCount <= 6) {
+        targetDuration = 18.0;
+      } else if (cleanLettersCount <= 10) {
+        targetDuration = 19.5;
+      } else if (cleanLettersCount <= 15) {
+        targetDuration = 22.0;
+      } else {
+        targetDuration = 25.0;
+      }
+
+      const areaHeight = this.fallingArea.clientHeight || 560;
+      const totalDistance = Math.max(120, areaHeight - actualHeight - startY - 4);
+      let cardSpeed = totalDistance / targetDuration;
+
+      // Invariant: newer word must NEVER fall faster or overtake older word ahead of it
+      const precedingWord = this.activeWords.find(w => !w.isDying && !w.isGrounded);
+      if (precedingWord) {
+        targetDuration = Math.max(targetDuration, precedingWord.duration || 18.5);
+        cardSpeed = Math.min(cardSpeed, precedingWord.speed);
+      }
+
       const wordObj = {
         id: this.wordIdCounter++,
         vi: wordData.vi,
@@ -473,7 +579,8 @@
         y: startY,
         width: actualWidth,
         height: actualHeight,
-        speed: this.baseSpeed + (Math.random() * 6 - 3),
+        duration: targetDuration,
+        speed: cardSpeed,
         el: cardEl,
         innerEl: innerEl,
         letters: letters,
@@ -484,6 +591,9 @@
 
       cardEl.style.transform = `translate3d(${wordObj.x}px, ${wordObj.y}px, 0)`;
       this.activeWords.push(wordObj);
+
+      // Update FIFO target highlight and slot states
+      this.updateCardVisuals();
     }
 
     // -------------------------------------------------------------------------
@@ -497,13 +607,25 @@
 
       const groundLimit = this.fallingArea.clientHeight;
 
-      for (let i = this.activeWords.length - 1; i >= 0; i--) {
+      for (let i = 0; i < this.activeWords.length; i++) {
         if (this.state !== 'PLAYING' || this.lives <= 0) break;
 
         const w = this.activeWords[i];
         if (w.isDying || w.isGrounded) continue;
 
         w.y += w.speed * dt;
+
+        // Prevent younger word from catching up/overlapping preceding word
+        if (i > 0) {
+          const prev = this.activeWords[i - 1];
+          if (prev && !prev.isDying && !prev.isGrounded) {
+            const minGap = Math.max(65, w.height + 12);
+            if (w.y > prev.y - minGap) {
+              w.y = prev.y - minGap;
+            }
+          }
+        }
+
         w.el.style.transform = `translate3d(${w.x}px, ${w.y}px, 0)`;
 
         // Check if word hits ground threshold
@@ -532,11 +654,6 @@
       word.y = Math.max(0, groundLimit - word.height - 4);
       word.el.style.transform = `translate3d(${word.x}px, ${word.y}px, 0)`;
 
-      // Unlock if it was active target
-      if (this.lockedWord === word) {
-        this.unlockTarget();
-      }
-
       // Penalty (clamped so lives cannot go below 0)
       this.lives = Math.max(0, this.lives - 1);
       this.combo = 0;
@@ -545,14 +662,18 @@
       // Audio feedback
       this.sound.playMiss();
 
-      // Floating -1 Heart feedback (positioned above card to keep German text unobstructed)
+      // Floating -1 Heart feedback
       this.showFloatingFeedback(word.x + word.width / 2, Math.max(10, word.y - 28), '-1 ❤️', 'life-loss');
 
       // Update HUD immediately
       this.renderHUD();
 
+      // FIFO: The next waiting word immediately becomes the active target!
+      this.updateCardVisuals();
+
       // Visual ground reveal: highlight card and show full German answer for 1.2s
       word.el.classList.add('word-grounded-reveal');
+      word.el.classList.remove('card-target', 'card-focused', 'card-waiting');
       const inner = word.innerEl || word.el.querySelector('.word-card-inner');
       if (inner) {
         const slots = inner.querySelector('.word-card-slots');
@@ -586,6 +707,11 @@
 
         if (isFatalMiss && this.state === 'PLAYING') {
           this.gameOver();
+        } else if (this.state === 'PLAYING') {
+          // Refill waiting queue if needed
+          if (this.activeWords.filter(w => !w.isDying && !w.isGrounded).length < this.maxConcurrent) {
+            this.maybeSpawnWord();
+          }
         }
       }, 1200);
     }
@@ -599,6 +725,7 @@
 
       if (e.key === 'Backspace') {
         e.preventDefault();
+        this.lastProcessed = { char: 'backspace', time: performance.now(), source: 'keydown' };
         this.handleBackspace();
         return;
       }
@@ -617,68 +744,36 @@
 
       if (e.key.length === 1) {
         e.preventDefault();
-        this.handleCharInput(e.key);
+        const char = e.key;
+        this.lastProcessed = { char: char.toLowerCase(), time: performance.now(), source: 'keydown' };
+        this.handleCharInput(char, 'keydown');
         return;
       }
     }
 
-    handleCharInput(rawChar) {
+    handleCharInput(rawChar, source = 'unknown') {
       if (this.state !== 'PLAYING') return;
       if (this.lives <= 0) return;
 
-      const char = rawChar.toLowerCase();
+      // Strict FIFO: Only the current target word accepts input
+      const target = this.getTargetWord();
+      if (!target) return;
 
-      // If a locked target exists, verify it is still valid
-      if (this.lockedWord) {
-        if (this.lockedWord.isDying || this.lockedWord.isGrounded) {
-          this.unlockTarget();
-        }
-      }
+      const nextLetter = target.letters[target.typedCount];
+      if (!nextLetter) return;
 
-      // If NO locked target:
-      if (!this.lockedWord) {
-        const available = this.activeWords.filter(w => !w.isDying && !w.isGrounded);
-        let candidate = null;
-
-        for (const w of available) {
-          if (!w.letters || w.letters.length === 0) continue;
-          const expected = w.letters[0].char;
-          if (this.charsMatch(char, expected)) {
-            // Pick the one closest to the ground (highest y)
-            if (!candidate || w.y > candidate.y) {
-              candidate = w;
-            }
-          }
-        }
-
-        if (candidate) {
-          this.lockTarget(candidate);
-          this.fillNextSlot(candidate);
-        }
-        return;
-      }
-
-      // A target is locked:
-      const word = this.lockedWord;
-      const nextLetter = word.letters[word.typedCount];
-      if (nextLetter && this.charsMatch(char, nextLetter.char)) {
-        this.fillNextSlot(word);
+      if (this.charsMatch(rawChar, nextLetter.char)) {
+        this.fillNextSlot(target);
       } else {
-        // Wrong character typed on locked target: subtle shake error, NO life lost!
-        this.shakeTargetError(word);
+        // Wrong character typed on target: subtle shake error, NO life lost, NO card switch!
+        this.shakeTargetError(target);
       }
     }
 
+    // German Characters Strict Equality: a ≠ ä, o ≠ ö, u ≠ ü, s ≠ ß
     charsMatch(inputChar, targetChar) {
-      const a = inputChar.toLowerCase();
-      const b = targetChar.toLowerCase();
-      if (a === b) return true;
-      // Friendly German umlauts / sharp s fallback
-      if (b === 'ä' && a === 'a') return true;
-      if (b === 'ö' && a === 'o') return true;
-      if (b === 'ü' && a === 'u') return true;
-      if (b === 'ß' && a === 's') return true;
-      return false;
+      if (!inputChar || !targetChar) return false;
+      return inputChar.toLowerCase() === targetChar.toLowerCase();
     }
 
     fillNextSlot(word) {
@@ -686,42 +781,23 @@
       if (!letter) return;
 
       letter.slotEl.textContent = letter.char;
+      letter.slotEl.classList.remove('first-char-hint', 'current');
       letter.slotEl.classList.add('typed');
-      letter.slotEl.classList.remove('current');
 
       word.typedCount++;
 
       // Complete word: POP immediately!
       if (word.typedCount >= word.letters.length) {
-        const idx = this.activeWords.indexOf(word);
-        this.handleCorrectAnswer(word, idx);
-        this.unlockTarget();
-
-        // Maintain momentum: spawn next word quickly if board is open
-        if (this.activeWords.filter(w => !w.isDying && !w.isGrounded).length < 2) {
-          setTimeout(() => {
-            if (this.state === 'PLAYING') {
-              this.maybeSpawnWord();
-            }
-          }, 250);
-        }
+        this.handleCorrectAnswer(word);
       } else {
-        // Highlight next slot
-        const nextLetter = word.letters[word.typedCount];
-        if (nextLetter) {
-          nextLetter.slotEl.classList.add('current');
-        }
+        this.updateCardVisuals();
       }
     }
 
     handleBackspace() {
-      if (this.state !== 'PLAYING' || !this.lockedWord) return;
-
-      const word = this.lockedWord;
-      if (word.isDying || word.isGrounded) {
-        this.unlockTarget();
-        return;
-      }
+      if (this.state !== 'PLAYING') return;
+      const word = this.getTargetWord();
+      if (!word) return;
 
       if (word.typedCount > 0) {
         if (word.typedCount < word.letters.length) {
@@ -730,37 +806,19 @@
 
         word.typedCount--;
         const letter = word.letters[word.typedCount];
-        letter.slotEl.textContent = '_';
         letter.slotEl.classList.remove('typed');
-        letter.slotEl.classList.add('current');
 
         if (word.typedCount === 0) {
-          // Cleared all letters, unlock so player can switch to another word
-          this.unlockTarget();
+          // Cleared back to slot 0: restore subtle first-char hint
+          letter.slotEl.textContent = letter.char;
+          letter.slotEl.classList.add('first-char-hint');
+        } else {
+          letter.slotEl.textContent = '_';
         }
-      }
-    }
 
-    lockTarget(word) {
-      if (this.lockedWord && this.lockedWord !== word) {
-        this.unlockTarget();
+        this.updateCardVisuals();
       }
-      this.lockedWord = word;
-      word.el.classList.add('card-focused');
-      if (word.typedCount < word.letters.length) {
-        word.letters[word.typedCount].slotEl.classList.add('current');
-      }
-    }
-
-    unlockTarget() {
-      if (this.lockedWord) {
-        const word = this.lockedWord;
-        word.el.classList.remove('card-focused');
-        if (word.typedCount < word.letters.length) {
-          word.letters[word.typedCount].slotEl.classList.remove('current');
-        }
-        this.lockedWord = null;
-      }
+      // Note: Target is strictly retained even if typedCount reaches 0
     }
 
     shakeTargetError(word) {
@@ -773,25 +831,21 @@
       }, 280);
     }
 
-    handleCorrectAnswer(word, index) {
+    handleCorrectAnswer(word) {
       word.isDying = true;
-      if (index !== -1) {
-        this.activeWords.splice(index, 1);
-      } else {
-        const i = this.activeWords.indexOf(word);
-        if (i !== -1) this.activeWords.splice(i, 1);
+      const idx = this.activeWords.indexOf(word);
+      if (idx !== -1) {
+        this.activeWords.splice(idx, 1);
       }
 
       // Stats
-      this.score += 100;
+      const wordLen = word.letters ? word.letters.length : 10;
+      this.score += wordLen * 10;
       this.combo += 1;
       if (this.combo > this.maxCombo) {
         this.maxCombo = this.combo;
       }
       this.solvedCount += 1;
-
-      // Gentle speed progression
-      this.baseSpeed = Math.min(84, this.baseSpeed + this.speedIncrement);
 
       // Audio
       this.sound.playCorrect(this.combo);
@@ -805,12 +859,25 @@
       }, 360);
 
       // Floating Score Indicator
-      const scoreText = this.combo >= 3 ? `+100 (Combo x${this.combo})` : '+100';
+      const scoreGain = wordLen * 10;
+      const scoreText = this.combo >= 3 ? `+${scoreGain} (Combo x${this.combo})` : `+${scoreGain}`;
       const scoreClass = this.combo >= 3 ? 'score combo-burst' : 'score';
       this.showFloatingFeedback(word.x + word.width / 2, Math.max(20, word.y), scoreText, scoreClass);
 
       // Update HUD
       this.renderHUD();
+
+      // FIFO: Next word in queue immediately becomes the active target!
+      this.updateCardVisuals();
+
+      // Maintain flow: Spawn next word smoothly if board has space
+      if (this.activeWords.filter(w => !w.isDying && !w.isGrounded).length < this.maxConcurrent) {
+        setTimeout(() => {
+          if (this.state === 'PLAYING') {
+            this.maybeSpawnWord();
+          }
+        }, 1200);
+      }
     }
 
     // -------------------------------------------------------------------------
