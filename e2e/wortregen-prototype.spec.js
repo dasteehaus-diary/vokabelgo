@@ -237,4 +237,59 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     await page.screenshot({ path: 'screenshot_wortregen_mobile.png', fullPage: false });
   });
 
+  test('regression: 2 words touching ground simultaneously when lives === 1 yields lives === 0 and clean single game over', async ({ page }) => {
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.wortregenGame !== undefined);
+    await page.click('#btn-start');
+    await expect(page.locator('#start-screen')).toBeHidden();
+
+    // Setup state: 1 life remaining, 2 active words spawned
+    await page.evaluate(() => {
+      const g = window.wortregenGame;
+      g.lives = 1;
+      g.missedCount = 2; // already lost 2 lives prior
+      while (g.activeWords.filter(w => !w.isDying).length < 2) {
+        g.maybeSpawnWord();
+      }
+    });
+
+    // Ensure 2 active words are present
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.activeWords.filter(w => !w.isDying).length >= 2;
+    });
+
+    // Position BOTH words simultaneously at/below ground limit in same frame
+    await page.evaluate(() => {
+      const g = window.wortregenGame;
+      const words = g.activeWords.filter(w => !w.isDying);
+      words[0].y = g.fallingArea.clientHeight;
+      words[1].y = g.fallingArea.clientHeight;
+    });
+
+    // Wait for the animation frame loop to process the collision
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.state === 'GAME_OVER';
+    }, { timeout: 4000 });
+
+    // Verify strict invariants:
+    // 1. lives must be exactly 0 (NEVER -1 or negative)
+    const finalLives = await page.evaluate(() => window.wortregenGame.lives);
+    expect(finalLives).toBe(0);
+
+    // 2. missedCount must be exactly 3 (incremented once by the game-ending word, second word stopped)
+    const finalMissed = await page.evaluate(() => window.wortregenGame.missedCount);
+    expect(finalMissed).toBe(3);
+
+    // 3. UI shows exactly 3 lost hearts
+    expect(await page.locator('#hud-lives .hud-heart.lost').count()).toBe(3);
+    const heartTexts = await page.locator('#hud-lives .hud-heart').allInnerTexts();
+    expect(heartTexts).toEqual(['🤍', '🤍', '🤍']);
+
+    // 4. Game Over screen visible with correct stats
+    await expect(page.locator('#game-over-screen')).toBeVisible();
+    await expect(page.locator('#summary-missed')).toHaveText('3');
+  });
+
 });

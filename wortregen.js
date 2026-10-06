@@ -451,6 +451,8 @@
       const groundLimit = this.fallingArea.clientHeight;
 
       for (let i = this.activeWords.length - 1; i >= 0; i--) {
+        if (this.state !== 'PLAYING') break;
+
         const w = this.activeWords[i];
         if (w.isDying) continue;
 
@@ -460,6 +462,9 @@
         // Check if word hits ground threshold
         if (w.y + w.height >= groundLimit - 4) {
           this.handleWordMissed(w, i);
+          if (this.state !== 'PLAYING') {
+            break; // Stop processing remaining words immediately in this frame
+          }
         }
       }
 
@@ -472,11 +477,13 @@
     // Word Missed (Hits Ground)
     // -------------------------------------------------------------------------
     handleWordMissed(word, index) {
+      if (this.state !== 'PLAYING') return;
+
       word.isDying = true;
       this.activeWords.splice(index, 1);
 
-      // Penalty
-      this.lives -= 1;
+      // Penalty (clamped so lives cannot go below 0)
+      this.lives = Math.max(0, this.lives - 1);
       this.combo = 0;
       this.missedCount += 1;
 
