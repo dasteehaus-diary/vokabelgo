@@ -1,8 +1,10 @@
 const { test, expect } = require('@playwright/test');
+const fs = require('fs');
+const path = require('path');
 
 test.describe('Wortregen V0.1 Gameplay Prototype', () => {
 
-  test('full gameplay loop, answer checking, collision, lives, gameover, and replay', async ({ page }) => {
+  test('full gameplay fidelity loop: direct on-card typing, slots, auto-space, backspace, error shake, no enter, and ground reveal', async ({ page }) => {
     const consoleErrors = [];
     page.on('console', msg => {
       if (msg.type() === 'error') {
@@ -15,8 +17,13 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     // 1. Initial Start Screen verification
     await expect(page.locator('#start-screen')).toBeVisible();
     await expect(page.locator('#start-screen .overlay-title')).toHaveText('Wortregen');
-    await expect(page.locator('#start-screen .overlay-instruction')).toContainText('Gõ từ tiếng Đức trước khi từ rơi xuống!');
+    await expect(page.locator('#start-screen .overlay-instruction')).toContainText('Gõ trực tiếp các chữ cái vào thẻ trước khi chạm đất!');
     await expect(page.locator('#btn-start')).toBeVisible();
+
+    // Verify input dock and submit button are completely removed
+    await expect(page.locator('#input-dock')).toHaveCount(0);
+    await expect(page.locator('#word-input')).toHaveCount(0);
+    await expect(page.locator('#btn-submit')).toHaveCount(0);
 
     // Check Initial HUD
     await expect(page.locator('#hud-score-val')).toHaveText('0');
@@ -27,7 +34,7 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
       await expect(hearts.nth(i)).toHaveText('❤️');
     }
 
-    // 1b. Screenshot Start Screen
+    // Screenshot Start Screen
     await page.screenshot({ path: 'screenshot_wortregen_start.png', fullPage: false });
 
     // 2. Click "Bắt đầu"
@@ -35,112 +42,144 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     await page.click('#btn-start');
     await expect(page.locator('#start-screen')).toBeHidden();
 
-    // Verify input is auto-focused
-    await expect(page.locator('#word-input')).toBeFocused();
-
     // 3. Wait for the first word to spawn
     const wordCard = page.locator('.word-card').first();
     await wordCard.waitFor({ state: 'visible', timeout: 5000 });
 
-    // 4. Inspect active word object from window.wortregenGame
+    // 4. Inspect active word object and slot rendering
     const firstWordInfo = await page.evaluate(() => {
       const g = window.wortregenGame;
       if (g && g.activeWords && g.activeWords.length > 0) {
+        const w = g.activeWords[0];
         return {
-          id: g.activeWords[0].id,
-          vi: g.activeWords[0].vi,
-          de: g.activeWords[0].de,
-          y: g.activeWords[0].y,
-          speed: g.activeWords[0].speed
+          id: w.id,
+          vi: w.vi,
+          de: w.de,
+          letterCount: w.letters.length,
+          letters: w.letters.map(l => l.char)
         };
       }
       return null;
     });
 
     expect(firstWordInfo).not.toBeNull();
-    expect(firstWordInfo.de).toBeTruthy();
-    expect(firstWordInfo.vi).toBeTruthy();
+    const cleanLetters = firstWordInfo.de.replace(/\s+/g, '');
+    expect(firstWordInfo.letterCount).toBe(cleanLetters.length);
 
-    // 5. Test Incorrect Answer: Type something wrong and submit
-    await page.fill('#word-input', 'sai-hoan-toan-xyz');
-    await page.keyboard.press('Enter');
+    // Verify slot elements in DOM
+    const cardSlots = wordCard.locator('.char-slot');
+    await expect(cardSlots).toHaveCount(cleanLetters.length);
+    for (let i = 0; i < cleanLetters.length; i++) {
+      await expect(cardSlots.nth(i)).toHaveText('_');
+    }
 
-    // Input should shake, combo should be 0, word should still exist
-    await expect(page.locator('#hud-combo')).toHaveText('Combo x0');
-    await expect(page.locator('#hud-score-val')).toHaveText('0');
-    await expect(page.locator('#word-input')).toHaveValue('');
-    await expect(page.locator('#word-input')).toBeFocused();
+    // 5. Test Direct Typing & Target Locking:
+    // Type first character directly via keyboard
+    const firstChar = cleanLetters[0];
+    await page.keyboard.type(firstChar);
 
-    // Ensure the word did NOT disappear
-    const wordStillThere = await page.evaluate((id) => {
-      return window.wortregenGame.activeWords.some(w => w.id === id && !w.isDying);
-    }, firstWordInfo.id);
-    expect(wordStillThere).toBe(true);
+    // Word should become locked target with .card-focused
+    await expect(wordCard).toHaveClass(/card-focused/);
+    // Slot 0 should be filled with firstChar and have class .typed
+    await expect(cardSlots.nth(0)).toHaveClass(/typed/);
+    await expect(cardSlots.nth(0)).toHaveText(firstChar);
 
-    // 6. Test Correct Answer: Type correct German answer (case-insensitive test)
-    // E.g., if target is "die Entscheidung", typing "Die Entscheidung" should work!
-    const targetGerman = firstWordInfo.de;
-    await page.fill('#word-input', targetGerman.toUpperCase());
-    await page.keyboard.press('Enter');
+    // 6. Test Mistake Feedback on locked card:
+    // Type an incorrect character
+    const wrongChar = firstChar.toLowerCase() === 'z' ? 'x' : 'z';
+    await page.keyboard.type(wrongChar);
 
-    // Score should become 100, combo should be x1
+    // Card inner should shake, lives should NOT be lost, combo should NOT decrease
+    const inner = wordCard.locator('.word-card-inner');
+    await expect(inner).toHaveClass(/shake-error/);
+    const currentLives = await page.evaluate(() => window.wortregenGame.lives);
+    expect(currentLives).toBe(3);
+
+    // 7. Test Backspace:
+    // Press backspace to erase slot 0
+    await page.keyboard.press('Backspace');
+    await expect(cardSlots.nth(0)).toHaveText('_');
+    await expect(cardSlots.nth(0)).not.toHaveClass(/typed/);
+    // Card should now be unlocked since typedCount === 0
+    await expect(wordCard).not.toHaveClass(/card-focused/);
+
+    // 8. Test Auto-Space Skip and Immediate Pop without Enter:
+    // Type all letters of the word directly without typing any spaces!
+    for (const char of cleanLetters) {
+      await page.keyboard.type(char);
+      await page.waitForTimeout(40);
+    }
+
+    // Word must POP immediately, score becomes 100, combo becomes x1
     await expect(page.locator('#hud-score-val')).toHaveText('100');
     await expect(page.locator('#hud-combo')).toHaveText('Combo x1');
-    await expect(page.locator('#word-input')).toHaveValue('');
-    await expect(page.locator('#word-input')).toBeFocused();
 
-    // 7. Test Combo Progression: wait for next word and solve correctly
+    // 9. Test Combo Progression: wait for next active word and solve it
     await page.waitForFunction(() => {
-      return window.wortregenGame.activeWords.some(w => !w.isDying);
+      return window.wortregenGame.activeWords.some(w => !w.isDying && !w.isGrounded);
     }, { timeout: 6000 });
 
-    const secondWordInfo = await page.evaluate(() => {
-      const w = window.wortregenGame.activeWords.find(w => !w.isDying);
-      return w ? { id: w.id, de: w.de } : null;
+    const secondWordClean = await page.evaluate(() => {
+      const w = window.wortregenGame.activeWords.find(w => !w.isDying && !w.isGrounded);
+      return w ? w.de.replace(/\s+/g, '') : null;
     });
 
-    if (secondWordInfo) {
-      await page.fill('#word-input', secondWordInfo.de.toLowerCase());
-      await page.keyboard.press('Enter');
+    if (secondWordClean) {
+      for (const char of secondWordClean) {
+        await page.keyboard.type(char);
+        await page.waitForTimeout(30);
+      }
       await expect(page.locator('#hud-score-val')).toHaveText('200');
       await expect(page.locator('#hud-combo')).toHaveText('Combo x2');
     }
 
-    // 8. Test Ground Collision & 3 Natural Life Losses (NO gameOver() mocking!):
-    // Miss 1: Word 1 touches ground -> lives = 2, missedCount = 1
+    // 10. Test Ground Collision with 1.2s Full German Answer Reveal:
+    // Wait for an active falling word
     await page.waitForFunction(() => {
-      return window.wortregenGame && window.wortregenGame.activeWords.some(w => !w.isDying);
+      return window.wortregenGame && window.wortregenGame.activeWords.some(w => !w.isDying && !w.isGrounded);
     }, { timeout: 6000 });
 
-    await page.evaluate(() => {
+    // Miss 1: Move word to ground
+    const miss1WordInfo = await page.evaluate(() => {
       const g = window.wortregenGame;
-      const w = g.activeWords.find(item => !item.isDying);
-      if (w) w.y = g.fallingArea.clientHeight - w.height + 10;
+      const w = g.activeWords.find(item => !item.isDying && !item.isGrounded);
+      if (w) {
+        w.y = g.fallingArea.clientHeight - w.height + 10;
+        return { id: w.id, de: w.de };
+      }
+      return null;
     });
 
+    // Check lives becomes 2 immediately
     await page.waitForFunction(() => {
       const g = window.wortregenGame;
       return g && g.lives === 2 && g.missedCount === 1;
     }, { timeout: 3000 });
 
-    await expect(page.locator('#hud-combo')).toHaveText('Combo x0');
-    expect(await page.locator('#hud-lives .hud-heart.lost').count()).toBe(1);
+    // Verify card enters ground reveal mode showing full German text
+    const groundedCard1 = page.locator(`#word-${miss1WordInfo.id}`);
+    await expect(groundedCard1).toHaveClass(/word-grounded-reveal/);
+    await expect(groundedCard1.locator('.word-card-reveal-de')).toHaveText(miss1WordInfo.de);
+    await page.screenshot({ path: 'screenshot_wortregen_ground_reveal.png', fullPage: false });
 
-    // Miss 2: Word 2 touches ground -> lives = 1, missedCount = 2
+    // Wait for the 1.2s reveal duration to elapse and card to be removed
+    await page.waitForTimeout(1400);
+
+    // Miss 2: Second word touches ground -> lives = 1, missedCount = 2
     await page.evaluate(() => {
       const g = window.wortregenGame;
-      if (!g.activeWords.some(w => !w.isDying)) {
+      if (!g.activeWords.some(w => !w.isDying && !w.isGrounded)) {
         g.maybeSpawnWord();
       }
     });
 
     await page.waitForFunction(() => {
-      return window.wortregenGame && window.wortregenGame.activeWords.some(w => !w.isDying);
+      return window.wortregenGame && window.wortregenGame.activeWords.some(w => !w.isDying && !w.isGrounded);
     }, { timeout: 6000 });
 
     await page.evaluate(() => {
       const g = window.wortregenGame;
-      const w = g.activeWords.find(item => !item.isDying);
+      const w = g.activeWords.find(item => !item.isDying && !item.isGrounded);
       if (w) w.y = g.fallingArea.clientHeight - w.height + 10;
     });
 
@@ -149,33 +188,48 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
       return g && g.lives === 1 && g.missedCount === 2;
     }, { timeout: 3000 });
 
-    expect(await page.locator('#hud-lives .hud-heart.lost').count()).toBe(2);
+    await page.waitForTimeout(1400);
 
-    // Miss 3: Word 3 touches ground -> lives = 0, missedCount = 3 -> Game Over triggers naturally
+    // Miss 3 (FATAL): Third word touches ground -> lives = 0, reveals answer, then triggers Game Over
     await page.evaluate(() => {
       const g = window.wortregenGame;
-      if (!g.activeWords.some(w => !w.isDying)) {
+      if (!g.activeWords.some(w => !w.isDying && !w.isGrounded)) {
         g.maybeSpawnWord();
       }
     });
 
     await page.waitForFunction(() => {
-      return window.wortregenGame && window.wortregenGame.activeWords.some(w => !w.isDying);
+      return window.wortregenGame && window.wortregenGame.activeWords.some(w => !w.isDying && !w.isGrounded);
     }, { timeout: 6000 });
 
-    await page.evaluate(() => {
+    const fatalWordInfo = await page.evaluate(() => {
       const g = window.wortregenGame;
-      const w = g.activeWords.find(item => !item.isDying);
-      if (w) w.y = g.fallingArea.clientHeight - w.height + 10;
+      const w = g.activeWords.find(item => !item.isDying && !item.isGrounded);
+      if (w) {
+        w.y = g.fallingArea.clientHeight - w.height + 10;
+        return { id: w.id, de: w.de };
+      }
+      return null;
     });
 
-    // Wait for game engine to transition to GAME_OVER naturally via gameLoop
+    // Lives is 0 immediately upon contact
     await page.waitForFunction(() => {
       const g = window.wortregenGame;
-      return g && g.lives === 0 && g.missedCount === 3 && g.state === 'GAME_OVER';
+      return g && g.lives === 0 && g.missedCount === 3;
+    }, { timeout: 3000 });
+
+    // Fatal card displays reveal
+    const fatalCard = page.locator(`#word-${fatalWordInfo.id}`);
+    await expect(fatalCard).toHaveClass(/word-grounded-reveal/);
+    await expect(fatalCard.locator('.word-card-reveal-de')).toHaveText(fatalWordInfo.de);
+
+    // Wait for the 1.2s reveal to complete and transition to GAME_OVER
+    await page.waitForFunction(() => {
+      const g = window.wortregenGame;
+      return g && g.state === 'GAME_OVER';
     }, { timeout: 4000 });
 
-    // Verify all 3 hearts are lost in UI
+    // Verify all 3 hearts lost in UI
     expect(await page.locator('#hud-lives .hud-heart.lost').count()).toBe(3);
     const heartTexts = await page.locator('#hud-lives .hud-heart').allInnerTexts();
     expect(heartTexts).toEqual(['🤍', '🤍', '🤍']);
@@ -190,7 +244,7 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     // Screenshot Game Over Screen
     await page.screenshot({ path: 'screenshot_wortregen_gameover.png', fullPage: false });
 
-    // 10. Test Replay button
+    // 11. Test Replay button
     await page.click('#btn-replay');
     await expect(page.locator('#game-over-screen')).toBeHidden();
 
@@ -199,7 +253,6 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     await expect(page.locator('#hud-combo')).toHaveText('Combo x0');
     const resetLives = await page.evaluate(() => window.wortregenGame.lives);
     expect(resetLives).toBe(3);
-    await expect(page.locator('#word-input')).toBeFocused();
 
     // Check no console errors
     expect(consoleErrors).toEqual([]);
@@ -212,7 +265,7 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     await page.waitForFunction(() => window.wortregenGame !== undefined);
     await page.click('#btn-start');
     await page.waitForSelector('.word-card');
-    await page.waitForTimeout(2200); // let words spawn and fall
+    await page.waitForTimeout(2000); // let words spawn and fall
     await page.screenshot({ path: 'screenshot_wortregen_desktop.png', fullPage: false });
 
     // Laptop Viewport (1024 x 768)
@@ -224,16 +277,15 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/wortregen.html');
     await page.waitForFunction(() => window.wortregenGame !== undefined);
-    
+
     // Verify no horizontal overflow in header on 390px
     const isHeaderWithinBounds = await page.locator('.wortregen-header').evaluate(el => el.scrollWidth <= el.clientWidth + 1);
     expect(isHeaderWithinBounds).toBe(true);
 
     await page.click('#btn-start');
     await page.waitForSelector('.word-card');
-    await page.waitForTimeout(2200);
+    await page.waitForTimeout(2000);
     await expect(page.locator('.game-board')).toBeVisible();
-    await expect(page.locator('#word-input')).toBeVisible();
     await page.screenshot({ path: 'screenshot_wortregen_mobile.png', fullPage: false });
   });
 
@@ -248,26 +300,25 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
       const g = window.wortregenGame;
       g.lives = 1;
       g.missedCount = 2; // already lost 2 lives prior
-      while (g.activeWords.filter(w => !w.isDying).length < 2) {
+      while (g.activeWords.filter(w => !w.isDying && !w.isGrounded).length < 2) {
         g.maybeSpawnWord();
       }
     });
 
-    // Ensure 2 active words are present
     await page.waitForFunction(() => {
       const g = window.wortregenGame;
-      return g && g.activeWords.filter(w => !w.isDying).length >= 2;
+      return g && g.activeWords.filter(w => !w.isDying && !w.isGrounded).length >= 2;
     });
 
     // Position BOTH words simultaneously at/below ground limit in same frame
     await page.evaluate(() => {
       const g = window.wortregenGame;
-      const words = g.activeWords.filter(w => !w.isDying);
+      const words = g.activeWords.filter(w => !w.isDying && !w.isGrounded);
       words[0].y = g.fallingArea.clientHeight;
       words[1].y = g.fallingArea.clientHeight;
     });
 
-    // Wait for the animation frame loop to process the collision
+    // Wait for the ground reveal (1.2s) and transition to GAME_OVER
     await page.waitForFunction(() => {
       const g = window.wortregenGame;
       return g && g.state === 'GAME_OVER';
@@ -278,7 +329,7 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     const finalLives = await page.evaluate(() => window.wortregenGame.lives);
     expect(finalLives).toBe(0);
 
-    // 2. missedCount must be exactly 3 (incremented once by the game-ending word, second word stopped)
+    // 2. missedCount must be exactly 3 (first fatal miss counted, second halted)
     const finalMissed = await page.evaluate(() => window.wortregenGame.missedCount);
     expect(finalMissed).toBe(3);
 
@@ -290,6 +341,67 @@ test.describe('Wortregen V0.1 Gameplay Prototype', () => {
     // 4. Game Over screen visible with correct stats
     await expect(page.locator('#game-over-screen')).toBeVisible();
     await expect(page.locator('#summary-missed')).toHaveText('3');
+  });
+
+  test('record 15-20s authentic gameplay video demonstrating direct on-card typing and tempo', async ({ browser }) => {
+    const videoDir = path.resolve(__dirname, '../artifacts_video');
+    if (!fs.existsSync(videoDir)) {
+      fs.mkdirSync(videoDir, { recursive: true });
+    }
+
+    const context = await browser.newContext({
+      recordVideo: {
+        dir: videoDir,
+        size: { width: 520, height: 780 }
+      },
+      viewport: { width: 520, height: 780 }
+    });
+
+    const page = await context.newPage();
+    await page.goto('/wortregen.html');
+    await page.waitForFunction(() => window.wortregenGame !== undefined);
+
+    // Start game
+    await page.click('#btn-start');
+    await expect(page.locator('#start-screen')).toBeHidden();
+
+    // Play continuously for ~16 seconds
+    const startTime = Date.now();
+    while (Date.now() - startTime < 16000) {
+      // Find active falling card to type
+      const target = await page.evaluate(() => {
+        const g = window.wortregenGame;
+        if (!g || g.state !== 'PLAYING') return null;
+        const w = g.activeWords.find(item => !item.isDying && !item.isGrounded);
+        return w ? { id: w.id, clean: w.de.replace(/\s+/g, '') } : null;
+      });
+
+      if (target) {
+        // Type characters smoothly with natural cadence
+        for (const char of target.clean) {
+          await page.keyboard.type(char);
+          await page.waitForTimeout(70 + Math.random() * 40);
+        }
+        await page.waitForTimeout(400);
+      } else {
+        await page.waitForTimeout(200);
+      }
+    }
+
+    // Capture in-action screenshot of typing directly on card
+    await page.screenshot({ path: 'screenshot_wortregen_typing.png', fullPage: false });
+
+    // Close page and context to finish video encoding
+    await page.close();
+    await context.close();
+
+    // Locate the generated video and rename to gameplay_wortregen.webm
+    const files = fs.readdirSync(videoDir).filter(f => f.endsWith('.webm'));
+    if (files.length > 0) {
+      const generatedVideoPath = path.join(videoDir, files[files.length - 1]);
+      const targetVideoPath = path.resolve(__dirname, '../gameplay_wortregen.webm');
+      fs.copyFileSync(generatedVideoPath, targetVideoPath);
+    }
   });
 
 });

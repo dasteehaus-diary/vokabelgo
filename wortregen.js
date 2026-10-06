@@ -163,8 +163,7 @@
       // DOM Elements
       this.appEl = document.getElementById('wortregen-app');
       this.fallingArea = document.getElementById('falling-area');
-      this.inputEl = document.getElementById('word-input');
-      this.inputForm = document.getElementById('input-dock');
+      this.keyboardCapture = document.getElementById('keyboard-capture');
       this.hudLives = document.getElementById('hud-lives');
       this.hudScore = document.getElementById('hud-score-val');
       this.hudCombo = document.getElementById('hud-combo');
@@ -196,12 +195,13 @@
       this.solvedCount = 0;
       this.missedCount = 0;
 
-      // Mechanics
+      // Mechanics & Fast Tempo
       this.activeWords = [];
+      this.lockedWord = null;
       this.wordIdCounter = 1;
       this.availableWords = [...WORD_POOL];
-      this.baseSpeed = 46; // px per second
-      this.speedIncrement = 1.2; // slight increment after correct answers
+      this.baseSpeed = 65; // px per second (fast, snappy tempo)
+      this.speedIncrement = 1.4; // slight progression
       this.maxConcurrent = 3;
       this.spawnTimer = null;
       this.animFrameId = null;
@@ -222,12 +222,6 @@
         this.startGame();
       });
 
-      // Answer Submission
-      this.inputForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.handleSubmit();
-      });
-
       // Sound Toggle
       this.btnMute.addEventListener('click', () => {
         this.sound.init();
@@ -235,12 +229,30 @@
         this.updateSoundIcon(isMuted);
       });
 
-      // Auto-refocus input during active play
+      // Direct Keyboard Input (Desktop & Physical Keyboards)
+      window.addEventListener('keydown', (e) => {
+        this.handleKeyDown(e);
+      });
+
+      // Mobile Virtual Keyboard Capture
+      if (this.keyboardCapture) {
+        this.keyboardCapture.addEventListener('input', () => {
+          if (this.state !== 'PLAYING') return;
+          const val = this.keyboardCapture.value;
+          if (val) {
+            for (const char of val) {
+              this.handleCharInput(char);
+            }
+            this.keyboardCapture.value = '';
+          }
+        });
+      }
+
+      // Tap / Click anywhere refocuses keyboard during play
       document.addEventListener('click', (e) => {
         if (this.state === 'PLAYING') {
-          // If not clicking mute button, refocus input
           if (!e.target.closest('#btn-mute')) {
-            this.focusInput();
+            this.focusKeyboard();
           }
         }
       });
@@ -268,9 +280,9 @@
       }
     }
 
-    focusInput() {
-      if (this.inputEl) {
-        this.inputEl.focus();
+    focusKeyboard() {
+      if (this.keyboardCapture) {
+        this.keyboardCapture.focus();
       }
     }
 
@@ -287,8 +299,9 @@
       this.maxCombo = 0;
       this.solvedCount = 0;
       this.missedCount = 0;
-      this.baseSpeed = 46;
+      this.baseSpeed = 65;
       this.activeWords = [];
+      this.lockedWord = null;
       this.availableWords = [...WORD_POOL];
       this.shuffleArray(this.availableWords);
 
@@ -302,19 +315,18 @@
       // Update HUD
       this.renderHUD();
 
-      // Reset input
-      this.inputEl.value = '';
-      this.focusInput();
+      // Focus invisible input for virtual keyboard
+      this.focusKeyboard();
 
       // Start Loops
       this.lastFrameTime = performance.now();
       this.animFrameId = requestAnimationFrame(this.gameLoop.bind(this));
-      this.scheduleSpawn(300); // 1st word spawn
+      this.scheduleSpawn(150); // 1st word spawn
       setTimeout(() => {
         if (this.state === 'PLAYING' && this.activeWords.length < this.maxConcurrent) {
           this.maybeSpawnWord(); // 2nd word spawn
         }
-      }, 1500);
+      }, 1200);
     }
 
     gameOver() {
@@ -345,14 +357,13 @@
     // -------------------------------------------------------------------------
     // Word Spawning & Collision Prevention
     // -------------------------------------------------------------------------
-    scheduleSpawn(delay = 2800) {
+    scheduleSpawn(delay = 2000) {
       if (this.state !== 'PLAYING') return;
 
       this.spawnTimer = setTimeout(() => {
         if (this.state === 'PLAYING') {
           this.maybeSpawnWord();
-          // Dynamic interval slightly faster as score increases
-          const nextDelay = Math.max(1900, 2900 - Math.min(800, this.solvedCount * 30));
+          const nextDelay = Math.max(1600, 2400 - Math.min(600, this.solvedCount * 35));
           this.scheduleSpawn(nextDelay);
         }
       }, delay);
@@ -360,11 +371,10 @@
 
     maybeSpawnWord() {
       if (this.activeWords.length >= this.maxConcurrent) {
-        return; // Don't crowd the screen
+        return;
       }
 
       if (this.availableWords.length === 0) {
-        // Refill and reshuffle pool
         this.availableWords = [...WORD_POOL];
         this.shuffleArray(this.availableWords);
       }
@@ -372,7 +382,7 @@
       // Pick next word
       const wordData = this.availableWords.pop();
       const areaWidth = this.fallingArea.clientWidth || 340;
-      const cardWidth = Math.min(180, Math.max(130, areaWidth * 0.42)); // estimated card width
+      const cardWidth = Math.min(230, Math.max(140, areaWidth * 0.5));
       const minX = 10;
       const maxX = Math.max(minX, areaWidth - cardWidth - 10);
 
@@ -389,33 +399,66 @@
         }
       }
 
-      // If crowded, pick position furthest from existing top cards
       if (spawnX === null) {
         if (topWords.length === 0) {
           spawnX = minX + (maxX - minX) * 0.5;
         } else {
-          // Average position of top words, place on opposite side
           const avgX = topWords.reduce((s, w) => s + w.x, 0) / topWords.length;
           spawnX = avgX > areaWidth / 2 ? minX + 10 : maxX - 10;
         }
       }
 
-      // Create DOM element
+      // Create DOM element with slots
       const cardEl = document.createElement('div');
       cardEl.className = 'word-card';
       cardEl.id = `word-${this.wordIdCounter}`;
 
+      const innerEl = document.createElement('div');
+      innerEl.className = 'word-card-inner';
+
       const viEl = document.createElement('div');
       viEl.className = 'word-card-vi';
       viEl.textContent = wordData.vi;
-      cardEl.appendChild(viEl);
+      innerEl.appendChild(viEl);
 
+      const slotsEl = document.createElement('div');
+      slotsEl.className = 'word-card-slots';
+
+      // Parse letters and words
+      const wordParts = wordData.de.trim().split(/\s+/);
+      const letters = [];
+
+      wordParts.forEach((part, partIdx) => {
+        const partEl = document.createElement('div');
+        partEl.className = 'slot-word';
+
+        for (let i = 0; i < part.length; i++) {
+          const char = part[i];
+          const slotEl = document.createElement('span');
+          slotEl.className = 'char-slot';
+          slotEl.textContent = '_';
+          slotEl.dataset.char = char;
+          partEl.appendChild(slotEl);
+
+          letters.push({
+            char: char,
+            slotEl: slotEl,
+            wordIdx: partIdx,
+            charIdx: i
+          });
+        }
+
+        slotsEl.appendChild(partEl);
+      });
+
+      innerEl.appendChild(slotsEl);
+      cardEl.appendChild(innerEl);
       this.fallingArea.appendChild(cardEl);
 
       // Measure real dimensions
       const rect = cardEl.getBoundingClientRect();
       const actualWidth = rect.width || cardWidth;
-      const actualHeight = rect.height || 48;
+      const actualHeight = rect.height || 54;
 
       // Keep inside bounds
       const clampedMaxX = Math.max(minX, areaWidth - actualWidth - 14);
@@ -430,9 +473,13 @@
         y: startY,
         width: actualWidth,
         height: actualHeight,
-        speed: this.baseSpeed + (Math.random() * 6 - 3), // slight random variance
+        speed: this.baseSpeed + (Math.random() * 6 - 3),
         el: cardEl,
-        isDying: false
+        innerEl: innerEl,
+        letters: letters,
+        typedCount: 0,
+        isDying: false,
+        isGrounded: false
       };
 
       cardEl.style.transform = `translate3d(${wordObj.x}px, ${wordObj.y}px, 0)`;
@@ -443,7 +490,7 @@
     // Main Animation Loop
     // -------------------------------------------------------------------------
     gameLoop(timestamp) {
-      if (this.state !== 'PLAYING') return;
+      if (this.state !== 'PLAYING' || this.lives <= 0) return;
 
       const dt = Math.min(0.1, (timestamp - this.lastFrameTime) / 1000);
       this.lastFrameTime = timestamp;
@@ -451,10 +498,10 @@
       const groundLimit = this.fallingArea.clientHeight;
 
       for (let i = this.activeWords.length - 1; i >= 0; i--) {
-        if (this.state !== 'PLAYING') break;
+        if (this.state !== 'PLAYING' || this.lives <= 0) break;
 
         const w = this.activeWords[i];
-        if (w.isDying) continue;
+        if (w.isDying || w.isGrounded) continue;
 
         w.y += w.speed * dt;
         w.el.style.transform = `translate3d(${w.x}px, ${w.y}px, 0)`;
@@ -462,13 +509,13 @@
         // Check if word hits ground threshold
         if (w.y + w.height >= groundLimit - 4) {
           this.handleWordMissed(w, i);
-          if (this.state !== 'PLAYING') {
-            break; // Stop processing remaining words immediately in this frame
+          if (this.lives <= 0) {
+            break; // Halt processing remaining words in this frame
           }
         }
       }
 
-      if (this.state === 'PLAYING') {
+      if (this.state === 'PLAYING' && this.lives > 0) {
         this.animFrameId = requestAnimationFrame(this.gameLoop.bind(this));
       }
     }
@@ -477,10 +524,18 @@
     // Word Missed (Hits Ground)
     // -------------------------------------------------------------------------
     handleWordMissed(word, index) {
-      if (this.state !== 'PLAYING') return;
+      if (this.state !== 'PLAYING' || this.lives <= 0) return;
+      if (word.isGrounded || word.isDying) return;
 
-      word.isDying = true;
-      this.activeWords.splice(index, 1);
+      word.isGrounded = true;
+      const groundLimit = this.fallingArea.clientHeight;
+      word.y = Math.max(0, groundLimit - word.height - 4);
+      word.el.style.transform = `translate3d(${word.x}px, ${word.y}px, 0)`;
+
+      // Unlock if it was active target
+      if (this.lockedWord === word) {
+        this.unlockTarget();
+      }
 
       // Penalty (clamped so lives cannot go below 0)
       this.lives = Math.max(0, this.lives - 1);
@@ -490,70 +545,242 @@
       // Audio feedback
       this.sound.playMiss();
 
-      // Visual feedback: animate card drop miss
-      word.el.classList.add('word-missed');
-      setTimeout(() => {
-        if (word.el.parentNode) {
-          word.el.remove();
-        }
-      }, 350);
+      // Floating -1 Heart feedback (positioned above card to keep German text unobstructed)
+      this.showFloatingFeedback(word.x + word.width / 2, Math.max(10, word.y - 28), '-1 ❤️', 'life-loss');
 
-      // Floating -1 Heart feedback
-      this.showFloatingFeedback(word.x + word.width / 2, this.fallingArea.clientHeight - 35, '-1 ❤️', 'life-loss');
-
-      // Update HUD
+      // Update HUD immediately
       this.renderHUD();
 
-      // Check Game Over
-      if (this.lives <= 0) {
-        this.gameOver();
+      // Visual ground reveal: highlight card and show full German answer for 1.2s
+      word.el.classList.add('word-grounded-reveal');
+      const inner = word.innerEl || word.el.querySelector('.word-card-inner');
+      if (inner) {
+        const slots = inner.querySelector('.word-card-slots');
+        if (slots) slots.style.display = 'none';
+        let revealEl = inner.querySelector('.word-card-reveal-de');
+        if (!revealEl) {
+          revealEl = document.createElement('div');
+          revealEl.className = 'word-card-reveal-de';
+          revealEl.textContent = word.de;
+          inner.appendChild(revealEl);
+        }
       }
+
+      const isFatalMiss = this.lives <= 0;
+
+      // Pause at bottom for 1.2s so the player can learn the correct answer
+      setTimeout(() => {
+        word.isDying = true;
+        word.el.classList.add('word-missed');
+
+        setTimeout(() => {
+          if (word.el.parentNode) {
+            word.el.remove();
+          }
+        }, 350);
+
+        const idx = this.activeWords.indexOf(word);
+        if (idx !== -1) {
+          this.activeWords.splice(idx, 1);
+        }
+
+        if (isFatalMiss && this.state === 'PLAYING') {
+          this.gameOver();
+        }
+      }, 1200);
     }
 
     // -------------------------------------------------------------------------
-    // Answer Submission
+    // Direct Keyboard & In-Place Typing
     // -------------------------------------------------------------------------
-    handleSubmit() {
+    handleKeyDown(e) {
       if (this.state !== 'PLAYING') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const rawVal = this.inputEl.value;
-      const normalizedInput = normalizeAnswer(rawVal);
-
-      if (!normalizedInput) {
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        this.handleBackspace();
         return;
       }
 
-      // Check against all active non-dying words
-      // If multiple match, choose the one closest to the ground (highest y)
-      let matchedWord = null;
-      let matchedIdx = -1;
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        // Auto-space is active; pressing Space is safely ignored
+        return;
+      }
 
-      for (let i = 0; i < this.activeWords.length; i++) {
-        const w = this.activeWords[i];
-        if (!w.isDying && normalizeAnswer(w.de) === normalizedInput) {
-          if (!matchedWord || w.y > matchedWord.y) {
-            matchedWord = w;
-            matchedIdx = i;
-          }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // Enter is not needed, ignore safely
+        return;
+      }
+
+      if (e.key.length === 1) {
+        e.preventDefault();
+        this.handleCharInput(e.key);
+        return;
+      }
+    }
+
+    handleCharInput(rawChar) {
+      if (this.state !== 'PLAYING') return;
+      if (this.lives <= 0) return;
+
+      const char = rawChar.toLowerCase();
+
+      // If a locked target exists, verify it is still valid
+      if (this.lockedWord) {
+        if (this.lockedWord.isDying || this.lockedWord.isGrounded) {
+          this.unlockTarget();
         }
       }
 
-      if (matchedWord) {
-        // CORRECT
-        this.handleCorrectAnswer(matchedWord, matchedIdx);
-      } else {
-        // INCORRECT
-        this.handleIncorrectAnswer();
+      // If NO locked target:
+      if (!this.lockedWord) {
+        const available = this.activeWords.filter(w => !w.isDying && !w.isGrounded);
+        let candidate = null;
+
+        for (const w of available) {
+          if (!w.letters || w.letters.length === 0) continue;
+          const expected = w.letters[0].char;
+          if (this.charsMatch(char, expected)) {
+            // Pick the one closest to the ground (highest y)
+            if (!candidate || w.y > candidate.y) {
+              candidate = w;
+            }
+          }
+        }
+
+        if (candidate) {
+          this.lockTarget(candidate);
+          this.fillNextSlot(candidate);
+        }
+        return;
       }
 
-      // Always clear and refocus input
-      this.inputEl.value = '';
-      this.focusInput();
+      // A target is locked:
+      const word = this.lockedWord;
+      const nextLetter = word.letters[word.typedCount];
+      if (nextLetter && this.charsMatch(char, nextLetter.char)) {
+        this.fillNextSlot(word);
+      } else {
+        // Wrong character typed on locked target: subtle shake error, NO life lost!
+        this.shakeTargetError(word);
+      }
+    }
+
+    charsMatch(inputChar, targetChar) {
+      const a = inputChar.toLowerCase();
+      const b = targetChar.toLowerCase();
+      if (a === b) return true;
+      // Friendly German umlauts / sharp s fallback
+      if (b === 'ä' && a === 'a') return true;
+      if (b === 'ö' && a === 'o') return true;
+      if (b === 'ü' && a === 'u') return true;
+      if (b === 'ß' && a === 's') return true;
+      return false;
+    }
+
+    fillNextSlot(word) {
+      const letter = word.letters[word.typedCount];
+      if (!letter) return;
+
+      letter.slotEl.textContent = letter.char;
+      letter.slotEl.classList.add('typed');
+      letter.slotEl.classList.remove('current');
+
+      word.typedCount++;
+
+      // Complete word: POP immediately!
+      if (word.typedCount >= word.letters.length) {
+        const idx = this.activeWords.indexOf(word);
+        this.handleCorrectAnswer(word, idx);
+        this.unlockTarget();
+
+        // Maintain momentum: spawn next word quickly if board is open
+        if (this.activeWords.filter(w => !w.isDying && !w.isGrounded).length < 2) {
+          setTimeout(() => {
+            if (this.state === 'PLAYING') {
+              this.maybeSpawnWord();
+            }
+          }, 250);
+        }
+      } else {
+        // Highlight next slot
+        const nextLetter = word.letters[word.typedCount];
+        if (nextLetter) {
+          nextLetter.slotEl.classList.add('current');
+        }
+      }
+    }
+
+    handleBackspace() {
+      if (this.state !== 'PLAYING' || !this.lockedWord) return;
+
+      const word = this.lockedWord;
+      if (word.isDying || word.isGrounded) {
+        this.unlockTarget();
+        return;
+      }
+
+      if (word.typedCount > 0) {
+        if (word.typedCount < word.letters.length) {
+          word.letters[word.typedCount].slotEl.classList.remove('current');
+        }
+
+        word.typedCount--;
+        const letter = word.letters[word.typedCount];
+        letter.slotEl.textContent = '_';
+        letter.slotEl.classList.remove('typed');
+        letter.slotEl.classList.add('current');
+
+        if (word.typedCount === 0) {
+          // Cleared all letters, unlock so player can switch to another word
+          this.unlockTarget();
+        }
+      }
+    }
+
+    lockTarget(word) {
+      if (this.lockedWord && this.lockedWord !== word) {
+        this.unlockTarget();
+      }
+      this.lockedWord = word;
+      word.el.classList.add('card-focused');
+      if (word.typedCount < word.letters.length) {
+        word.letters[word.typedCount].slotEl.classList.add('current');
+      }
+    }
+
+    unlockTarget() {
+      if (this.lockedWord) {
+        const word = this.lockedWord;
+        word.el.classList.remove('card-focused');
+        if (word.typedCount < word.letters.length) {
+          word.letters[word.typedCount].slotEl.classList.remove('current');
+        }
+        this.lockedWord = null;
+      }
+    }
+
+    shakeTargetError(word) {
+      const inner = word.innerEl || word.el.querySelector('.word-card-inner') || word.el;
+      inner.classList.remove('shake-error');
+      void inner.offsetWidth; // force reflow
+      inner.classList.add('shake-error');
+      setTimeout(() => {
+        inner.classList.remove('shake-error');
+      }, 280);
     }
 
     handleCorrectAnswer(word, index) {
       word.isDying = true;
-      this.activeWords.splice(index, 1);
+      if (index !== -1) {
+        this.activeWords.splice(index, 1);
+      } else {
+        const i = this.activeWords.indexOf(word);
+        if (i !== -1) this.activeWords.splice(i, 1);
+      }
 
       // Stats
       this.score += 100;
@@ -564,7 +791,7 @@
       this.solvedCount += 1;
 
       // Gentle speed progression
-      this.baseSpeed = Math.min(76, this.baseSpeed + this.speedIncrement);
+      this.baseSpeed = Math.min(84, this.baseSpeed + this.speedIncrement);
 
       // Audio
       this.sound.playCorrect(this.combo);
@@ -581,22 +808,6 @@
       const scoreText = this.combo >= 3 ? `+100 (Combo x${this.combo})` : '+100';
       const scoreClass = this.combo >= 3 ? 'score combo-burst' : 'score';
       this.showFloatingFeedback(word.x + word.width / 2, Math.max(20, word.y), scoreText, scoreClass);
-
-      // Update HUD
-      this.renderHUD();
-    }
-
-    handleIncorrectAnswer() {
-      // Combo resets to 0
-      this.combo = 0;
-
-      // Subtle shake on input (no loud red, gentle amber shake)
-      this.inputEl.classList.remove('shake-subtle');
-      void this.inputEl.offsetWidth; // Force reflow
-      this.inputEl.classList.add('shake-subtle');
-      setTimeout(() => {
-        this.inputEl.classList.remove('shake-subtle');
-      }, 320);
 
       // Update HUD
       this.renderHUD();

@@ -60,28 +60,19 @@
           <div class="ground-threshold">Vùng chạm đất</div>
         </div>
 
-        <!-- Fixed Bottom Input Dock -->
-        <form class="input-dock" id="input-dock" autocomplete="off">
-          <div class="input-container">
-            <input 
-              type="text" 
-              id="word-input" 
-              class="word-input" 
-              placeholder="Gõ tiếng Đức..." 
-              autocomplete="off" 
-              autocorrect="off" 
-              autocapitalize="none" 
-              spellcheck="false"
-            />
-          </div>
-          <button type="submit" class="btn-submit" id="btn-submit" aria-label="Nộp đáp án">
-            <span>Enter</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 10 4 15 9 20"></polyline>
-              <path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
-            </svg>
-          </button>
-        </form>
+        <!-- Invisible capture input for mobile virtual keyboard trigger -->
+        <input 
+          type="text" 
+          id="keyboard-capture" 
+          class="keyboard-capture" 
+          autocomplete="off" 
+          autocorrect="off" 
+          autocapitalize="none" 
+          spellcheck="false"
+          inputmode="text"
+          aria-hidden="true"
+          tabindex="-1"
+        />
 
         <!-- Start Overlay Screen -->
         <div class="overlay-screen" id="start-screen">
@@ -89,10 +80,10 @@
             <div class="overlay-icon">🌧️ 📖</div>
             <h2 class="overlay-title accent">Wortregen</h2>
             <p class="overlay-instruction">
-              Gõ từ tiếng Đức trước khi từ rơi xuống!
+              Gõ trực tiếp các chữ cái vào thẻ trước khi chạm đất!
             </p>
             <p class="overlay-tip">
-              💡 Nhấn Enter để bắn rơi từ. Giữ nhịp đúng liên tiếp để tích Combo!
+              💡 Không cần gõ dấu cách hay nhấn Enter. Từ sẽ tự nổ khi gõ đúng! Dùng Backspace để sửa chữ.
             </p>
             <button class="btn-primary" id="btn-start" type="button">
               <span>Bắt đầu</span>
