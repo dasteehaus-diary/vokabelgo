@@ -7167,6 +7167,8 @@ input.search:focus {
   <link rel="stylesheet" href="reward-prototype.css">
   <!-- Modern Pedagogical Learning UX Stylesheet -->
   <link rel="stylesheet" href="learning-ux.css">
+  <!-- Wortregen Mini-Game Stylesheet (Phase 3) -->
+  <link rel="stylesheet" href="wortregen.css">
 </head>
 <body>
 <!-- VOKABELGO REUSABLE SVG ICON SYSTEM (ROUND 1) -->
@@ -7595,6 +7597,10 @@ input.search:focus {
           <span><svg class="v-icon icon-xs" aria-hidden="true"><use href="#icon-recall"></use></svg></span>
           <span>Ghép cặp</span>
         </button>
+        <button type="button" class="study-mode-pill" data-studymode="wortregen" onclick="setStudySubMode('wortregen')">
+          <span style="font-size:15px;line-height:1">🌧️</span>
+          <span>Wortregen – Mưa từ vựng</span>
+        </button>
       </div>
 
       <!-- Integrated Study Tools (Deck select & Search) -->
@@ -7934,6 +7940,153 @@ input.search:focus {
             <p id="matchVictoryText"></p>
             <button id="matchAgainBtn" class="primary">Chơi ván tiếp theo →</button>
           </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           WORTREGEN: MƯA TỪ VỰNG (PHASE 3 INTEGRATION)
+           Peer study mode inside "Học từ", directly connected to allCards()
+           ===================================================================== -->
+      <section id="wortregenMode" class="hidden">
+        <div class="wortregen-app" id="wortregen-app">
+          <!-- Header with Branding & HUD -->
+          <header class="wortregen-header">
+            <div class="header-top-row">
+              <button type="button" class="btn-back-to-study" id="btn-back-to-study" onclick="exitWortregenToStudy()" title="Quay lại Học từ">
+                <span>← Quay lại Học từ</span>
+              </button>
+
+              <div class="brand-section">
+                <span class="brand-badge">VokabelGo</span>
+                <h1 class="brand-title">Wortregen</h1>
+              </div>
+
+              <!-- Mute/Unmute Button -->
+              <button class="btn-icon-sound" id="btn-mute" type="button" aria-label="Bật/Tắt âm thanh" title="Âm thanh">
+                <svg id="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+                <svg id="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <line x1="23" y1="9" x2="17" y2="15"></line>
+                  <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+              </button>
+            </div>
+
+            <!-- HUD Stats -->
+            <div class="hud-bar">
+              <!-- Combo Pill -->
+              <div class="hud-pill hud-combo" id="hud-combo">Combo x0</div>
+
+              <!-- Score Pill -->
+              <div class="hud-pill hud-score">
+                <span class="hud-score-label">Điểm</span>
+                <span class="hud-score-value" id="hud-score-val">0</span>
+              </div>
+
+              <!-- Lives Pill -->
+              <div class="hud-pill hud-lives" id="hud-lives" aria-label="3 mạng">
+                <span class="hud-heart">❤️</span>
+                <span class="hud-heart">❤️</span>
+                <span class="hud-heart">❤️</span>
+              </div>
+            </div>
+          </header>
+
+          <!-- Main Game Viewport -->
+          <main class="game-viewport">
+            <div class="game-board">
+              <!-- Falling Words Zone -->
+              <div class="falling-area" id="falling-area">
+                <!-- Threshold line indicating ground contact -->
+                <div class="ground-threshold">Vùng chạm đất</div>
+              </div>
+
+              <!-- Invisible capture input for mobile virtual keyboard trigger -->
+              <input 
+                type="text" 
+                id="keyboard-capture" 
+                class="keyboard-capture" 
+                autocomplete="off" 
+                autocorrect="off" 
+                autocapitalize="none" 
+                spellcheck="false" 
+                inputmode="text" 
+                aria-hidden="true" 
+                tabindex="-1"
+              />
+
+              <!-- Start Overlay Screen -->
+              <div class="overlay-screen" id="start-screen">
+                <div class="overlay-card">
+                  <div class="overlay-icon">🌧️ 📖</div>
+                  <h2 class="overlay-title accent">Wortregen</h2>
+                  <p class="overlay-instruction">
+                    Gõ trực tiếp các chữ cái vào thẻ trước khi chạm đất!
+                  </p>
+                  <p class="overlay-tip">
+                    💡 Không cần gõ dấu cách hay nhấn Enter. Từ sẽ tự nổ khi gõ đúng! Dùng Backspace để sửa chữ.
+                  </p>
+                  <button class="btn-primary" id="btn-start" type="button">
+                    <span>Bắt đầu</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Game Over Overlay Screen -->
+              <div class="overlay-screen hidden" id="game-over-screen">
+                <div class="overlay-card">
+                  <div class="overlay-icon">🏁 💧</div>
+                  <h2 class="overlay-title">Wortregen beendet!</h2>
+                  
+                  <div class="stats-list">
+                    <div class="stat-item">
+                      <span class="stat-item-label">
+                        <span>🏆</span> Điểm
+                      </span>
+                      <span class="stat-item-val highlight" id="summary-score">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-item-label">
+                        <span>✨</span> Số từ trả lời đúng
+                      </span>
+                      <span class="stat-item-val" id="summary-solved">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-item-label">
+                        <span>💧</span> Số từ bị rơi mất
+                      </span>
+                      <span class="stat-item-val" id="summary-missed">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-item-label">
+                        <span>🔥</span> Combo cao nhất
+                      </span>
+                      <span class="stat-item-val highlight" id="summary-combo">x0</span>
+                    </div>
+                  </div>
+
+                  <div class="game-over-actions" style="display:flex;flex-direction:column;gap:8px;width:100%;">
+                    <button class="btn-primary" id="btn-replay" type="button">
+                      <span>Chơi lại</span>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                      </svg>
+                    </button>
+                    <button class="btn-secondary" id="btn-gameover-back" type="button" onclick="exitWortregenToStudy()">
+                      <span>← Quay lại Học từ</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
       </section>
       <!-- KINO-DIKTAT & SHADOWING MODE -->
@@ -14438,6 +14591,7 @@ function setPrimaryHub(hub){
   const mcqModeEl = document.getElementById('mcqMode');
   const typingModeEl = document.getElementById('typingMode');
   const matchModeEl = document.getElementById('matchMode');
+  const wortregenModeEl = document.getElementById('wortregenMode');
 
   if (todaySec) todaySec.classList.toggle('hidden', hub !== 'today');
   if (studySec) studySec.classList.toggle('hidden', hub !== 'study' && hub !== 'kino');
@@ -14447,12 +14601,22 @@ function setPrimaryHub(hub){
   }
   if (librarySec) librarySec.classList.toggle('hidden', hub !== 'library');
 
+  // If leaving study hub, cleanup Wortregen if running
+  if (hub !== 'study' && window.wortregenGame) {
+    if (typeof window.wortregenGame.resetToIdle === 'function') {
+      window.wortregenGame.resetToIdle();
+    } else if (typeof window.wortregenGame.cleanup === 'function') {
+      window.wortregenGame.cleanup();
+    }
+  }
+
   // Explicitly hide all Study submodes when entering Kino to prevent UI leaks
   if (hub === 'kino') {
     if (flashModeEl) flashModeEl.classList.add('hidden');
     if (mcqModeEl) mcqModeEl.classList.add('hidden');
     if (typingModeEl) typingModeEl.classList.add('hidden');
     if (matchModeEl) matchModeEl.classList.add('hidden');
+    if (wortregenModeEl) wortregenModeEl.classList.add('hidden');
   }
 
   const studySubnav = document.querySelector('.study-subnav-bar');
@@ -14478,6 +14642,16 @@ function setPrimaryHub(hub){
 
 function setStudySubMode(m){
   if (window.isStudySessionMode && m !== 'flash') return;
+  // Cleanup Wortregen if switching away from it
+  if (currentStudySubMode === 'wortregen' && m !== 'wortregen') {
+    if (window.wortregenGame) {
+      if (typeof window.wortregenGame.resetToIdle === 'function') {
+        window.wortregenGame.resetToIdle();
+      } else if (typeof window.wortregenGame.cleanup === 'function') {
+        window.wortregenGame.cleanup();
+      }
+    }
+  }
   currentStudySubMode = m;
   mode = m;
   try { localStorage.setItem('vokabelgo_active_mode', m); } catch(e){}
@@ -14493,13 +14667,27 @@ function setStudySubMode(m){
   document.getElementById('mcqMode').classList.toggle('hidden', m !== 'mcq');
   document.getElementById('typingMode').classList.toggle('hidden', m !== 'typing');
   document.getElementById('matchMode').classList.toggle('hidden', m !== 'match');
+  const wortregenModeEl = document.getElementById('wortregenMode');
+  if (wortregenModeEl) wortregenModeEl.classList.toggle('hidden', m !== 'wortregen');
 
   const toplineEl = document.querySelector('.topline');
-  if (toplineEl) toplineEl.style.display = 'flex';
+  const studyToolsWrap = document.querySelector('.study-tools-wrap');
+  if (m === 'wortregen') {
+    if (toplineEl) toplineEl.style.display = 'none';
+    if (studyToolsWrap) studyToolsWrap.style.display = 'none';
+  } else {
+    if (toplineEl) toplineEl.style.display = 'flex';
+    if (studyToolsWrap) studyToolsWrap.style.display = '';
+  }
 
   if (m === 'mcq') newQuestion();
   if (m === 'typing') newTyping();
   if (m === 'match') startMatchGame();
+  if (m === 'wortregen') {
+    if (!window.wortregenGame && typeof WortregenGame !== 'undefined') {
+      window.wortregenGame = new WortregenGame();
+    }
+  }
   if (m === 'flash') {
     if (window.isStudySessionMode && window.VokabelSession && window.VokabelSession.getTodaySession()) {
       renderSessionInteraction();
@@ -14541,7 +14729,7 @@ function setLibraryTab(tab){
 function setMode(m){
   if (m === 'today') {
     setPrimaryHub('today');
-  } else if (m === 'flash' || m === 'mcq' || m === 'typing' || m === 'match') {
+  } else if (m === 'flash' || m === 'mcq' || m === 'typing' || m === 'match' || m === 'wortregen') {
     setPrimaryHub('study');
     setStudySubMode(m);
   } else if (m === 'diktat') {
@@ -19629,5 +19817,7 @@ function playKinoMixtape(){
 </div>
 
 <script src="reward-prototype.js"></script>
+<script src="wortregen-data.js"></script>
+<script src="wortregen.js"></script>
 </body>
 </html>

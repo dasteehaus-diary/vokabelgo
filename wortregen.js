@@ -146,6 +146,8 @@
       this.gameOverScreen = document.getElementById('game-over-screen');
       this.btnStart = document.getElementById('btn-start');
       this.btnReplay = document.getElementById('btn-replay');
+      this.btnBackToStudy = document.getElementById('btn-back-to-study');
+      this.btnGameOverBack = document.getElementById('btn-gameover-back');
 
       // Summary Elements
       this.summaryScore = document.getElementById('summary-score');
@@ -229,22 +231,40 @@
 
     initEvents() {
       // Start & Replay
-      this.btnStart.addEventListener('click', () => {
-        try { this.sound.init(); } catch (e) {}
-        this.startGame();
-      });
+      if (this.btnStart) {
+        this.btnStart.addEventListener('click', () => {
+          try { this.sound.init(); } catch (e) {}
+          this.startGame();
+        });
+      }
 
-      this.btnReplay.addEventListener('click', () => {
-        try { this.sound.init(); } catch (e) {}
-        this.startGame();
-      });
+      if (this.btnReplay) {
+        this.btnReplay.addEventListener('click', () => {
+          try { this.sound.init(); } catch (e) {}
+          this.startGame();
+        });
+      }
+
+      // Exit back to Study Hub
+      if (this.btnBackToStudy) {
+        this.btnBackToStudy.addEventListener('click', () => {
+          this.exitToStudy();
+        });
+      }
+      if (this.btnGameOverBack) {
+        this.btnGameOverBack.addEventListener('click', () => {
+          this.exitToStudy();
+        });
+      }
 
       // Sound Toggle
-      this.btnMute.addEventListener('click', () => {
-        this.sound.init();
-        const isMuted = this.sound.toggleMute();
-        this.updateSoundIcon(isMuted);
-      });
+      if (this.btnMute) {
+        this.btnMute.addEventListener('click', () => {
+          this.sound.init();
+          const isMuted = this.sound.toggleMute();
+          this.updateSoundIcon(isMuted);
+        });
+      }
 
       // Direct Keyboard Input (Desktop & Physical Keyboards)
       window.addEventListener('keydown', (e) => {
@@ -296,7 +316,7 @@
       // Tap / Click anywhere refocuses keyboard capture input
       document.addEventListener('click', (e) => {
         if (this.state === 'PLAYING') {
-          if (!e.target.closest('#btn-mute')) {
+          if (!e.target.closest('#btn-mute') && !e.target.closest('#btn-back-to-study') && !e.target.closest('.study-mode-pill')) {
             this.focusKeyboard();
           }
         }
@@ -305,13 +325,15 @@
       // Visual Viewport Handling for Mobile Virtual Keyboard
       if (window.visualViewport) {
         const handleResize = () => {
-          if (this.appEl) {
+          if (this.appEl && (window.innerWidth <= 600 || (document.body && document.body.classList.contains('wortregen-standalone')))) {
             this.appEl.style.height = `${window.visualViewport.height}px`;
           }
         };
         window.visualViewport.addEventListener('resize', handleResize);
         window.visualViewport.addEventListener('scroll', handleResize);
-        handleResize();
+        if (document.body && document.body.classList.contains('wortregen-standalone')) {
+          handleResize();
+        }
       }
     }
 
@@ -426,6 +448,36 @@
       if (this.spawnTimer) {
         clearTimeout(this.spawnTimer);
         this.spawnTimer = null;
+      }
+    }
+
+    resetToIdle() {
+      this.cleanup();
+      this.state = 'IDLE';
+      if (this.activeWords && this.activeWords.length) {
+        this.activeWords.forEach(w => {
+          if (w.el && w.el.parentNode) {
+            w.el.remove();
+          }
+        });
+        this.activeWords = [];
+      }
+      if (this.startScreen) {
+        this.startScreen.classList.remove('hidden');
+      }
+      if (this.gameOverScreen) {
+        this.gameOverScreen.classList.add('hidden');
+      }
+    }
+
+    exitToStudy() {
+      this.resetToIdle();
+      if (typeof window !== 'undefined' && typeof window.exitWortregenToStudy === 'function') {
+        window.exitWortregenToStudy();
+      } else if (typeof window !== 'undefined' && typeof window.setStudySubMode === 'function') {
+        window.setStudySubMode('flash');
+      } else if (typeof window !== 'undefined') {
+        window.location.href = 'index.html';
       }
     }
 
@@ -958,10 +1010,24 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Bootstrapping
+  // Bootstrapping & Global Helpers
   // ---------------------------------------------------------------------------
+  function exitWortregenToStudy() {
+    if (window.wortregenGame && typeof window.wortregenGame.resetToIdle === 'function') {
+      window.wortregenGame.resetToIdle();
+    } else if (window.wortregenGame && typeof window.wortregenGame.cleanup === 'function') {
+      window.wortregenGame.cleanup();
+    }
+    if (typeof window.setStudySubMode === 'function') {
+      window.setStudySubMode('flash');
+    } else if (typeof window.location !== 'undefined') {
+      window.location.href = 'index.html';
+    }
+  }
+
   if (typeof window !== 'undefined') {
     window.WortregenGame = WortregenGame;
+    window.exitWortregenToStudy = exitWortregenToStudy;
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {

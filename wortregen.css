@@ -35,14 +35,7 @@
   --shadow-chunky-xs: 0 2px 0 var(--ink-border);
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-}
-
-html, body {
+body.wortregen-standalone {
   width: 100%;
   height: 100%;
   height: 100dvh;
@@ -54,6 +47,48 @@ html, body {
     linear-gradient(var(--grid-line) 1.2px, transparent 1.2px),
     linear-gradient(90deg, var(--grid-line) 1.2px, transparent 1.2px);
   background-size: 24px 24px;
+}
+
+body.wortregen-standalone .wortregen-app {
+  height: 100%;
+  height: 100dvh;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.wortregen-app, .wortregen-app * {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Embedded in VokabelGo study mode container */
+#wortregenMode {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+#wortregenMode .wortregen-app {
+  height: 680px;
+  max-height: calc(100vh - 140px);
+  min-height: 520px;
+  border-radius: 24px;
+  border: 2px solid var(--ink-border);
+  box-shadow: var(--shadow-chunky);
+  background-color: var(--paper-bg);
+  background-image: 
+    linear-gradient(var(--grid-line) 1.2px, transparent 1.2px),
+    linear-gradient(90deg, var(--grid-line) 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
+@media (max-width: 600px) {
+  #wortregenMode .wortregen-app {
+    height: calc(100dvh - 110px);
+    max-height: none;
+    border-radius: 16px;
+  }
 }
 
 /* App Wrapper */
@@ -731,6 +766,70 @@ html, body {
 .btn-primary:active {
   transform: translateY(3px);
   box-shadow: 0 1px 0 var(--ink-border);
+}
+
+/* Secondary & Back to Study Buttons */
+.btn-back-to-study {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--card-bg, #ffffff);
+  border: 2px solid var(--ink-border, #2B241E);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-text, #2B241E);
+  box-shadow: var(--shadow-chunky-xs, 0 2px 0 #2B241E);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+  order: 0;
+  text-decoration: none;
+  user-select: none;
+}
+
+.btn-back-to-study:hover {
+  background: var(--c-butter, #FBE577);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-chunky-sm, 0 3px 0 #2B241E);
+}
+
+.btn-back-to-study:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 var(--ink-border, #2B241E);
+}
+
+.btn-secondary {
+  width: 100%;
+  height: 46px;
+  background: #FFFFFF;
+  color: var(--ink-text, #2B241E);
+  border: 2px solid var(--ink-border, #2B241E);
+  border-radius: 16px;
+  font-family: var(--font-brand, system-ui, sans-serif);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  box-shadow: var(--shadow-chunky-sm, 0 3px 0 #2B241E);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.08s, box-shadow 0.08s, background-color 0.12s;
+  user-select: none;
+  margin-top: 6px;
+}
+
+.btn-secondary:hover {
+  background: var(--card-bg-soft, #F5F8ED);
+}
+
+.btn-secondary:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--ink-border, #2B241E);
 }
 
 /* Mobile & Virtual Keyboard Adaptations */

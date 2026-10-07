@@ -6,11 +6,15 @@
   <title>Wortregen V0.1 · Mưa Từ Vựng tiếng Đức (VokabelGo)</title>
   <link rel="stylesheet" href="wortregen.css">
 </head>
-<body>
+<body class="wortregen-standalone">
   <div class="wortregen-app" id="wortregen-app">
     <!-- Header with Branding & HUD -->
     <header class="wortregen-header">
       <div class="header-top-row">
+        <button type="button" class="btn-back-to-study" id="btn-back-to-study" onclick="exitWortregenToStudy()" title="Quay lại Học từ">
+          <span>← Quay lại Học từ</span>
+        </button>
+
         <div class="brand-section">
           <span class="brand-badge">VokabelGo Mini-Game</span>
           <h1 class="brand-title">Wortregen</h1>
@@ -127,12 +131,17 @@
               </div>
             </div>
 
-            <button class="btn-primary" id="btn-replay" type="button">
-              <span>Chơi lại</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-              </svg>
-            </button>
+            <div class="game-over-actions" style="display:flex;flex-direction:column;gap:8px;width:100%;">
+              <button class="btn-primary" id="btn-replay" type="button">
+                <span>Chơi lại</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+              </button>
+              <button class="btn-secondary" id="btn-gameover-back" type="button" onclick="exitWortregenToStudy()">
+                <span>← Quay lại Học từ</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
